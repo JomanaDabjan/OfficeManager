@@ -1,110 +1,143 @@
 <?php
 
-namespace App\Http\Controllers\admin;
+namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProjectStoreRequest;
 use App\Http\Requests\ProjectUpdateRequest;
-//use Illuminate\Http\Request;
 use App\Models\Project;
-//use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Exception;
-
-
 
 class ProjectController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Define middleware to manage access control based on user roles.
+     */
+    public function __construct()
+    {
+        // 1. Admin: Has full access to all methods
+        $this->middleware('role:admin');
+
+        // 2. Project Manager: Has specific access to edit and update,
+        // but not to delete or create new projects via this route
+        $this->middleware('role:manager')->only(['index', 'show', 'edit', 'update']);
+
+        // 3. Employee: Has restricted access, only to view projects and their details
+        $this->middleware('role:employee')->only(['index', 'show']);
+    }
+
+    /**
+     * Display a listing of projects filtered by the user's role.
      */
     public function index()
     {
-        // To display just 10 projects per page, we can use the paginate method instead of all(). This will also provide pagination links in the view.
-        $projects = Project::with('manager')->paginate(10);
+        $user = Auth::user();
+
+        // Admin sees all projects; Manager sees their own; Employee sees assigned projects.
+        if ($user->role === 'admin') {
+            $projects = Project::with('manager')->paginate(10);
+        } elseif ($user->role === 'manager') {
+            $projects = Project::where('manager_id', $user->id)->paginate(10);
+        } else {
+            $projects = $user->projects()->paginate(10);
+        }
 
         return view('admin.contents.tables.ShowProjects', compact('projects'));
     }
+
     /**
-     * Show the form for creating a new resource.
+     * Show the form for creating a new project.
      */
     public function create()
     {
-        // When creating a project, the admin will need to select a manager from a list of existing managers.
-        $managers = \App\Models\User::where('role', 'manager')->get();
-        return view('admin.contents.createforms.ProjectCreateForm', compact('managers'));
+        return view('admin.contents.forms.CreateProject');
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created project in the database.
      */
     public function store(ProjectStoreRequest $request)
     {
         try {
-            DB::beginTransaction(); // لبدء عملية حفظ آمنة
-            $data = $request->validated();
-            Project::create($data);
-            DB::commit(); // حفظ التغييرات في حال النجاح
-            return redirect()->route('project.index')->with('success', 'Project Added Correctly');
-        } catch (Exception $ex) {
-            DB::rollBack(); // التراجع في حال حدوث خطأ
-            return redirect()->back()->with('error', 'The Error Is: ' . $ex->getMessage())->withInput();
+            DB::beginTransaction();
+            Project::create($request->validated());
+            DB::commit();
+            return redirect()->route('admin.projects.index')->with('success', 'Project created successfully.');
+        } catch (Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'The Error Is: ' . $e->getMessage())->withInput();
         }
     }
 
     /**
-     * Display the specified resource.
+     * Display the specified project details with authorization checks.
      */
     public function show(Project $project)
     {
-        // Load the related manager, tasks, and users for the project to display detailed information in the admin panel
+        $user = Auth::user();
+
+        // Security Check: Ensure Managers and Employees only access projects they are linked to.
+        if ($user->role === 'manager' && $project->manager_id !== $user->id) {
+            abort(403, 'Unauthorized access.');
+        }
+        if ($user->role === 'employee' && !$project->users()->where('user_id', $user->id)->exists()) {
+            abort(403, 'Unauthorized access.');
+        }
 
         $project->load(['manager', 'tasks', 'users']);
-        return view('admin.contents.details.ProjectDetails', compact('project'));
+        return view('admin.contents.details.ShowProjectDetails', compact('project'));
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Show the form for editing the project.
      */
     public function edit(Project $project)
     {
-        // When editing a project, the admin will need to select a manager from a list of existing managers for this project.
+        // Manager specific security check for editing.
+        if (Auth::user()->role === 'manager' && $project->manager_id !== Auth::id()) {
+            abort(403, 'Unauthorized access.');
+        }
 
-        $managers = \App\Models\User::where('role', 'manager')->get();
-        return view('admin.contents.updateforms.ProjectUpdateForm', compact('project', 'managers'));
+        return view('admin.contents.forms.EditProject', compact('project'));
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update the project in the database.
      */
     public function update(ProjectUpdateRequest $request, Project $project)
     {
         try {
             DB::beginTransaction();
+
             $data = $request->validated();
+
+            // Manager restriction: Managers cannot change the project manager_id.
+            if (Auth::user()->role === 'manager') {
+                $project->manager_id !== Auth::id() ? abort(403) : null;
+                unset($data['manager_id']);
+            }
+
             $project->update($data);
             DB::commit();
-            return redirect()->route('project.index')->with('success', 'Project Updated Correctly');
-        } catch (Exception $ex) {
+            return redirect()->route('admin.projects.index')->with('success', 'Project updated successfully.');
+        } catch (Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'The Error Is: ' . $ex->getMessage())->withInput();
+            return redirect()->back()->with('error', 'The Error Is: ' . $e->getMessage())->withInput();
         }
     }
 
-
     /**
-     * Remove the specified resource from storage.
+     * Remove the project from storage.
      */
     public function destroy(Project $project)
     {
         try {
-            DB::beginTransaction();
             $project->delete();
-            DB::commit();
-            return redirect()->route('project.index')->with('success', 'Project Deleted Correctly');
-        } catch (Exception $ex) {
-            DB::rollBack();
-            return redirect()->back()->with('error', 'The Error Is: ' . $ex->getMessage())->withInput();
+            return redirect()->route('admin.projects.index')->with('success', 'Project deleted.');
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', 'The Error Is: ' . $e->getMessage())->withInput();
         }
     }
 }

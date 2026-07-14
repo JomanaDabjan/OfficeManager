@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-//use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,9 +12,16 @@ class EmpTaskUpdateRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // Ensure the task belongs to the currently authenticated employee
+        // Get the task instance from the route
         $task = $this->route('task');
-        return $task && $task->user_id === Auth::id();
+
+        // Check two conditions:
+        // 1. The user must be an employee.
+        // 2. The task must belong to this specific employee.
+        return Auth::check() &&
+            Auth::user()->role === 'employee' &&
+            $task &&
+            $task->user_id === Auth::id();
     }
 
     /**
@@ -24,8 +30,8 @@ class EmpTaskUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Allow the employee to update only the task status
-            'status' => ['required', 'in:pending,in_progress,completed'],
+            // The employee is only allowed to update the status of the task.
+            'status' => ['required', 'in:pending,accepted,in_progress,completed,rejected'],
         ];
     }
 }

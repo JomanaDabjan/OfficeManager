@@ -12,6 +12,15 @@ use Exception;
 
 class UserController extends Controller
 {
+
+    // This Function is used to ensure that only users with the 'admin' role can access the methods in this controller.
+    // It applies a middleware that checks the user's role before allowing access to any of the controller's actions.
+    public function __construct()
+    {
+        // Ensure only admins can access user management
+        $this->middleware('role:admin');
+    }
+
     /**
      * Display a listing of users filtered by role.
      */
