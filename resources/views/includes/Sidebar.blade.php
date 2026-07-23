@@ -100,7 +100,7 @@
             <li class="{{ request()->routeIs('project-status*') ? 'active' : '' }}">
                 <a href="#">
                     <i class="now-ui-icons loader_refresh"></i>
-                    <p>ProjectStatus</p>
+                    <p>Project Status</p>
                 </a>
             </li>
 
