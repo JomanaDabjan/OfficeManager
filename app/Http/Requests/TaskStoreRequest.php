@@ -38,6 +38,9 @@ class TaskStoreRequest extends FormRequest
 
             // Status is required and must match one of the allowed workflow states.
             'status'      => ['required', 'in:pending,accepted,in_progress,completed,rejected'],
+
+            // Attachment is optional, but if provided, must be a valid file type and within size limits.
+            'attachment'  => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,png,jpeg', 'max:2048'],
         ];
     }
 }

@@ -1,25 +1,181 @@
 @push('Script')
 
-<!--   Core JS Files   -->
+<!-- ========================================== -->
+<!-- CORE JS FILES AND PLUGINS                  -->
+<!-- ========================================== -->
 <script src="{{ asset('assets/js/core/jquery.min.js') }}"></script>
 <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
 <script src="{{ asset('assets/js/core/bootstrap.min.js') }}"></script>
 <script src="{{ asset('assets/js/plugins/perfect-scrollbar.jquery.min.js') }}"></script>
-<!--  Google Maps Plugin    -->
+
+<!-- ========================================== -->
+<!-- GOOGLE MAPS AND CHART PLUGINS              -->
+<!-- ========================================== -->
 <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY_HERE"></script>
-<!-- Chart JS -->
 <script src="{{ asset('assets/js/plugins/chartjs.min.js') }}"></script>
-<!--  Notifications Plugin    -->
 <script src="{{ asset('assets/js/plugins/bootstrap-notify.js') }}"></script>
-<!-- Control Center for Now Ui Dashboard: parallax effects, scripts for the example pages etc -->
+
+<!-- ========================================== -->
+<!-- NOW UI DASHBOARD CONTROL CENTER SCRIPTS    -->
+<!-- ========================================== -->
 <script src="{{ asset('assets/js/now-ui-dashboard.js?v=1.0.1') }}"></script>
-<!-- Now Ui Dashboard DEMO methods, don't include it in your project! -->
 <script src="{{ asset('assets/demo/demo.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- ========================================== -->
+<!-- INITIALIZE DASHBOARD CHARTS                -->
+<!-- ========================================== -->
 <script>
     $(document).ready(function () {
-        // Javascript method's body can be found in assets/js/demos.js
+        // Initialize template default dashboard charts from demo.js
         demo.initDashboardPageCharts();
     });
+</script>
+
+<!-- ========================================== -->
+<!-- LIVE SEARCH FILTER FOR PROJECTS TABLE      -->
+<!-- ========================================== -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const searchInput = document.getElementById("projectSearchInput");
+        const rows = document.querySelectorAll("#projectsTable tbody tr.project-row");
+
+        if (searchInput) {
+            searchInput.addEventListener("keyup", function () {
+                const query = this.value.toLowerCase().trim();
+
+                rows.forEach(row => {
+                    const textContent = row.textContent.toLowerCase();
+                    // Show or hide table rows based on real-time matching query
+                    if (textContent.includes(query)) {
+                        row.style.display = "";
+                    } else {
+                        row.style.display = "none";
+                    }
+                });
+            });
+        }
+    });
+</script>
+
+<!-- ========================================== -->
+<!-- LIVE SEARCH FILTER FOR TASKS TABLE         -->
+<!-- ========================================== -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const taskSearchInput = document.getElementById("taskSearchInput");
+        const taskRows = document.querySelectorAll("#tasksTable tbody tr.task-row");
+
+        if (taskSearchInput) {
+            taskSearchInput.addEventListener("keyup", function () {
+                const query = this.value.toLowerCase().trim();
+
+                taskRows.forEach(row => {
+                    const textContent = row.textContent.toLowerCase();
+                    // Toggle visibility of task rows dynamically during typing
+                    if (textContent.includes(query)) {
+                        row.style.display = "";
+                    } else {
+                        row.style.display = "none";
+                    }
+                });
+            });
+        }
+    });
+</script>
+
+<!-- ========================================== -->
+<!-- INITIALIZE AND RENDER TASK STATUS CHART    -->
+<!-- ========================================== -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const canvasElement = document.getElementById('tasksChart');
+        if (canvasElement) {
+            const ctx = canvasElement.getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    // Added 'Accepted' to the chart labels array
+                    labels: ['Pending', 'In Progress', 'Completed', 'Accepted', 'Rejected'],
+                    datasets: [{
+                        data: [
+                            {{ $pendingTasks ?? 0 }},
+                            {{ $inProgressTasks ?? 0 }},
+                            {{ $completedTasks ?? 0 }},
+                            {{ $acceptedTasks ?? 0 }}, // Dynamic data variable for accepted tasks
+                            {{ $rejectedTasks ?? 0 }}
+                        ],
+                        backgroundColor: [
+                            '#fbc658', // Yellow for Pending
+                            '#51cbce', // Cyan for In Progress
+                            '#6bd098', // Green for Completed
+                            '#9b59b6', // Blue/Teal for Accepted
+                            '#ef8157'  // Orange/Red for Rejected
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+
+<!-- ========================================== -->
+<!-- DYNAMIC FILE UPLOAD PREVIEW HANDLER        -->
+<!-- ========================================== -->
+<script>
+    const attachmentInput = document.getElementById('attachmentInput');
+    if (attachmentInput) {
+        attachmentInput.addEventListener('change', function(event) {
+            const files = event.target.files;
+            const uploadPrompt = document.getElementById('uploadPrompt');
+            const filePreviewContainer = document.getElementById('filePreviewContainer');
+            const fileNameDisplay = document.getElementById('fileNameDisplay');
+            const fileSizeDisplay = document.getElementById('fileSizeDisplay');
+
+            if (files.length > 0) {
+                // Hide default upload prompt and display preview container
+                uploadPrompt.classList.add('d-none');
+                filePreviewContainer.classList.remove('d-none');
+                filePreviewContainer.classList.add('d-flex');
+
+                if (files.length === 1) {
+                    // Display single file name and calculated size in MB
+                    fileNameDisplay.textContent = files[0].name;
+                    fileSizeDisplay.textContent = (files[0].size / (1024 * 1024)).toFixed(2) + ' MB';
+                } else {
+                    // Display multi-file selection count and aggregated size
+                    fileNameDisplay.textContent = files.length + ' files selected';
+                    let totalSize = Array.from(files).reduce((acc, file) => acc + file.size, 0);
+                    fileSizeDisplay.textContent = 'Total size: ' + (totalSize / (1024 * 1024)).toFixed(2) + ' MB';
+                }
+            }
+        });
+    }
+
+    const removeFileBtn = document.getElementById('removeFileBtn');
+    if (removeFileBtn) {
+        removeFileBtn.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent triggering parent container click event
+            const fileInput = document.getElementById('attachmentInput');
+            const uploadPrompt = document.getElementById('uploadPrompt');
+            const filePreviewContainer = document.getElementById('filePreviewContainer');
+
+            fileInput.value = ''; // Reset file input selection
+            filePreviewContainer.classList.remove('d-flex');
+            filePreviewContainer.classList.add('d-none');
+            uploadPrompt.classList.remove('d-none'); // Restore upload prompt view
+        });
+    }
 </script>
 
 @endpush

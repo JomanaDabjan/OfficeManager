@@ -13,22 +13,6 @@ use Exception;
 class ProjectController extends Controller
 {
     /**
-     * Define middleware to manage access control based on user roles.
-     */
-    public function __construct()
-    {
-        // 1. Admin: Has full access to all methods
-        $this->middleware('role:admin');
-
-        // 2. Project Manager: Has specific access to edit and update,
-        // but not to delete or create new projects via this route
-        $this->middleware('role:manager')->only(['index', 'show', 'edit', 'update']);
-
-        // 3. Employee: Has restricted access, only to view projects and their details
-        $this->middleware('role:employee')->only(['index', 'show']);
-    }
-
-    /**
      * Display a listing of projects filtered by the user's role.
      */
     public function index()
@@ -44,27 +28,37 @@ class ProjectController extends Controller
             $projects = $user->projects()->paginate(10);
         }
 
-        return view('admin.contents.tables.ShowProjects', compact('projects'));
+        return view('contents.project.Index', compact('projects'));
     }
 
     /**
      * Show the form for creating a new project.
+     * (Restricted to Admin)
      */
     public function create()
     {
-        return view('admin.contents.forms.CreateProject');
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized access.');
+        }
+
+        return view('contents.project.Create');
     }
 
     /**
      * Store a newly created project in the database.
+     * (Restricted to Admin)
      */
     public function store(ProjectStoreRequest $request)
     {
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized access.');
+        }
+
         try {
             DB::beginTransaction();
             Project::create($request->validated());
             DB::commit();
-            return redirect()->route('admin.projects.index')->with('success', 'Project created successfully.');
+            return redirect()->route('admin.project.index')->with('success', 'Project created successfully.');
         } catch (Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'The Error Is: ' . $e->getMessage())->withInput();
@@ -87,7 +81,7 @@ class ProjectController extends Controller
         }
 
         $project->load(['manager', 'tasks', 'users']);
-        return view('admin.contents.details.ShowProjectDetails', compact('project'));
+        return view('contents.project.Show', compact('project'));
     }
 
     /**
@@ -95,12 +89,19 @@ class ProjectController extends Controller
      */
     public function edit(Project $project)
     {
-        // Manager specific security check for editing.
-        if (Auth::user()->role === 'manager' && $project->manager_id !== Auth::id()) {
+        $user = Auth::user();
+
+        // Employees cannot edit
+        if ($user->role === 'employee') {
             abort(403, 'Unauthorized access.');
         }
 
-        return view('admin.contents.forms.EditProject', compact('project'));
+        // Manager specific security check for editing.
+        if ($user->role === 'manager' && $project->manager_id !== $user->id) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        return view('contents.project.Edit', compact('project'));
     }
 
     /**
@@ -108,20 +109,29 @@ class ProjectController extends Controller
      */
     public function update(ProjectUpdateRequest $request, Project $project)
     {
+        $user = Auth::user();
+
+        // Employees cannot update
+        if ($user->role === 'employee') {
+            abort(403, 'Unauthorized access.');
+        }
+
         try {
             DB::beginTransaction();
 
             $data = $request->validated();
 
             // Manager restriction: Managers cannot change the project manager_id.
-            if (Auth::user()->role === 'manager') {
-                $project->manager_id !== Auth::id() ? abort(403) : null;
+            if ($user->role === 'manager') {
+                if ($project->manager_id !== $user->id) {
+                    abort(403, 'Unauthorized access.');
+                }
                 unset($data['manager_id']);
             }
 
             $project->update($data);
             DB::commit();
-            return redirect()->route('admin.projects.index')->with('success', 'Project updated successfully.');
+            return redirect()->route('admin.project.index')->with('success', 'Project updated successfully.');
         } catch (Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'The Error Is: ' . $e->getMessage())->withInput();
@@ -130,12 +140,17 @@ class ProjectController extends Controller
 
     /**
      * Remove the project from storage.
+     * (Restricted to Admin)
      */
     public function destroy(Project $project)
     {
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized access.');
+        }
+
         try {
             $project->delete();
-            return redirect()->route('admin.projects.index')->with('success', 'Project deleted.');
+            return redirect()->route('admin.project.index')->with('success', 'Project deleted.');
         } catch (Exception $e) {
             return redirect()->back()->with('error', 'The Error Is: ' . $e->getMessage())->withInput();
         }

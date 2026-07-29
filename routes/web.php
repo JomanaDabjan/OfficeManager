@@ -1,6 +1,8 @@
 <?php
 
-use App\Http\Controllers\admin\WebsiteController;
+use App\Http\Controllers\admin\ProjectController;
+use App\Http\Controllers\admin\TaskController;
+use App\Http\Controllers\admin\DashController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -8,19 +10,16 @@ use Illuminate\Support\Facades\Route;
     return view('welcome');
 });*/
 
-/* Start Website Controller */
+/* Start Website Routes */
 
-Route::resource('/', WebsiteController::class)->names([
-    'index' => '/'
-]);
-Route::get('/project', [WebsiteController::class, 'project'])->name('project');
-Route::get('/task', [WebsiteController::class, 'task'])->name('task');
-Route::get('/team', [WebsiteController::class, 'team'])->name('team');
-Route::get('/user', [WebsiteController::class, 'user'])->name('user');
-Route::get('/prostatus', [WebsiteController::class, 'projectstatus'])->name('prostatus');
-Route::get('/report', [WebsiteController::class, 'report'])->name('report');
+Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('dash', DashController::class);
+    Route::resource('project', ProjectController::class);
+    Route::resource('task', TaskController::class);
+});
 
-/* End Website Controller */
+/* End Website Routes */
+
 
 Route::get('/dashboard', function () {
     return view('dashboard');

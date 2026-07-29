@@ -30,8 +30,11 @@ class EmpTaskUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // The employee is only allowed to update the status of the task.
-            'status' => ['required', 'in:pending,accepted,in_progress,completed,rejected'],
+            // Ensure status is valid
+            'status' => ['sometimes', 'in:pending,accepted,in_progress,completed,rejected'],
+
+            // Rejection reason is required if provided or needed for rejection action
+            'rejection_reason' => ['required_if:status,rejected', 'nullable', 'string', 'max:500'],
         ];
     }
 }
