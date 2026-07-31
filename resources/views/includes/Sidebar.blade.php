@@ -57,7 +57,7 @@
                             <a href="#">Project Manager Profile</a>
                         </li>
                         <li class="{{ request()->routeIs('admin.users.employee') ? 'active' : '' }}">
-                            <a href="{{ route('admin.user.index', ['role' => 'employee']) }}">Employee Profile</a>
+                            <a href="{{ route('admin.user.employee.Index', ['role' => 'employee']) }}">Employee Profile</a>
                         </li>
                     </ul>
                 </div>
