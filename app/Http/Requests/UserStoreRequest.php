@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Admin;
+namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +19,13 @@ class UserStoreRequest extends FormRequest
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'min:8'],
-            'role'     => ['required', 'in:project_manager,employee'],
+            'role'          => ['required', 'string'],
+            'phone'         => ['nullable', 'string', 'max:50'],
+            'position'      => ['nullable', 'string', 'max:255'],
+            'department'    => ['nullable', 'string', 'max:255'],
+            'status'        => ['nullable', 'in:active,deactivated'],
+            'working_hours' => ['nullable', 'integer'],
+            'joining_date'  => ['nullable', 'date'],
         ];
     }
 }

@@ -3,45 +3,35 @@
 namespace App\Http\Controllers\admin;
 
 use App\Http\Controllers\Controller;
-//use Illuminate\Http\Request;
 use App\Models\User;
-use App\Http\Requests\Admin\UserStoreRequest;
+use App\Http\Requests\UserStoreRequest;
 use App\Http\Requests\Admin\UserUpdateRequest;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use Exception;
 
 class UserController extends Controller
 {
-
-    // This Function is used to ensure that only users with the 'admin' role can access the methods in this controller.
-    // It applies a middleware that checks the user's role before allowing access to any of the controller's actions.
-    public function __construct()
-    {
-        // Ensure only admins can access user management
-        $this->middleware('role:admin');
-    }
-
     /**
      * Display a listing of users filtered by role.
      */
-    public function index($role)
+    public function index(Request $request)
     {
-        // Fetch users based on the provided role and paginate the results to show 10 users per page.
+        $role = $request->input('role', 'employee');
         $users = User::where('role', $role)->paginate(10);
-        return view('admin.contents.tables.ShowUsers', compact('users', 'role'));
+        return view('contents.user.ShowUsers', compact('users', 'role'));
     }
 
     /**
      * Show the form for creating a new user.
-     *
-     * @return \Illuminate\View\View
      */
     public function create()
     {
-        // Return the view containing the form to create a new user.
-        // We can pass the roles if we want to make the form dynamic.
-        return view('admin.contents.createforms.UserCreateForm');
+        return view('contents.user.UserCreateForm');
     }
+
     /**
      * Store a newly created resource in storage.
      */
@@ -50,12 +40,17 @@ class UserController extends Controller
         try {
             DB::beginTransaction();
             $data = $request->validated();
+
+            if (isset($data['password'])) {
+                $data['password'] = bcrypt($data['password']);
+            }
+
             User::create($data);
             DB::commit();
-            return redirect()->route('user.index')->with('success', 'User created successfully.');
+            return redirect()->route('user.index', ['role' => $data['role']])->with('success', 'User created successfully.');
         } catch (Exception $ex) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Failed to create user' . $ex->getMessage())->withtInput();
+            return redirect()->back()->with('error', 'Failed to create user: ' . $ex->getMessage())->withInput();
         }
     }
 
@@ -69,13 +64,9 @@ class UserController extends Controller
 
     /**
      * Show the form for editing the specified user.
-     *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\View\View
      */
     public function edit(User $user)
     {
-        // Return the view containing the form pre-filled with user data.
         return view('admin.contents.updateforms.UserUpdateForm', compact('user'));
     }
 
@@ -87,12 +78,19 @@ class UserController extends Controller
         try {
             DB::beginTransaction();
             $data = $request->validated();
+
+            if (!empty($data['password'])) {
+                $data['password'] = bcrypt($data['password']);
+            } else {
+                unset($data['password']);
+            }
+
             $user->update($data);
             DB::commit();
-            return redirect()->route('user.index')->with('success', 'User updated successfully.');
+            return redirect()->route('user.index', ['role' => $user->role])->with('success', 'User updated successfully.');
         } catch (Exception $ex) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Failed to update user' . $ex->getMessage())->withInput();
+            return redirect()->back()->with('error', 'Failed to update user: ' . $ex->getMessage())->withInput();
         }
     }
 
@@ -102,8 +100,7 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         try {
-            // Prevent the admin from deleting themselves
-            if ($user->id === auth()->id()) {
+            if ($user->id === Auth::id()) {
                 return redirect()->back()->with('error', 'You cannot delete yourself.');
             }
 
@@ -111,10 +108,8 @@ class UserController extends Controller
 
             return redirect()->back()->with('success', 'User deleted successfully.');
         } catch (Exception $ex) {
-            // Log the error for debugging purposes
-            \Log::error("Error deleting user {$user->id}: " . $ex->getMessage());
+            Log::error("Error deleting user {$user->id}: " . $ex->getMessage());
 
-            // Redirect back with a user-friendly error message
             return redirect()->back()->with('error', 'An error occurred while deleting the user. Please try again.');
         }
     }

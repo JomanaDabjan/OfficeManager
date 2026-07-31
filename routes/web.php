@@ -5,6 +5,7 @@ use App\Http\Controllers\admin\TaskController;
 use App\Http\Controllers\admin\DashController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\admin\UserController;
 
 /*Route::get('/', function () {
     return view('welcome');
@@ -16,6 +17,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::resource('dash', DashController::class);
     Route::resource('project', ProjectController::class);
     Route::resource('task', TaskController::class);
+    Route::resource('user', UserController::class);
 });
 
 /* End Website Routes */
