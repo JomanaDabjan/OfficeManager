@@ -21,7 +21,7 @@ class UserController extends Controller
     {
         $role = $request->input('role', 'employee');
         $users = User::where('role', $role)->paginate(10);
-        return view('contents.user.ShowUsers', compact('users', 'role'));
+        return view('contents.user.Index', compact('users', 'role'));
     }
 
     /**
@@ -59,7 +59,7 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        return view('admin.contents.details.UserDetails', compact('user'));
+        return view('admin.contents.user.Show', compact('user'));
     }
 
     /**
@@ -67,7 +67,7 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        return view('admin.contents.updateforms.UserUpdateForm', compact('user'));
+        return view('admin.contents.user.Edit', compact('user'));
     }
 
     /**
