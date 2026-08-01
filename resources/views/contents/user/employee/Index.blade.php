@@ -61,7 +61,7 @@
                             @forelse($users as $user)
                             <tr class="border-bottom">
                                 <td class="font-weight-bold text-dark pl-4 align-middle">
-                                    {{ $loop->iteration }}
+                                    {{ ($users->currentPage() - 1) * $users->perPage() + $loop->iteration }}
                                 </td>
 
                                 <td class="align-middle">
@@ -100,9 +100,16 @@
                                 </td>
 
                                 <td class="text-right pr-4 align-middle">
-                                    <a href="#" class="btn btn-success btn-round btn-icon btn-sm" title="Edit">
+                                    <a href="{{ route('admin.user.edit', $user->id) }}" class="btn btn-success btn-round btn-icon btn-sm" title="Edit">
                                         <i class="now-ui-icons ui-2_settings-90"></i>
                                     </a>
+                                    <form id="delete-form-{{ $user->id }}" action="{{ route('admin.user.destroy', $user->id) }}" method="POST" style="display: inline-block;">
+                                         @csrf
+                                         @method('DELETE')
+                                        <button type="button" class="btn btn-danger btn-round btn-icon btn-sm" title="Delete" onclick="confirmDelete({{ $user->id }})">
+                                            <i class="now-ui-icons ui-1_simple-remove"></i>
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                             @empty
@@ -136,5 +143,24 @@
         </div>
     </div>
 </div>
-
 @endsection
+@push('Script')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function confirmDelete(userId) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f96332', 
+        cancelButtonColor: '#888888',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('delete-form-' + userId).submit();
+        }
+    });
+}
+</script>
+@endpush

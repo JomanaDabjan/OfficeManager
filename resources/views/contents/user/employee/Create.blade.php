@@ -20,30 +20,31 @@
                 </div>
             @endif
 
-            <form action="{{ route('admin.user.store') }}" method="POST">
+            <form action="{{ route('admin.user.store') }}" method="POST" autocomplete="off">
                 @csrf
+               <input type="text" name="fake_username" style="display:none;" autocomplete="username">
+               <input type="password" name="fake_password" style="display:none;" autocomplete="current-password">
 
-                <div class="row">
-                    
-                    <div class="col-md-6 mb-3">
-                        <label for="name" class="form-label">Full Name</label>
-                        <input type="text" class="form-control" id="name" name="name" value="{{ old('name') }}" required>
-                    </div>
-
-                   
-                    <div class="col-md-6 mb-3">
-                        <label for="email" class="form-label">Email Address</label>
-                        <input type="email" class="form-control" id="email" name="email" value="{{ old('email') }}" required>
-                    </div>
+               <div class="row">
+        
+                <div class="col-md-6 mb-3">
+                    <label for="name" class="form-label">Full Name</label>
+                   <input type="text" class="form-control" id="name" name="name" value="{{ old('name') }}" autocomplete="off" required>
                 </div>
 
-                <div class="row">
-                   
-                    <div class="col-md-6 mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
-                    </div>
+       
+                 <div class="col-md-6 mb-3">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" class="form-control" id="email" name="email" value="{{ old('email') }}" autocomplete="new-email" required>
+                </div>
+               </div>
 
+                <div class="row">
+       
+               <div class="col-md-6 mb-3">
+                   <label for="password" class="form-label">Password</label>
+                   <input type="password" class="form-control" id="password" name="password" autocomplete="new-password" required>
+                </div>
                    
                     <div class="col-md-6 mb-3">
                         <label for="role" class="form-label">Role</label>

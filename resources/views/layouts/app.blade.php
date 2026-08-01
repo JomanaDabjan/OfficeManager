@@ -39,6 +39,7 @@
     <!-- JavaScript Files and Scripts -->
     @include('includes.Script')
     @stack('Script')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 
 </html>

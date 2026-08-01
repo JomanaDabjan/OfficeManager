@@ -5,11 +5,11 @@ namespace App\Http\Controllers\admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Http\Requests\UserStoreRequest;
-use App\Http\Requests\Admin\UserUpdateRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use App\Http\Requests\UserUpdateRequest;
 use Exception;
 
 class UserController extends Controller
@@ -47,7 +47,7 @@ class UserController extends Controller
 
             User::create($data);
             DB::commit();
-            return redirect()->route('user.index', ['role' => $data['role']])->with('success', 'User created successfully.');
+            return redirect()->route('admin.user.index', ['role' => $data['role']])->with('success', 'User created successfully.');
         } catch (Exception $ex) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to create user: ' . $ex->getMessage())->withInput();
@@ -59,7 +59,7 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        return view('admin.contents.user.employee.Show', compact('user'));
+        return view('contents.user.employee.Show', compact('user'));
     }
 
     /**
@@ -67,7 +67,7 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        return view('admin.contents.user.employee.Edit', compact('user'));
+        return view('contents.user.employee.Edit', compact('user'));
     }
 
     /**
@@ -87,7 +87,7 @@ class UserController extends Controller
 
             $user->update($data);
             DB::commit();
-            return redirect()->route('user.index', ['role' => $user->role])->with('success', 'User updated successfully.');
+            return redirect()->route('admin.user.index', ['role' => $user->role])->with('success', 'User updated successfully.');
         } catch (Exception $ex) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to update user: ' . $ex->getMessage())->withInput();

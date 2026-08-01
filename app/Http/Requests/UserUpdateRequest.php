@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Admin;
+namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -23,6 +23,13 @@ class UserUpdateRequest extends FormRequest
             'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($this->route('user')->id)],
 
             'role'  => ['required', 'in:project_manager,employee'],
+            'password'      => ['nullable', 'string', 'min:6'],
+            'phone'         => ['nullable', 'string', 'max:50'],
+            'position'      => ['nullable', 'string', 'max:255'],
+            'department'    => ['nullable', 'string', 'max:255'],
+            'status'        => ['nullable', 'in:active,deactivated'],
+            'working_hours' => ['nullable', 'numeric'],
+            'joining_date'  => ['nullable', 'date'],
         ];
     }
 }
