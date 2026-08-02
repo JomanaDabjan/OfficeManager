@@ -21,6 +21,7 @@
 <script src="{{ asset('assets/js/now-ui-dashboard.js?v=1.0.1') }}"></script>
 <script src="{{ asset('assets/demo/demo.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <!-- ========================================== -->
 <!-- INITIALIZE DASHBOARD CHARTS                -->
@@ -95,14 +96,13 @@
             new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    // Added 'Accepted' to the chart labels array
                     labels: ['Pending', 'In Progress', 'Completed', 'Accepted', 'Rejected'],
                     datasets: [{
                         data: [
                             {{ $pendingTasks ?? 0 }},
                             {{ $inProgressTasks ?? 0 }},
                             {{ $completedTasks ?? 0 }},
-                            {{ $acceptedTasks ?? 0 }}, // Dynamic data variable for accepted tasks
+                            {{ $acceptedTasks ?? 0 }},
                             {{ $rejectedTasks ?? 0 }}
                         ],
                         backgroundColor: [
@@ -143,17 +143,14 @@
             const fileSizeDisplay = document.getElementById('fileSizeDisplay');
 
             if (files.length > 0) {
-                // Hide default upload prompt and display preview container
                 uploadPrompt.classList.add('d-none');
                 filePreviewContainer.classList.remove('d-none');
                 filePreviewContainer.classList.add('d-flex');
 
                 if (files.length === 1) {
-                    // Display single file name and calculated size in MB
                     fileNameDisplay.textContent = files[0].name;
                     fileSizeDisplay.textContent = (files[0].size / (1024 * 1024)).toFixed(2) + ' MB';
                 } else {
-                    // Display multi-file selection count and aggregated size
                     fileNameDisplay.textContent = files.length + ' files selected';
                     let totalSize = Array.from(files).reduce((acc, file) => acc + file.size, 0);
                     fileSizeDisplay.textContent = 'Total size: ' + (totalSize / (1024 * 1024)).toFixed(2) + ' MB';
@@ -165,17 +162,62 @@
     const removeFileBtn = document.getElementById('removeFileBtn');
     if (removeFileBtn) {
         removeFileBtn.addEventListener('click', function(e) {
-            e.stopPropagation(); // Prevent triggering parent container click event
+            e.stopPropagation();
             const fileInput = document.getElementById('attachmentInput');
             const uploadPrompt = document.getElementById('uploadPrompt');
             const filePreviewContainer = document.getElementById('filePreviewContainer');
 
-            fileInput.value = ''; // Reset file input selection
+            fileInput.value = '';
             filePreviewContainer.classList.remove('d-flex');
             filePreviewContainer.classList.add('d-none');
-            uploadPrompt.classList.remove('d-none'); // Restore upload prompt view
+            uploadPrompt.classList.remove('d-none');
         });
     }
+</script>
+
+<!-- ==================================================================== -->
+<!-- CONFIRM DELETE DIALOG USING SWEETALERT2 (UPDATED FOR PROJECTS & TASKS) -->
+<!-- ==================================================================== -->
+<script>
+    function confirmDelete(type, id) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#f96332',
+            cancelButtonColor: '#888888',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel',
+            customClass: {
+                confirmButton: 'btn btn-primary btn-round px-4',
+                cancelButton: 'btn btn-secondary btn-round px-4'
+            },
+            buttonsStyling: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Dynamically submit the correct delete form based on type ('project' or 'task')
+                document.getElementById('delete-form-' + type + '-' + id).submit();
+            }
+        });
+    }
+</script>
+
+<!-- ==================================================================== -->
+<!-- AUTOMATIC ALERT DISMISSAL SCRIPT MESSAGE                             -->
+<!-- ==================================================================== -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        setTimeout(function () {
+            let alerts = document.querySelectorAll('.custom-auto-dismiss-alert');
+            alerts.forEach(function (alert) {
+                let dismissBtn = alert.querySelector('.close');
+                if (dismissBtn) {
+                    dismissBtn.click();
+                }
+            });
+        }, 4000);
+    });
 </script>
 
 @endpush

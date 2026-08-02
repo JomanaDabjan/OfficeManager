@@ -16,11 +16,16 @@ use Exception;
 
 class TaskController extends Controller
 {
+    // =========================================================================
+    // DISPLAY TASKS LISTING METHOD
+    // =========================================================================
+
     /**
      * Display a listing of tasks.
      */
     public function index()
     {
+        // Get currently authenticated user instance
         $user = Auth::user();
 
         // Admin/Manager see all tasks; Employee sees only their assigned tasks.
@@ -28,16 +33,23 @@ class TaskController extends Controller
             ? Task::where('user_id', $user->id)->paginate(10)
             : Task::paginate(10);
 
+        // Return the tasks index view with paginated records
         return view('contents.task.Index', compact('tasks'));
     }
+
+    // =========================================================================
+    // SHOW CREATE TASK FORM METHOD
+    // =========================================================================
 
     /**
      * Show the form for creating a new task.
      */
     public function create()
     {
+        // Get currently authenticated user instance
         $user = Auth::user();
 
+        // Restrict access: only admins and managers can view the create form
         if (!in_array($user->role, ['admin', 'manager'])) {
             abort(403, 'Unauthorized action.');
         }
@@ -46,23 +58,32 @@ class TaskController extends Controller
         $projects = Project::all();
         $users = User::where('role', 'employee')->get();
 
+        // Return the create task view with dropdown dependencies
         return view('contents.task.Create', compact('projects', 'users'));
     }
+
+    // =========================================================================
+    // STORE NEW TASK METHOD
+    // =========================================================================
 
     /**
      * Store a newly created task.
      */
     public function store(TaskStoreRequest $request)
     {
+        // Get currently authenticated user instance
         $user = Auth::user();
 
+        // Restrict access: only admins and managers can store tasks
         if (!in_array($user->role, ['admin', 'manager'])) {
             abort(403, 'Unauthorized action.');
         }
 
         try {
+            // Begin database transaction for safe execution
             DB::beginTransaction();
 
+            // Retrieve validated input data from form request
             $data = $request->validated();
 
             // Handle MULTIPLE file uploads if attachments exist
@@ -80,23 +101,34 @@ class TaskController extends Controller
                 $data['attachment'] = json_encode($uploadedFiles);
             }
 
+            // Create new task record in database
             Task::create($data);
+
+            // Commit database transaction
             DB::commit();
 
+            // Redirect back to task index with success message
             return redirect()->route('admin.task.index')->with('success', 'Task created successfully.');
         } catch (Exception $e) {
+            // Rollback database transaction on failure
             DB::rollBack();
             return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
         }
     }
+
+    // =========================================================================
+    // SHOW EDIT TASK FORM METHOD
+    // =========================================================================
 
     /**
      * Show the form for editing the specified task.
      */
     public function edit(Task $task)
     {
+        // Get currently authenticated user instance
         $user = Auth::user();
 
+        // Restrict access: only admins and managers can access edit form
         if (!in_array($user->role, ['admin', 'manager'])) {
             abort(403, 'Unauthorized action.');
         }
@@ -105,23 +137,32 @@ class TaskController extends Controller
         $projects = Project::all();
         $users = User::where('role', 'employee')->get();
 
+        // Return the edit view with task and dropdown data
         return view('contents.task.Edit', compact('task', 'projects', 'users'));
     }
+
+    // =========================================================================
+    // UPDATE EXISTING TASK METHOD
+    // =========================================================================
 
     /**
      * Update the specified task.
      */
     public function update(TaskUpdateRequest $request, Task $task)
     {
+        // Get currently authenticated user instance
         $user = Auth::user();
 
+        // Restrict access: only admins and managers can update tasks
         if (!in_array($user->role, ['admin', 'manager'])) {
             abort(403, 'Unauthorized action.');
         }
 
         try {
+            // Begin database transaction
             DB::beginTransaction();
 
+            // Retrieve validated request data
             $data = $request->validated();
 
             // Handle MULTIPLE file uploads if new attachments are provided
@@ -131,7 +172,7 @@ class TaskController extends Controller
                 if ($task->attachment) {
                     $oldAttachments = json_decode($task->attachment, true);
 
-                    // Check if it's an array (JSON)
+                    // Check if it's an array (JSON) for multiple files which helps avoid errors if the old code stored a single string instead of JSON
                     if (is_array($oldAttachments)) {
                         foreach ($oldAttachments as $oldFile) {
                             if (Storage::disk('public')->exists($oldFile)) {
@@ -153,38 +194,53 @@ class TaskController extends Controller
                     $uploadedFiles[] = 'tasks_attachments/' . $filename;
                 }
 
-                // Update attachment field with new JSON
+                // Update attachment field with new JSON for storage it in database
                 $data['attachment'] = json_encode($uploadedFiles);
             }
 
+            // Update task record details
             $task->update($data);
+
+            // Commit transaction changes
             DB::commit();
 
+            // Redirect to index with success notification
             return redirect()->route('admin.task.index')
                 ->with('success', 'Task updated successfully.');
         } catch (Exception $e) {
+            // Rollback transaction on error
             DB::rollBack();
             return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
         }
     }
+
+    // =========================================================================
+    // EMPLOYEE ACCEPT TASK METHOD
+    // =========================================================================
 
     /**
      * Employee accepts the task.
      */
     public function accept(Task $task)
     {
+        // Get currently authenticated user instance
         $user = Auth::user();
 
+        // Ensure user is an employee and owns the specific assigned task
         if ($user->role !== 'employee' || $task->user_id !== $user->id) {
             abort(403, 'Unauthorized action.');
         }
 
         try {
+            // Begin transaction for status update
             DB::beginTransaction();
+
+            // Update status and clear rejection reason
             $task->update([
                 'status' => 'accepted',
                 'rejection_reason' => null
             ]);
+
             DB::commit();
 
             return redirect()->back()->with('success', 'Task accepted successfully.');
@@ -194,23 +250,33 @@ class TaskController extends Controller
         }
     }
 
+    // =========================================================================
+    // EMPLOYEE REJECT TASK METHOD
+    // =========================================================================
+
     /**
      * Employee rejects the task with a reason.
      */
     public function reject(EmpTaskUpdateRequest $request, Task $task)
     {
+        // Get currently authenticated user instance
         $user = Auth::user();
 
+        // Verify authorization for assigned employee role and ownership
         if ($user->role !== 'employee' || $task->user_id !== $user->id) {
             abort(403, 'Unauthorized action.');
         }
 
         try {
+            // Begin transaction block
             DB::beginTransaction();
+
+            // Update status and record rejection reason input
             $task->update([
                 'status' => 'rejected',
                 'rejection_reason' => $request->rejection_reason
             ]);
+
             DB::commit();
 
             return redirect()->back()->with('success', 'Task rejected successfully.');
@@ -220,21 +286,28 @@ class TaskController extends Controller
         }
     }
 
+    // =========================================================================
+    // DESTROY / DELETE TASK METHOD
+    // =========================================================================
+
     /**
      * Destroy a task.
      */
     public function destroy(Task $task)
     {
+        // Get currently authenticated user instance
         $user = Auth::user();
 
+        // Restrict delete permissions strictly to admin and manager roles
         if (!in_array($user->role, ['admin', 'manager'])) {
             abort(403, 'Unauthorized action.');
         }
 
         try {
+            // Begin transaction for safe file and record deletion
             DB::beginTransaction();
 
-            // Delete associated files from storage before deleting the task
+            // Delete associated files from storage before deleting the task record
             if ($task->attachment) {
                 $attachments = json_decode($task->attachment, true);
 
@@ -249,12 +322,15 @@ class TaskController extends Controller
                 }
             }
 
+            // Delete the task model instance from database
             $task->delete();
 
+            // Commit database transaction
             DB::commit();
 
             return redirect()->route('admin.task.index')->with('success', 'Task deleted.');
         } catch (Exception $e) {
+            // Rollback database transaction on error
             DB::rollBack();
             return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
         }

@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('description');
-            // ربط المشروع بمدير المشروع
-            $table->foreignId('manager_id')->constrained('users')->onDelete('cascade');
+            // Add a foreign key for the project manager (user)
+            $table->foreignId('manager_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->enum('status', ['pending', 'in_progress', 'completed'])->default('pending');
             $table->timestamps();
         });

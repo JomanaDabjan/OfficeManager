@@ -36,6 +36,7 @@
 <!-- ========================================== -->
 <div class="row">
     <div class="col-md-12">
+        <x-alert-message />
         <div class="card shadow-sm border-0">
             <div class="card-body px-0 pb-0">
                 <div class="table-responsive">
@@ -59,9 +60,17 @@
                                     {{ $project->title }}
                                 </td>
 
-                                <!-- Project Description Column (Truncated for clean view) -->
+                                <!-- Project Description Column (Clickable to open Modal) -->
                                 <td class="text-muted align-middle project-desc">
-                                    {{ Str::limit($project->description, 45) }}
+                                    {{ Str::limit($project->description, 40) }}
+                                    @if(strlen($project->description) > 40)
+                                    <button type="button"
+                                        class="btn btn-link btn-sm p-0 ml-1 text-primary font-weight-bold"
+                                        data-toggle="modal" data-target="#descModal-{{ $project->id }}"
+                                        style="font-size: 12px; text-decoration: underline;">
+                                        More
+                                    </button>
+                                    @endif
                                 </td>
 
                                 <!-- Assigned Manager Column with Avatar Initials -->
@@ -89,33 +98,39 @@
                                     </span>
                                 </td>
 
-                                <!-- ========================================== -->
-                                <!-- ACTIONS COLUMN (VIEW, EDIT, DELETE)        -->
-                                <!-- ========================================== -->
+                                <!-- ACTIONS COLUMN (VIEW, EDIT, DELETE) -->
                                 <td class="text-right pr-4 align-middle">
-                                    <!-- View Project Details Button -->
-                                    <a href="{{ route('admin.project.show', $project->id) }}"
-                                        class="btn btn-info btn-round btn-icon btn-sm" title="View">
-                                        <i class="now-ui-icons design_image"></i>
-                                    </a>
+                                    <div class="btn-group" role="group" aria-label="Project Actions">
+                                        <!-- View Project Details Button -->
+                                        <a href="{{ route('admin.project.show', $project->id) }}"
+                                            class="btn btn-info btn-sm btn-icon shadow-sm mx-1 rounded"
+                                            title="View Details"
+                                            style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
+                                            <i class="now-ui-icons business_bulb-63" style="font-size: 13px;"></i>
+                                        </a>
 
-                                    <!-- Edit Project Button -->
-                                    <a href="{{ route('admin.project.edit', $project->id) }}"
-                                        class="btn btn-success btn-round btn-icon btn-sm" title="Edit">
-                                        <i class="now-ui-icons ui-2_settings-90"></i>
-                                    </a>
+                                        <!-- Edit Project Button -->
+                                        <a href="{{ route('admin.project.edit', $project->id) }}"
+                                            class="btn btn-warning btn-sm btn-icon shadow-sm mx-1 rounded"
+                                            title="Edit Project"
+                                            style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
+                                            <i class="now-ui-icons ui-2_settings-90" style="font-size: 13px;"></i>
+                                        </a>
 
-                                    <!-- Delete Form with Confirmation Prompt -->
-                                    <form action="{{ route('admin.project.destroy', $project->id) }}" method="POST"
-                                        style="display: inline-block;"
-                                        onsubmit="return confirm('Are you sure you want to delete this project?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-round btn-icon btn-sm"
-                                            title="Delete">
-                                            <i class="now-ui-icons ui-1_simple-remove"></i>
-                                        </button>
-                                    </form>
+                                        <!-- Delete Form with SweetAlert Confirmation -->
+                                        <form action="{{ route('admin.project.destroy', $project->id) }}" method="POST"
+                                            style="display: inline-block;" id="delete-form-{{ $project->id }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="button"
+                                                class="btn btn-danger btn-sm btn-icon shadow-sm mx-1 rounded"
+                                                title="Delete Project"
+                                                style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
+                                                onclick="confirmDelete({{ $project->id }})">
+                                                <i class="now-ui-icons ui-1_simple-remove" style="font-size: 13px;"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                             @empty
@@ -135,9 +150,7 @@
                     </table>
                 </div>
 
-                <!-- ========================================== -->
-                <!-- PAGINATION CONTROLS SECTION                -->
-                <!-- ========================================== -->
+                <!-- PAGINATION CONTROLS SECTION -->
                 @if($projects->hasPages())
                 <div class="card-footer bg-white py-4 d-flex justify-content-between align-items-center">
                     <div class="text-muted text-sm">
@@ -155,5 +168,35 @@
     </div>
 </div>
 
+<!-- ========================================== -->
+<!-- MODALS FOR PROJECT DESCRIPTIONS            -->
+<!-- ========================================== -->
+@foreach($projects as $project)
+@if(strlen($project->description) > 40)
+<div class="modal fade" id="descModal-{{ $project->id }}" tabindex="-1" role="dialog"
+    aria-labelledby="descModalLabel-{{ $project->id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #f96332 0%, #ff8c42 100%);">
+                <h5 class="modal-title font-weight-bold" id="descModalLabel-{{ $project->id }}">
+                    <i class="now-ui-icons business_briefcase-24 mr-2"></i> Description
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close"
+                    style="opacity: 0.9;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4 text-dark" style="background-color: #f9fbfd; line-height: 1.6;">
+                <p class="mb-0" style="white-space: pre-line;">{{ $project->description }}</p>
+            </div>
+            <div class="modal-footer bg-white border-0 py-3">
+                <button type="button" class="btn btn-secondary btn-round px-4 shadow-sm"
+                    data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+@endforeach
 
 @endsection

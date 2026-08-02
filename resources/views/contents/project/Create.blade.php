@@ -2,22 +2,37 @@
 
 @section('Main_Content')
 
+<!-- ========================================================================= -->
+<!-- MAIN FORM WRAPPER SECTION                                                 -->
+<!-- ========================================================================= -->
+
 <!-- Main Form Card Container Centered -->
 <div class="row justify-content-center">
     <div class="col-lg-9 col-md-10">
+
+        <!-- Include Session Alert Message Component -->
+        <x-alert-message />
+
         <div class="card shadow-sm border-0 project-form-card">
 
-            <!-- Styled Card Header with Gradient and Centered/Aligned Content -->
+            <!-- ===================================================== -->
+            <!-- CARD HEADER WITH GRADIENT AND ICON                    -->
+            <!-- ===================================================== -->
             <div class="card-header custom-card-header text-white d-flex align-items-center py-3 px-4">
+                <!-- Icon container with shadow -->
                 <div class="icon icon-shape bg-white text-primary rounded-circle shadow-sm mr-3">
                     <i class="now-ui-icons ui-1_simple-add"></i>
                 </div>
+                <!-- Title and subtitle description -->
                 <div>
                     <h4 class="font-weight-bold text-white mb-0">Create New Project</h4>
                     <p class="text-white-50 text-sm mb-0">Fill in the details below to add a new system project.</p>
                 </div>
             </div>
 
+            <!-- ===================================================== -->
+            <!-- CARD BODY FORM CONTAINER                              -->
+            <!-- ===================================================== -->
             <div class="card-body px-5 py-4">
                 <form action="{{ route('admin.project.store') }}" method="POST">
                     @csrf
@@ -27,8 +42,11 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label class="form-control-label font-weight-bold text-dark">Project Title</label>
+                                <!-- Input field retaining old values upon validation failure -->
                                 <input type="text" name="title" class="form-control"
                                     placeholder="Enter project title..." value="{{ old('title') }}" required>
+
+                                <!-- Display validation error message for title -->
                                 @error('title')
                                 <span class="text-danger text-sm mt-1 d-block">{{ $message }}</span>
                                 @enderror
@@ -41,11 +59,14 @@
                                 <label class="form-control-label font-weight-bold text-dark">Assign Manager</label>
                                 <select name="manager_id" class="form-control" required>
                                     <option value="" selected disabled>Select project manager...</option>
-                                    {{-- Assuming you pass $managers from your controller --}}
+                                    {{-- Dynamically loop through managers list if passed from controller --}}
                                     {{-- @foreach($managers as $manager) --}}
-                                    {{-- <option value="{{ $manager->id }}">{{ $manager->name }}</option> --}}
+                                    {{-- <option value="{{ $manager->id }}" {{ old('manager_id')==$manager->id ?
+                                        'selected' : '' }}>{{ $manager->name }}</option> --}}
                                     {{-- @endforeach --}}
                                 </select>
+
+                                <!-- Display validation error message for manager selection -->
                                 @error('manager_id')
                                 <span class="text-danger text-sm mt-1 d-block">{{ $message }}</span>
                                 @enderror
@@ -58,11 +79,17 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label class="form-control-label font-weight-bold text-dark">Project Status</label>
+                                <!-- Status dropdown using lower case values matching backend enums -->
                                 <select name="status" class="form-control">
-                                    <option value="In Progress">In Progress</option>
-                                    <option value="Pending">Pending</option>
-                                    <option value="Completed">Completed</option>
+                                    <option value="in_progress" {{ old('status')=='in_progress' ? 'selected' : '' }}>In
+                                        Progress</option>
+                                    <option value="pending" {{ old('status')=='pending' ? 'selected' : '' }}>Pending
+                                    </option>
+                                    <option value="completed" {{ old('status')=='completed' ? 'selected' : '' }}>
+                                        Completed</option>
                                 </select>
+
+                                <!-- Display validation error message for status -->
                                 @error('status')
                                 <span class="text-danger text-sm mt-1 d-block">{{ $message }}</span>
                                 @enderror
@@ -75,8 +102,11 @@
                         <div class="col-md-12">
                             <div class="form-group">
                                 <label class="form-control-label font-weight-bold text-dark">Description</label>
+                                <!-- Textarea preserving long description input text -->
                                 <textarea name="description" rows="4" class="form-control"
                                     placeholder="Enter project description and objectives...">{{ old('description') }}</textarea>
+
+                                <!-- Display validation error message for description -->
                                 @error('description')
                                 <span class="text-danger text-sm mt-1 d-block">{{ $message }}</span>
                                 @enderror
@@ -84,13 +114,17 @@
                         </div>
                     </div>
 
-                    <!-- Form Action Buttons -->
+                    <!-- ===================================================== -->
+                    <!-- FORM ACTION BUTTONS SECTION                           -->
+                    <!-- ===================================================== -->
                     <div class="row mt-4">
                         <div class="col-md-12 text-right">
-                            <a href="{{ route('admin.project.index') }}"
+                            <!-- Cancel button routing back to index list -->
+                            <a href="{{ route('admin.project.create') }}"
                                 class="btn btn-secondary btn-round px-4 mr-2 shadow-sm">
                                 Cancel
                             </a>
+                            <!-- Submit button to trigger store method -->
                             <button type="submit" class="btn btn-primary btn-round px-4 shadow-sm">
                                 Save Project
                             </button>

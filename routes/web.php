@@ -16,6 +16,11 @@ use App\Http\Controllers\admin\UserController;
 Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::resource('dash', DashController::class);
     Route::resource('project', ProjectController::class);
+
+    // Custom Routes for Task Accept and Reject
+    Route::patch('task/{task}/accept', [TaskController::class, 'accept'])->name('task.accept');
+    Route::patch('task/{task}/reject', [TaskController::class, 'reject'])->name('task.reject');
+
     Route::resource('task', TaskController::class);
     Route::resource('user', UserController::class);
 });
