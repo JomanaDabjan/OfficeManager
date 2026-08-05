@@ -38,16 +38,16 @@
 <!-- ========================================== -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        const searchInput = document.getElementById("projectSearchInput");
-        const rows = document.querySelectorAll("#projectsTable tbody tr.project-row");
+        const projectSearchInput = document.getElementById("projectSearchInput");
+        const projectRows = document.querySelectorAll("#projectsTable tbody tr, .project-row");
 
-        if (searchInput) {
-            searchInput.addEventListener("keyup", function () {
+        if (projectSearchInput) {
+            projectSearchInput.addEventListener("keyup", function () {
                 const query = this.value.toLowerCase().trim();
 
-                rows.forEach(row => {
+                projectRows.forEach(row => {
                     const textContent = row.textContent.toLowerCase();
-                    // Show or hide table rows based on real-time matching query
+                    // Toggle visibility dynamically as user types letters or words
                     if (textContent.includes(query)) {
                         row.style.display = "";
                     } else {
@@ -60,21 +60,23 @@
 </script>
 
 <!-- ========================================== -->
-<!-- LIVE SEARCH FILTER FOR TASKS TABLE         -->
+<!-- LIVE SEARCH FILTER FOR TASKS TABLE (FIXED) -->
 <!-- ========================================== -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const taskSearchInput = document.getElementById("taskSearchInput");
-        const taskRows = document.querySelectorAll("#tasksTable tbody tr.task-row");
+        const taskRows = document.querySelectorAll("#tasksTable tbody tr, .task-row");
 
         if (taskSearchInput) {
             taskSearchInput.addEventListener("keyup", function () {
                 const query = this.value.toLowerCase().trim();
 
                 taskRows.forEach(row => {
+                    // Extract text content from the entire row to ensure matching works anywhere
                     const textContent = row.textContent.toLowerCase();
-                    // Toggle visibility of task rows dynamically during typing
-                    if (textContent.includes(query)) {
+
+                    // Show the row if the input is empty or if the text contains the typed query anywhere
+                    if (query === "" || textContent.includes(query)) {
                         row.style.display = "";
                     } else {
                         row.style.display = "none";
@@ -83,6 +85,151 @@
             });
         }
     });
+</script>
+
+<!-- ========================================== -->
+<!-- DRAG AND DROP COLUMNS FOR PROJECTS TABLE   -->
+<!-- ========================================== -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const table = document.getElementById("projectsTable");
+        if (!table) return;
+
+        const headerRow = table.querySelector("thead tr");
+        const bodyRows = table.querySelectorAll("tbody tr.project-row");
+        const storageKey = "projects_table_column_order";
+
+        // Load saved column order from localStorage on page load
+        let savedOrder = JSON.parse(localStorage.getItem(storageKey));
+        if (savedOrder) {
+            reorderTable(headerRow, bodyRows, savedOrder);
+        }
+
+        let draggedHeader = null;
+
+        // Enable HTML5 drag and drop functionality for project table headers
+        headerRow.querySelectorAll("th").forEach(th => {
+            th.addEventListener("dragstart", function (e) {
+                draggedHeader = this;
+                e.dataTransfer.effectAllowed = "move";
+            });
+
+            th.addEventListener("dragover", function (e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+            });
+
+            th.addEventListener("drop", function (e) {
+                e.preventDefault();
+                if (this !== draggedHeader) {
+                    let headers = Array.from(headerRow.children);
+                    let draggedIndex = headers.indexOf(draggedHeader);
+                    let targetIndex = headers.indexOf(this);
+
+                    if (draggedIndex < targetIndex) {
+                        headerRow.insertBefore(draggedHeader, this.nextSibling);
+                    } else {
+                        headerRow.insertBefore(draggedHeader, this);
+                    }
+
+                    // Get new column order based on data-column attributes
+                    let newOrder = Array.from(headerRow.children).map(th => th.getAttribute("data-column"));
+                    reorderTable(headerRow, bodyRows, newOrder);
+
+                    // Save the updated column order to localStorage
+                    localStorage.setItem(storageKey, JSON.stringify(newOrder));
+                }
+            });
+        });
+    });
+</script>
+
+<!-- ========================================== -->
+<!-- DRAG AND DROP COLUMNS FOR TASKS TABLE      -->
+<!-- ========================================== -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const table = document.getElementById("tasksTable");
+        if (!table) return;
+
+        const headerRow = table.querySelector("thead tr");
+        const bodyRows = table.querySelectorAll("tbody tr.task-row");
+        const storageKey = "tasks_table_column_order";
+
+        // Load saved column order from localStorage on page load
+        let savedOrder = JSON.parse(localStorage.getItem(storageKey));
+        if (savedOrder) {
+            reorderTable(headerRow, bodyRows, savedOrder);
+        }
+
+        let draggedHeader = null;
+
+        // Enable HTML5 drag and drop functionality for task table headers
+        headerRow.querySelectorAll("th").forEach(th => {
+            th.addEventListener("dragstart", function (e) {
+                draggedHeader = this;
+                e.dataTransfer.effectAllowed = "move";
+            });
+
+            th.addEventListener("dragover", function (e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+            });
+
+            th.addEventListener("drop", function (e) {
+                e.preventDefault();
+                if (this !== draggedHeader) {
+                    let headers = Array.from(headerRow.children);
+                    let draggedIndex = headers.indexOf(draggedHeader);
+                    let targetIndex = headers.indexOf(this);
+
+                    if (draggedIndex < targetIndex) {
+                        headerRow.insertBefore(draggedHeader, this.nextSibling);
+                    } else {
+                        headerRow.insertBefore(draggedHeader, this);
+                    }
+
+                    // Get new column order based on data-column attributes
+                    let newOrder = Array.from(headerRow.children).map(th => th.getAttribute("data-column"));
+                    reorderTable(headerRow, bodyRows, newOrder);
+
+                    // Save the updated column order to localStorage
+                    localStorage.setItem(storageKey, JSON.stringify(newOrder));
+                }
+            });
+        });
+    });
+</script>
+
+<!-- ========================================== -->
+<!-- GLOBAL REORDER HELPER FUNCTION             -->
+<!-- ========================================== -->
+<script>
+    function reorderTable(headerRow, bodyRows, order) {
+        // Reorder header elements according to the saved column order array
+        let headerMap = {};
+        Array.from(headerRow.children).forEach(th => {
+            headerMap[th.getAttribute("data-column")] = th;
+        });
+        order.forEach(colName => {
+            if (headerMap[colName]) {
+                headerRow.appendChild(headerMap[colName]);
+            }
+        });
+
+        // Reorder corresponding table cells (td) for each row in the table body
+        bodyRows.forEach(row => {
+            let cellMap = {};
+            Array.from(row.children).forEach(td => {
+                cellMap[td.getAttribute("data-column")] = td;
+            });
+            order.forEach(colName => {
+                if (cellMap[colName]) {
+                    row.appendChild(cellMap[colName]);
+                }
+            });
+        });
+    }
 </script>
 
 <!-- ========================================== -->
@@ -196,7 +343,7 @@
             buttonsStyling: true
         }).then((result) => {
             if (result.isConfirmed) {
-                // Dynamically submit the correct delete form based on type ('project' or 'task')
+                // Dynamically submit the correct delete form based on type and id
                 document.getElementById('delete-form-' + type + '-' + id).submit();
             }
         });
@@ -217,6 +364,42 @@
                 }
             });
         }, 4000);
+    });
+</script>
+
+<!-- ==================================================================== -->
+<!-- FORCE REMOVE PLUGIN-BASED INTERNAL SCROLL WRAPPERS                           -->
+<!-- ==================================================================== -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Force remove any plugin-based internal scroll wrappers if initialized by the template
+        const mainPanel = document.querySelector('.main-panel');
+        if (mainPanel) {
+            mainPanel.style.overflow = "visible";
+            mainPanel.style.height = "auto";
+        }
+        const sidebarWrapper = document.querySelector('.sidebar-wrapper');
+        if (sidebarWrapper) {
+            sidebarWrapper.style.overflow = "visible";
+        }
+    });
+</script>
+
+
+<!-- ==================================================================== -->
+<!-- SIDEBAR MINIMIZATION SCRIPT                                          -->
+<!-- ==================================================================== -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const minimizeBtn = document.getElementById("minimizeSidebar");
+        const bodyElement = document.body;
+
+        if (minimizeBtn) {
+            minimizeBtn.addEventListener("click", function () {
+                // Toggle mini sidebar class smoothly
+                bodyElement.classList.toggle("sidebar-mini");
+            });
+        }
     });
 </script>
 

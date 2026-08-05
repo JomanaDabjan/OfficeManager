@@ -243,7 +243,7 @@
                                 Cancel
                             </a>
                             <!-- Submit button to trigger task update process -->
-                            <button type="submit" class="btn btn-info btn-round px-4 shadow-sm text-white">
+                            <button type="submit" class="btn btn-primary btn-round px-4 shadow-sm">
                                 Update Task
                             </button>
                         </div>

@@ -80,7 +80,7 @@
                     <!-- ROW 2: EMPLOYEE ASSIGNMENT AND TASK STATUS                -->
                     <!-- ========================================================= -->
                     <div class="row mt-3">
-                        <!-- Assign User Field -->
+                        <!-- Assign User Field (Filtered to Employees Only) -->
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label class="form-control-label font-weight-bold text-dark">Assign To Employee</label>
@@ -144,7 +144,6 @@
                     <!-- ROW 4: MULTIPLE FILE ATTACHMENTS UPLOAD BOX               -->
                     <!-- ========================================================= -->
                     <div class="row mt-3">
-                        <!-- Styled Task Attachments Field with Live Preview for Multiple Files -->
                         <div class="col-md-12">
                             <div class="form-group">
                                 <label class="form-control-label font-weight-bold text-dark">Task Attachments
@@ -181,13 +180,14 @@
                                         </div>
                                         <!-- Button to clear or remove selected files -->
                                         <button type="button" class="btn btn-sm btn-danger btn-round p-2 mb-0"
-                                            id="removeFileBtn" title="Remove files" style="line-height: 1;">
+                                            id="removeFileBtn" title="Remove files" style="line-height: 1;"
+                                            onclick="event.stopPropagation(); clearFiles();">
                                             <i class="now-ui-icons ui-1_simple-remove text-white"></i>
                                         </button>
                                     </div>
                                 </div>
 
-                                <!-- Actual Hidden File Input (Note the attachments[] name and multiple attribute) -->
+                                <!-- Actual Hidden File Input -->
                                 <input type="file" name="attachments[]" id="attachmentInput" class="d-none" multiple
                                     accept=".pdf,.jpg,.jpeg,.png,.docx,.zip">
 
@@ -207,7 +207,7 @@
                     <!-- ========================================================= -->
                     <div class="row mt-4">
                         <div class="col-md-12 text-right">
-                            <!-- Cancel button linking back to tasks index list -->
+                            <!-- Cancel button linking back to previous page or index -->
                             <a href="{{ route('admin.task.create') }}"
                                 class="btn btn-secondary btn-round px-4 mr-2 shadow-sm">
                                 Cancel

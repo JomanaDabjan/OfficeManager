@@ -24,8 +24,63 @@
     }
 
     /* ==========================================================================
-       Sidebar Navigation Styling
+       Sidebar Navigation Styling & Smooth Collapse/Expand Transitions
        ========================================================================== */
+    /* Base sidebar positioning and transition properties */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1030;
+        width: 260px;
+        transition: width 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55), transform 0.3s ease;
+    }
+
+    /* Mini sidebar state configuration when collapsed */
+    .sidebar-mini .sidebar {
+        width: 80px !important;
+    }
+
+    /* Hide text labels, normal logos, and carets when sidebar is minimized */
+    .sidebar-mini .sidebar .logo .logo-normal,
+    .sidebar-mini .sidebar .nav p,
+    .sidebar-mini .sidebar .caret {
+        display: none !important;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease;
+    }
+
+    /* Show mini logo icon when sidebar is minimized */
+    .sidebar-mini .sidebar .logo .logo-mini {
+        display: block !important;
+        opacity: 1;
+        visibility: visible;
+    }
+
+    /* Adjust link padding and icon alignment in mini state */
+    .sidebar-mini .sidebar .nav li>a {
+        padding-left: 25px !important;
+    }
+
+    .sidebar-mini .sidebar .nav li>a i {
+        font-size: 20px;
+        margin-right: 0;
+    }
+
+    /* Smoothly adjust main panel width when sidebar expands or collapses */
+    .main-panel {
+        position: relative !important;
+        float: right !important;
+        width: calc(100% - 260px) !important;
+        transition: width 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    .sidebar-mini .main-panel {
+        width: calc(100% - 80px) !important;
+    }
+
     .sidebar .nav p {
         font-weight: 500;
         font-size: 14px;
@@ -243,38 +298,37 @@
     }
 
     /* ==========================================================================
-       This code is for fixing the scrollbar issue
+       Scrollbar for Dropdown Menus
        ========================================================================== */
-    /* Maintain proper container flow for the main wrapper */
-    .wrapper {
-        position: relative;
-        top: 0;
-        height: auto;
-    }
-
-    /* Ensure the main panel respects the sidebar space and scrolls correctly */
-    .main-panel {
-        position: relative;
-        float: right !important;
-        /* Forces the panel to stay on the correct side of the sidebar */
-        width: calc(100% - 260px) !important;
-        /* Matches the exact width accounting for the sidebar */
-        min-height: 100vh;
+    .dropdown-menu {
+        max-height: 250px !important;
+        /* You can adjust the height as needed */
         overflow-y: auto !important;
+        overflow-x: hidden !important;
     }
 
-    /* Fix content spacing inside the panel */
-    .main-panel>.content {
-        padding: 30px 15px;
-        min-height: calc(100vh - 120px);
+    /* Customize the scrollbar appearance inside dropdown menus to appear on hover only */
+    .dropdown-menu {
+        scrollbar-width: thin !important;
+        scrollbar-color: transparent transparent !important;
+        transition: scrollbar-color 0.3s ease;
     }
 
-    /* Responsive fix for smaller screens where sidebar collapses */
-    @media screen and (max-width: 991px) {
-        .main-panel {
-            width: 100% !important;
-            float: none !important;
-        }
+    .dropdown-menu:hover {
+        scrollbar-color: rgba(0, 0, 0, 0.2) transparent !important;
+    }
+
+    .dropdown-menu::-webkit-scrollbar {
+        width: 5px !important;
+    }
+
+    .dropdown-menu::-webkit-scrollbar-thumb {
+        background-color: transparent !important;
+        border-radius: 10px;
+    }
+
+    .dropdown-menu:hover::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.25) !important;
     }
 </style>
 @endpush

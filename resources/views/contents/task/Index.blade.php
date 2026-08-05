@@ -19,14 +19,152 @@
 </div>
 
 <!-- ========================================== -->
-<!-- LIVE SEARCH INPUT CONTAINER                -->
+<!-- COLUMN FILTERS DROPDOWNS SECTION (SERVER)  -->
 <!-- ========================================== -->
-<div class="row mb-3">
+<div class="row mb-4">
     <div class="col-md-12">
+        <div class="card border-0 shadow-sm" style="border-radius: 16px; background: #ffffff; overflow: visible;">
+            <div class="card-body p-3" style="overflow: visible;">
+                <div class="d-flex flex-wrap align-items-center justify-content-between" style="gap: 12px;">
+
+                    <!-- Filters Grouping -->
+                    <div class="d-flex flex-wrap align-items-center" style="gap: 12px;">
+                        <span class="text-muted font-weight-bold mr-2" style="font-size: 13px;">
+                            <i class="now-ui-icons ui-1_zoom-bold mr-1 text-primary"></i> Filter By:
+                        </span>
+
+                        <!-- Title Filter Dropdown -->
+                        <div class="dropdown">
+                            <button
+                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border"
+                                type="button" id="dropdownTitle" data-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false"
+                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important;">
+                                {{ request('title') ? Str::limit(request('title'), 15) : 'All Titles' }}
+                            </button>
+                            <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownTitle"
+                                style="border-radius: 12px; min-width: 180px;">
+                                <a class="dropdown-item py-2 px-3 text-sm {{ !request('title') ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.task.index', array_merge(request()->except(['title', 'page']), [])) }}">
+                                    <i class="now-ui-icons ui-1_simple-add mr-2"></i> All Titles
+                                </a>
+                                @foreach($allTitles as $titleItem)
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('title') == $titleItem ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.task.index', array_merge(request()->except(['title', 'page']), ['title' => $titleItem])) }}">
+                                    {{ $titleItem }}
+                                </a>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <!-- Assigned To Filter Dropdown -->
+                        <div class="dropdown">
+                            <button
+                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border"
+                                type="button" id="dropdownAssigned" data-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false"
+                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important;">
+                                @php
+                                $selectedUser = $allUsers->firstWhere('id', request('assigned_to'));
+                                @endphp
+                                {{ $selectedUser ? $selectedUser->name : 'Assigned To' }}
+                            </button>
+                            <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownAssigned"
+                                style="border-radius: 12px; min-width: 180px;">
+                                <a class="dropdown-item py-2 px-3 text-sm {{ !request('assigned_to') ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.task.index', array_merge(request()->except(['assigned_to', 'page']), [])) }}">
+                                    All Assignees
+                                </a>
+                                @foreach($allUsers as $uItem)
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('assigned_to') == $uItem->id ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.task.index', array_merge(request()->except(['assigned_to', 'page']), ['assigned_to' => $uItem->id])) }}">
+                                    {{ $uItem->name }}
+                                </a>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <!-- Attachment Filter Dropdown -->
+                        <div class="dropdown">
+                            <button
+                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border"
+                                type="button" id="dropdownAttachment" data-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false"
+                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important;">
+                                @if(request('has_attachment') == 'yes') With Attachment
+                                @elseif(request('has_attachment') == 'no') No File
+                                @else Attachment @endif
+                            </button>
+                            <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownAttachment"
+                                style="border-radius: 12px; min-width: 160px;">
+                                <a class="dropdown-item py-2 px-3 text-sm {{ !request('has_attachment') ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.task.index', array_merge(request()->except(['has_attachment', 'page']), [])) }}">All
+                                    Files</a>
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('has_attachment') == 'yes' ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.task.index', array_merge(request()->except(['has_attachment', 'page']), ['has_attachment' => 'yes'])) }}">With
+                                    Attachment</a>
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('has_attachment') == 'no' ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.task.index', array_merge(request()->except(['has_attachment', 'page']), ['has_attachment' => 'no'])) }}">No
+                                    File</a>
+                            </div>
+                        </div>
+
+                        <!-- Status Filter Dropdown -->
+                        <div class="dropdown">
+                            <button
+                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border"
+                                type="button" id="dropdownStatus" data-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false"
+                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important;">
+                                {{ request('filter') ? ucfirst(str_replace('_', ' ', request('filter'))) : 'All
+                                Statuses' }}
+                            </button>
+                            <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownStatus"
+                                style="border-radius: 12px; min-width: 160px;">
+                                <a class="dropdown-item py-2 px-3 text-sm {{ !request('filter') || request('filter') == 'all' ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'all'])) }}">All
+                                    Statuses</a>
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'pending' ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'pending'])) }}">Pending</a>
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'in_progress' ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'in_progress'])) }}">In
+                                    Progress</a>
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'completed' ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'completed'])) }}">Completed</a>
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'accepted' ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'accepted'])) }}">Accepted</a>
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'rejected' ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'rejected'])) }}">Rejected</a>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Reset Filters Button (Appears only if a filter is active) -->
+                    @if(request()->anyFilled(['title', 'assigned_to', 'has_attachment', 'filter', 'search']))
+                    <div>
+                        <a href="{{ route('admin.task.index') }}"
+                            class="btn btn-outline-danger btn-sm rounded-pill px-3 py-2" style="font-size: 12px;">
+                            <i class="now-ui-icons ui-1_simple-remove mr-1"></i> Reset Filters
+                        </a>
+                    </div>
+                    @endif
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- LIVE SEARCH SECTION                        -->
+<!-- ========================================== -->
+<div class="row mb-3 align-items-center">
+    <div class="col-md-5 mb-2 mb-md-0">
         <div class="search-container">
             <i class="now-ui-icons ui-1_zoom-bold search-icon"></i>
             <input type="text" id="taskSearchInput" class="form-control border rounded-pill shadow-sm"
-                placeholder="Search tasks..." style="background-color: #f9fbfd;">
+                placeholder="Search tasks..." value="{{ request('search') }}" style="background-color: #f9fbfd;">
         </div>
     </div>
 </div>
@@ -39,19 +177,25 @@
         <x-alert-message />
         <div class="card shadow-sm border-0">
             <div class="card-body px-0 pb-0">
-                <div class="table-responsive">
+                <div class="table-responsive" style="overflow-x: auto; width: 100%;">
                     <table class="table align-items-center table-flush mb-0" id="tasksTable">
                         <!-- Table Headings with Gradient Style Matching Projects -->
                         <thead style="background: linear-gradient(135deg, #f96332 0%, #ff8c42 100%); color: white;">
-                            <tr>
-                                <th class="py-3 font-weight-bold text-white pl-4">Title</th>
-                                <th class="py-3 font-weight-bold text-white">Description</th>
-                                <th class="py-3 font-weight-bold text-white">Assigned To</th>
-                                <th class="py-3 font-weight-bold text-white">Attachment</th>
-                                <th class="py-3 font-weight-bold text-white">Status</th>
-                                <th class="py-3 font-weight-bold text-white">Review Action</th>
-                                <!-- New column for accept/reject buttons -->
-                                <th class="py-3 font-weight-bold text-white text-right pr-4">Actions</th>
+                            <tr id="tableHeaders">
+                                <th class="py-3 font-weight-bold text-white pl-4 draggable-header" draggable="true"
+                                    data-column="title" style="cursor: grab;">Title</th>
+                                <th class="py-3 font-weight-bold text-white draggable-header" draggable="true"
+                                    data-column="description" style="cursor: grab;">Description</th>
+                                <th class="py-3 font-weight-bold text-white draggable-header" draggable="true"
+                                    data-column="assigned_to" style="cursor: grab;">Assigned To</th>
+                                <th class="py-3 font-weight-bold text-white draggable-header" draggable="true"
+                                    data-column="attachment" style="cursor: grab;">Attachment</th>
+                                <th class="py-3 font-weight-bold text-white draggable-header" draggable="true"
+                                    data-column="status" style="cursor: grab;">Status</th>
+                                <th class="py-3 font-weight-bold text-white draggable-header" draggable="true"
+                                    data-column="review_action" style="cursor: grab;">Review Action</th>
+                                <th class="py-3 font-weight-bold text-white text-right pr-4 draggable-header"
+                                    draggable="true" data-column="actions" style="cursor: grab;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -59,12 +203,12 @@
                             @forelse($tasks as $task)
                             <tr class="border-bottom task-row">
                                 <!-- Task Title Column -->
-                                <td class="font-weight-bold text-dark pl-4 align-middle task-title">
+                                <td class="font-weight-bold text-dark pl-4 align-middle task-title" data-column="title">
                                     {{ $task->title }}
                                 </td>
 
                                 <!-- Task Description Column (Clickable to open Modal) -->
-                                <td class="text-muted align-middle task-desc">
+                                <td class="text-muted align-middle task-desc" data-column="description">
                                     {{ Str::limit($task->description, 40) }}
                                     @if(strlen($task->description) > 40)
                                     <button type="button"
@@ -77,21 +221,25 @@
                                 </td>
 
                                 <!-- Assigned User Column with Avatar Initials Matching Project Manager Style -->
-                                <td class="align-middle task-user">
+                                <td class="align-middle task-user" data-column="assigned_to">
                                     <div class="d-flex align-items-center">
+                                        @if($task->user && $task->user->role !== 'admin')
                                         <span
                                             class="avatar-sm rounded-circle bg-light text-primary font-weight-bold d-flex align-items-center justify-content-center shadow-sm mr-2"
                                             style="width: 32px; height: 32px; font-size: 12px;">
-                                            {{ strtoupper(substr(optional($task->user)->name ?? 'U', 0, 2)) }}
+                                            {{ strtoupper(substr($task->user->name, 0, 2)) }}
                                         </span>
                                         <span class="text-dark font-weight-normal">
-                                            {{ optional($task->user)->name ?? 'No Assignee' }}
+                                            {{ $task->user->name }}
                                         </span>
+                                        @else
+                                        <span class="text-muted font-italic" style="font-size: 12px;">No Assignee</span>
+                                        @endif
                                     </div>
                                 </td>
 
                                 <!-- Attachment Column (Supports Single/Multiple Files via Collection or Array) -->
-                                <td class="align-middle task-attachment">
+                                <td class="align-middle task-attachment" data-column="attachment">
                                     @php
                                     $attachments = [];
                                     if (!empty($task->attachments)) {
@@ -118,7 +266,7 @@
                                 </td>
 
                                 <!-- Task Status Column with Matching Dynamic Colors & Rejection Reason Tooltip/Modal Trigger -->
-                                <td class="align-middle task-status">
+                                <td class="align-middle task-status" data-column="status">
                                     <span class="badge badge-pill
                                         @if($task->status == 'completed') badge-success
                                         @elseif($task->status == 'accepted') badge-primary
@@ -139,8 +287,23 @@
                                     @endif
                                 </td>
 
-                                <!-- REVIEW / ACTION COLUMN (Accept & Reject Buttons) -->
-                                <td class="align-middle">
+                                <!-- REVIEW / ACTION COLUMN -->
+                                <td class="align-middle" data-column="review_action">
+                                    @if($task->status == 'rejected')
+                                    <!-- If task is rejected, hide accept/reject buttons and show view reason button -->
+                                    @if(!empty($task->rejection_reason))
+                                    <button type="button"
+                                        class="btn btn-outline-danger btn-sm rounded-pill px-3 py-1 shadow-sm font-weight-bold"
+                                        data-toggle="modal" data-target="#rejectionReasonModal-{{ $task->id }}"
+                                        style="font-size: 11px;">
+                                        <i class="now-ui-icons info_circle mr-1"></i> View Reason
+                                    </button>
+                                    @else
+                                    <span class="text-muted font-italic" style="font-size: 12px;">No Reason
+                                        Provided</span>
+                                    @endif
+                                    @else
+                                    <!-- If task is not rejected, show standard accept and reject review actions -->
                                     <div class="btn-group" role="group" aria-label="Review Actions">
                                         <!-- Accept Button -->
                                         <form action="{{ route('admin.task.accept', $task->id) }}" method="POST"
@@ -164,16 +327,17 @@
                                             <i class="now-ui-icons ui-1_simple-remove" style="font-size: 13px;"></i>
                                         </button>
                                     </div>
+                                    @endif
                                 </td>
 
                                 <!-- STANDARD ACTIONS COLUMN (EDIT, DELETE WITH SWEETALERT) -->
-                                <td class="text-right pr-4 align-middle">
+                                <td class="text-right pr-4 align-middle" data-column="actions">
                                     <div class="btn-group" role="group" aria-label="Task Actions">
                                         <!-- Edit Task Button -->
                                         <a href="{{ route('admin.task.edit', $task->id) }}"
                                             class="btn btn-warning btn-sm btn-icon shadow-sm mx-1 rounded"
                                             title="Edit Task"
-                                            style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; background-color: #ff8c42; border-color: #ff8c42;">
+                                            style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
                                             <i class="now-ui-icons ui-2_settings-90" style="font-size: 13px;"></i>
                                         </a>
 
@@ -218,7 +382,7 @@
                             $tasks->total() }}</b> entries
                     </div>
                     <div>
-                        {{ $tasks->links('pagination::bootstrap-4') }}
+                        {{ $tasks->appends(request()->query())->links('pagination::bootstrap-4') }}
                     </div>
                 </div>
                 @endif
@@ -313,7 +477,6 @@ $attachments = is_array($task->attachment) ? $task->attachment : [$task->attachm
                                     style="width: 100%; height: 100%; object-fit: cover;">
                             </div>
                             @else
-                            <!-- الأيقونة تظهر هنا بناءً على نوع الملف -->
                             <div class="rounded-circle mr-3 shadow-sm text-white d-flex align-items-center justify-content-center"
                                 style="min-width: 40px; width: 40px; height: 40px; background: linear-gradient(135deg,
                                 @if($isVideo) #ef4444, #dc2626
@@ -397,7 +560,7 @@ $attachments = is_array($task->attachment) ? $task->attachment : [$task->attachm
                             rejection:</label>
                         <textarea name="rejection_reason" id="rejection_reason" rows="4"
                             class="form-control border rounded p-3" placeholder="Enter rejection reason here..."
-                            required style="background-color: #ffffff;"></TD></textarea>
+                            required style="background-color: #ffffff;"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer bg-white border-0 py-3">
@@ -420,16 +583,17 @@ $attachments = is_array($task->attachment) ? $task->attachment : [$task->attachm
     aria-labelledby="rejectionReasonModalLabel-{{ $task->id }}" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
-            <div class="modal-header text-white bg-danger">
+            <div class="modal-header text-white px-4 py-3"
+                style="background: linear-gradient(135deg, #f96332 0%, #ff8c42 100%);">
                 <h5 class="modal-title font-weight-bold" id="rejectionReasonModalLabel-{{ $task->id }}">
                     <i class="now-ui-icons info_circle mr-2"></i> Rejection Reason
                 </h5>
                 <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close"
                     style="opacity: 0.9;">
-                    <span aria-hidden="true">&times;—</span>
+                    <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="Modal-body p-4 text-dark" style="background-color: #f9fbfd; line-height: 1.6;">
+            <div class="modal-body p-4 text-dark" style="background-color: #f9fbfd; line-height: 1.6;">
                 <p class="mb-0" style="white-space: pre-line;">{{ $task->rejection_reason }}</p>
             </div>
             <div class="modal-footer bg-white border-0 py-3">

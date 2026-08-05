@@ -3,41 +3,98 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use App\Http\Requests\ProjectStoreRequest;
 use App\Http\Requests\ProjectUpdateRequest;
 use App\Models\Project;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Exception;
 
+/**
+ * =========================================================================
+ * PROJECT CONTROLLER CLASS
+ * =========================================================================
+ * This controller manages all CRUD (Create, Read, Update, Delete) operations
+ * for projects, including role-based authorization for Admins, Managers, and Employees.
+ */
 class ProjectController extends Controller
 {
     // =========================================================================
-    // INDEX METHOD: LIST PROJECTS
+    // INDEX METHOD: LIST & FILTER PROJECTS
     // =========================================================================
 
     /**
-     * Display a listing of projects filtered by the user's role.
+     * Display a listing of projects filtered by user roles, title, manager, and status.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\View\View
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Retrieve the currently authenticated user instance
+        // -----------------------------------------------------------------
+        // STEP 1: Get currently authenticated user instance
+        // -----------------------------------------------------------------
         $user = Auth::user();
 
-        // Admin sees all projects; Manager sees their own; Employee sees assigned projects.
+        // -----------------------------------------------------------------
+        // STEP 2: Initialize query based on user role permissions
+        // -----------------------------------------------------------------
         if ($user->role === 'admin') {
-            // Fetch all projects with manager relationship for admin users
-            $projects = Project::with('manager')->paginate(10);
+            // Admin sees all system projects with eager loaded manager relationship
+            $query = Project::with('manager');
         } elseif ($user->role === 'manager') {
-            // Fetch only projects managed by the specific manager ID
-            $projects = Project::where('manager_id', $user->id)->paginate(10);
+            // Manager sees only projects assigned specifically to their manager ID
+            $query = Project::where('manager_id', $user->id);
         } else {
-            // Fetch projects associated with the authenticated employee
-            $projects = $user->projects()->paginate(10);
+            // Regular employee sees only projects associated directly with their user account
+            $query = $user->projects();
         }
 
-        // Return the index view with paginated project results
-        return view('contents.project.Index', compact('projects'));
+        // =====================================================================
+        // SERVER-SIDE FILTERING LOGIC
+        // =====================================================================
+
+        // Apply specific project title filter if selected from the dropdown
+        if ($request->filled('title') && $request->title !== 'all') {
+            $query->where('title', $request->title);
+        }
+
+        // Apply manager filter if selected and user is admin (managers/employees see their own context)
+        if ($request->filled('manager_id') && $request->manager_id !== 'all') {
+            $query->where('manager_id', $request->manager_id);
+        }
+
+        // Apply status filter if provided and not set to the default 'all' option
+        if ($request->has('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        // Apply general text search filter across title or description fields
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        // Fetch paginated project results and preserve query parameters in pagination links
+        $projects = $query->latest()->paginate(10)->appends($request->query());
+
+        // =====================================================================
+        // DROPDOWN DATA FETCHING FOR VIEW FILTERS
+        // =====================================================================
+
+        // Retrieve unique project titles for the dropdown filter options
+        $allTitles = Project::select('title')->distinct()->pluck('title');
+
+        // Retrieve unique users who act as project managers to populate the manager dropdown
+        $managers = User::whereHas('managedProjects')->select('id', 'name')->distinct()->get();
+
+        // Return the project index view with paginated records and filter collections
+        return view('contents.project.Index', compact('projects', 'allTitles', 'managers'));
     }
 
     // =========================================================================
@@ -47,6 +104,8 @@ class ProjectController extends Controller
     /**
      * Show the form for creating a new project.
      * (Restricted to Admin)
+     *
+     * @return \Illuminate\View\View
      */
     public function create()
     {
@@ -62,6 +121,9 @@ class ProjectController extends Controller
     /**
      * Store a newly created project in the database.
      * (Restricted to Admin)
+     *
+     * @param \App\Http\Requests\ProjectStoreRequest $request
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(ProjectStoreRequest $request)
     {
@@ -97,9 +159,13 @@ class ProjectController extends Controller
 
     /**
      * Display the specified project details with authorization checks.
+     *
+     * @param \App\Models\Project $project
+     * @return \Illuminate\View\View
      */
     public function show(Project $project)
     {
+        // Get currently authenticated user instance
         $user = Auth::user();
 
         // Security Check: Ensure Managers and Employees only access projects they are linked to.
@@ -123,9 +189,13 @@ class ProjectController extends Controller
 
     /**
      * Show the form for editing the project.
+     *
+     * @param \App\Models\Project $project
+     * @return \Illuminate\View\View
      */
     public function edit(Project $project)
     {
+        // Get currently authenticated user instance
         $user = Auth::user();
 
         // Employees cannot access the edit interface
@@ -144,9 +214,14 @@ class ProjectController extends Controller
 
     /**
      * Update the project in the database.
+     *
+     * @param \App\Http\Requests\ProjectUpdateRequest $request
+     * @param \App\Models\Project $project
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(ProjectUpdateRequest $request, Project $project)
     {
+        // Get currently authenticated user instance
         $user = Auth::user();
 
         // Employees cannot execute updates
@@ -194,6 +269,9 @@ class ProjectController extends Controller
     /**
      * Remove the project from storage.
      * (Restricted to Admin)
+     *
+     * @param \App\Models\Project $project
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(Project $project)
     {
