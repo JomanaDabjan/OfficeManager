@@ -1,5 +1,8 @@
 @extends('layouts.app')
 
+<!-- Set the dynamic title for this specific page -->
+@section('title', 'Task Table View')
+
 @section('Main_Content')
 
 <!-- ========================================== -->
