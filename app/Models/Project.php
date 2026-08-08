@@ -27,4 +27,51 @@ class Project extends Model
     {
         return $this->belongsTo(User::class, 'manager_id');
     }
+
+
+
+    /**
+     * Scope a query to filter and search projects based on user roles and request parameters.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param \App\Models\User $user
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeFilterAndSearch($query, $user, $request)
+    {
+        // 1. Role-based base query restriction
+        if ($user->role === 'manager') {
+            $query->where('manager_id', $user->id);
+        } elseif ($user->role !== 'admin') {
+            // Assuming employees see projects they are directly linked to via relationship
+            $query->whereHas('users', fn($q) => $q->where('users.id', $user->id));
+        }
+
+        // 2. Filter by specific title
+        if ($request->filled('title') && $request->title !== 'all') {
+            $query->where('title', $request->title);
+        }
+
+        // 3. Filter by manager ID (applicable for admin views)
+        if ($request->filled('manager_id') && $request->manager_id !== 'all') {
+            $query->where('manager_id', $request->manager_id);
+        }
+
+        // 4. Filter by status
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        // 5. Search by title or description text
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        return $query;
+    }
 }

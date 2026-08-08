@@ -49,17 +49,18 @@
                             </div>
                         </div>
 
-                        <!-- Project Manager Selection Field -->
+                        <!-- Project Manager Field -->
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label class="form-control-label font-weight-bold text-dark">Assign Manager</label>
                                 <select name="manager_id" class="form-control" required>
-                                    <option value="" disabled>Select project manager...</option>
-                                    {{-- Loop through managers collection when provided from controller --}}
-                                    {{-- @foreach($managers as$manager) --}}
-                                    {{-- <option value="{{ $manager->id }}" {{ old('manager_id', $project->manager_id)
-                                        == $manager->id ? 'selected' : '' }}>{{ $manager->name }}</option> --}}
-                                    {{-- @endforeach --}}
+                                    <option value="" disabled selected>Select project manager...</option>
+                                    @foreach($managers as $manager)
+                                    <option value="{{ $manager->id }}" {{ old('manager_id', isset($project) ? $project->
+                                        manager_id : '') == $manager->id ? 'selected' : '' }}>
+                                        {{ $manager->name }}
+                                    </option>
+                                    @endforeach
                                 </select>
 
                                 <!-- Validation Error Display -->

@@ -248,16 +248,17 @@
                                             <i class="now-ui-icons ui-2_settings-90" style="font-size: 13px;"></i>
                                         </a>
 
-                                        <!-- Delete Form with Confirmation -->
                                         <form action="{{ route('admin.project.destroy', $project->id) }}" method="POST"
-                                            style="display: inline-block;" id="delete-form-{{ $project->id }}">
+                                            style="display: inline-block;" id="delete-form-project-{{ $project->id }}">
+                                            <!--  CSRF Token and Method -->
                                             @csrf
                                             @method('DELETE')
+
                                             <button type="button"
                                                 class="btn btn-danger btn-sm btn-icon shadow-sm mx-1 rounded"
                                                 title="Delete Project"
-                                                style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
-                                                onclick="confirmDelete({{ $project->id }})">
+                                                onclick="confirmDelete('project', {{ $project->id }})">
+                                                <!-- The "Delete" icon -->
                                                 <i class="now-ui-icons ui-1_simple-remove" style="font-size: 13px;"></i>
                                             </button>
                                         </form>

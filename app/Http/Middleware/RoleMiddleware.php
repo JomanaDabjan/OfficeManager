@@ -20,6 +20,6 @@ class RoleMiddleware
             return $next($request);
         }
 
-        abort(403, 'عذراً، ليس لديك صلاحية للوصول لهذه الصفحة.');
+        abort(403, 'Unauthorized action.');
     }
 }

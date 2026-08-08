@@ -59,14 +59,13 @@
                                 <label class="form-control-label font-weight-bold text-dark">Assign Manager</label>
                                 <select name="manager_id" class="form-control" required>
                                     <option value="" selected disabled>Select project manager...</option>
-                                    {{-- Dynamically loop through managers list if passed from controller --}}
-                                    {{-- @foreach($managers as $manager) --}}
-                                    {{-- <option value="{{ $manager->id }}" {{ old('manager_id')==$manager->id ?
-                                        'selected' : '' }}>{{ $manager->name }}</option> --}}
-                                    {{-- @endforeach --}}
+                                    @foreach($managers as $manager)
+                                    <option value="{{ $manager->id }}" {{ old('manager_id')==$manager->id ? 'selected' :
+                                        '' }}>
+                                        {{ $manager->name }}
+                                    </option>
+                                    @endforeach
                                 </select>
-
-                                <!-- Display validation error message for manager selection -->
                                 @error('manager_id')
                                 <span class="text-danger text-sm mt-1 d-block">{{ $message }}</span>
                                 @enderror
