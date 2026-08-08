@@ -1,5 +1,8 @@
 @extends('layouts.app')
 
+<!-- Set the dynamic title for this specific page -->
+@section('title', 'Edit Project')
+
 @section('Main_Content')
 
 <!--
