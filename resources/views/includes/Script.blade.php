@@ -403,4 +403,62 @@
     });
 </script>
 
+<!-- ==================================================================== -->
+<!-- WELCOME MODAL SCRIPT                                                 -->
+<!-- ==================================================================== -->
+@php
+// Safely check if the welcome session flag is set
+$isFirstLoginValid = session('show_welcome_modal', false);
+@endphp
+
+<!-- JavaScript to handle modal auto-hide and manual dismissal -->
+<script>
+    // Function to hide the welcome modal smoothly with fade out effect
+    function dismissWelcomeModal() {
+        const modal = document.getElementById('custom-welcome-modal');
+        if (modal) {
+            modal.style.opacity = '0';
+            modal.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+    }
+
+    // Trigger script execution once the DOM content is fully loaded
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.getElementById('custom-welcome-modal');
+        const progressBar = document.getElementById('welcome-progress-bar');
+
+        // Only trigger modal logic if the modal element exists on the page
+        if (modal) {
+            // Use safe boolean evaluation from backend without direct variable crashing
+            const shouldShow = @json($isFirstLoginValid);
+
+            if (shouldShow) {
+                // Display the modal in the center of the screen
+                modal.style.display = 'flex';
+
+                // Define how long the modal stays visible in milliseconds (e.g., 5000ms = 5 seconds)
+                const displayDuration = 5000;
+
+                // Animate progress bar width reduction over time
+                if (progressBar) {
+                    progressBar.style.transitionDuration = (displayDuration / 1000) + 's';
+                    setTimeout(() => {
+                        progressBar.style.width = '0%';
+                    }, 50);
+                }
+
+                // Automatically close the modal after the specified duration expires
+                setTimeout(() => {
+                    dismissWelcomeModal();
+                }, displayDuration);
+            } else {
+                // Ensure modal remains hidden on page refreshes or subsequent navigation clicks
+                modal.style.display = 'none';
+            }
+        }
+    });
+</script>
 @endpush
