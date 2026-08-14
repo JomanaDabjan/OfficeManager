@@ -41,14 +41,10 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label class="form-control-label font-weight-bold text-dark">Project Title</label>
-                                <input type="text" name="title" class="form-control"
+                                <input type="text" name="title"
+                                    class="form-control @error('title') is-invalid @enderror"
                                     placeholder="Enter project title..." value="{{ old('title', $project->title) }}"
                                     required>
-
-                                <!-- Validation Error Display -->
-                                @error('title')
-                                <span class="text-danger text-sm mt-1 d-block">{{ $message }}</span>
-                                @enderror
                             </div>
                         </div>
 
@@ -56,7 +52,8 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label class="form-control-label font-weight-bold text-dark">Assign Manager</label>
-                                <select name="manager_id" class="form-control" required>
+                                <select name="manager_id" class="form-control @error('manager_id') is-invalid @enderror"
+                                    required>
                                     <option value="" disabled selected>Select project manager...</option>
                                     @foreach($managers as $manager)
                                     <option value="{{ $manager->id }}" {{ old('manager_id', isset($project) ? $project->
@@ -65,11 +62,6 @@
                                     </option>
                                     @endforeach
                                 </select>
-
-                                <!-- Validation Error Display -->
-                                @error('manager_id')
-                                <span class="text-danger text-sm mt-1 d-block">{{ $message }}</span>
-                                @enderror
                             </div>
                         </div>
                     </div>
@@ -79,7 +71,7 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label class="form-control-label font-weight-bold text-dark">Project Status</label>
-                                <select name="status" class="form-control">
+                                <select name="status" class="form-control @error('status') is-invalid @enderror">
                                     <option value="in_progress" {{ old('status', $project->status) == 'in_progress' ?
                                         'selected' : '' }}>In Progress</option>
                                     <option value="pending" {{ old('status', $project->status) == 'pending' ? 'selected'
@@ -87,11 +79,28 @@
                                     <option value="completed" {{ old('status', $project->status) == 'completed' ?
                                         'selected' : '' }}>Completed</option>
                                 </select>
+                            </div>
+                        </div>
 
-                                <!-- Validation Error Display -->
-                                @error('status')
-                                <span class="text-danger text-sm mt-1 d-block">{{ $message }}</span>
-                                @enderror
+                        <!-- Project Start Date Field -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label font-weight-bold text-dark">Start Date</label>
+                                <input type="date" name="start_date"
+                                    class="form-control @error('start_date') is-invalid @enderror"
+                                    value="{{ old('start_date', optional($project->start_date)->format('Y-m-d') ?? $project->start_date) }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <!-- Project End Date Field -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label font-weight-bold text-dark">End Date</label>
+                                <input type="date" name="end_date"
+                                    class="form-control @error('end_date') is-invalid @enderror"
+                                    value="{{ old('end_date', optional($project->end_date)->format('Y-m-d') ?? $project->end_date) }}">
                             </div>
                         </div>
                     </div>
@@ -101,13 +110,9 @@
                         <div class="col-md-12">
                             <div class="form-group">
                                 <label class="form-control-label font-weight-bold text-dark">Description</label>
-                                <textarea name="description" rows="4" class="form-control"
+                                <textarea name="description" rows="4"
+                                    class="form-control @error('description') is-invalid @enderror"
                                     placeholder="Enter project description and objectives...">{{ old('description', $project->description) }}</textarea>
-
-                                <!-- Validation Error Display -->
-                                @error('description')
-                                <span class="text-danger text-sm mt-1 d-block">{{ $message }}</span>
-                                @enderror
                             </div>
                         </div>
                     </div>

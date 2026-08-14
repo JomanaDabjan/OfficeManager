@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+//use Illuminate\Http\Request;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 /**
  * =========================================================================
@@ -14,127 +15,57 @@ use App\Models\User;
  * =========================================================================
  * This controller handles the main administrative dashboard overview.
  * It gathers and computes statistics (total counts for projects, tasks,
- * users, and status breakdowns) to display on the dashboard view.
+ * users, and status breakdowns) efficiently using optimized database queries.
  */
 class DashController extends Controller
 {
-    // =========================================================================
-    // INDEX METHOD: DISPLAY DASHBOARD STATISTICS
-    // =========================================================================
-
     /**
-     * Display a listing of the resource (Dashboard main view with counts).
+     * =====================================================================
+     * DISPLAY DASHBOARD STATISTICS
+     * =====================================================================
+     * Fetch all necessary system metrics and pass them to the dashboard view.
      *
      * @return \Illuminate\View\View
      */
     public function index()
     {
         // -----------------------------------------------------------------
-        // STEP 1: Count total entities in the system database tables
+        // STEP 1: OPTIMIZED TASK STATUS COUNTING (GROUP BY)
         // -----------------------------------------------------------------
-        $totalProjects  = Project::count(); // Count all projects
-        $totalTasks     = Task::count();    // Count all tasks
-        $totalEmployees = User::where('role', 'employee')->count(); // Count users with employee role
-        $totalManagers  = User::where('role', 'manager')->count();  // Count users with manager role
-
-        // -----------------------------------------------------------------
-        // STEP 2: Count tasks separated by their current progression status
-        // -----------------------------------------------------------------
-        $pendingTasks    = Task::where('status', 'pending')->count();     // Count pending tasks
-        $inProgressTasks = Task::where('status', 'in_progress')->count(); // Count in-progress tasks
-        $completedTasks  = Task::where('status', 'completed')->count();  // Count completed tasks
-        $acceptedTasks   = Task::where('status', 'accepted')->count();   // Count accepted tasks
-        $rejectedTasks   = Task::where('status', 'rejected')->count();   // Count rejected tasks
+        // Instead of executing separate database queries for every single status
+        // (which causes performance bottlenecks), we fetch all status counts
+        // in a single database query using GROUP BY.
+        $taskStatusCounts = Task::select('status', DB::raw('count(*) as total'))
+            ->groupBy('status')
+            ->pluck('total', 'status');
 
         // -----------------------------------------------------------------
-        // STEP 3: Pass all gathered statistics variables to the dashboard view
+        // STEP 2: GATHER TOTAL COUNTS FOR OTHER ENTITIES
         // -----------------------------------------------------------------
-        return view('contents.dashboard.Index', compact(
-            'totalProjects',
-            'totalTasks',
-            'totalEmployees',
-            'totalManagers',
-            'pendingTasks',
-            'inProgressTasks',
-            'completedTasks',
-            'acceptedTasks',
-            'rejectedTasks'
-        ));
-    }
+        $totalProjects  = Project::count();                             // Count all projects in database
+        $totalTasks     = Task::count();                                // Count all tasks across all statuses
+        $totalEmployees = User::where('role', 'employee')->count();     // Count only users with 'employee' role
+        $totalManagers  = User::where('role', 'manager')->count();      // Count only users with 'manager' role
 
-    // =========================================================================
-    // EMPTY RESOURCE METHODS (NOT CURRENTLY USED)
-    // =========================================================================
+        // -----------------------------------------------------------------
+        // STEP 3: PREPARE DATA ARRAY FOR THE VIEW
+        // -----------------------------------------------------------------
+        // Map the grouped status counts safely, defaulting to 0 if a status doesn't exist yet.
+        $data = [
+            'totalProjects'   => $totalProjects,
+            'totalTasks'      => $totalTasks,
+            'totalEmployees'  => $totalEmployees,
+            'totalManagers'   => $totalManagers,
 
-    /**
-     * Show the form for creating a new resource.
-     * (Unused for dashboard)
-     *
-     * @return void
-     */
-    public function create()
-    {
-        // Left empty intentionally as dashboard does not create resources directly here
-    }
+            // Extract individual status counts from the optimized collection
+            'pendingTasks'    => $taskStatusCounts['pending'] ?? 0,
+            'inProgressTasks' => $taskStatusCounts['in_progress'] ?? 0,
+            'completedTasks'  => $taskStatusCounts['completed'] ?? 0,
+            'acceptedTasks'   => $taskStatusCounts['accepted'] ?? 0,
+            'rejectedTasks'   => $taskStatusCounts['rejected'] ?? 0,
+        ];
 
-    /**
-     * Store a newly created resource in storage.
-     * (Unused for dashboard)
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return void
-     */
-    public function store(Request $request)
-    {
-        // Left empty intentionally
-    }
-
-    /**
-     * Display the specified resource.
-     * (Unused for dashboard)
-     *
-     * @param string $id
-     * @return void
-     */
-    public function show(string $id)
-    {
-        // Left empty intentionally
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     * (Unused for dashboard)
-     *
-     * @param string $id
-     * @return void
-     */
-    public function edit(string $id)
-    {
-        // Left empty intentionally
-    }
-
-    /**
-     * Update the specified resource in storage.
-     * (Unused for dashboard)
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param string $id
-     * @return void
-     */
-    public function update(Request $request, string $id)
-    {
-        // Left empty intentionally
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     * (Unused for dashboard)
-     *
-     * @param string $id
-     * @return void
-     */
-    public function destroy(string $id)
-    {
-        // Left empty intentionally
+        // Return the dashboard view packed with all computed statistics
+        return view('contents.dashboard.Index', $data);
     }
 }

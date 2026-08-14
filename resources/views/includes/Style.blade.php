@@ -1,32 +1,55 @@
 @push('Style')
 <style>
     /* ==========================================================================
-       Global Typography and Smoothing Settings
-       ========================================================================== */
-    body,
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6,
-    .sidebar,
-    .main-panel,
-    .navbar {
-        font-family: 'Inter', 'Montserrat', sans-serif !important;
-        letter-spacing: -0.01em;
+        Clean Layout & Single Scrollbar Reset
+        ========================================================================== */
+    html {
+        height: 100% !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        scroll-behavior: smooth !important;
     }
 
     body {
+        height: 100% !important;
+        overflow-x: hidden !important;
+        overflow-y: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-family: 'Inter', 'Montserrat', sans-serif !important;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        text-rendering: optimizeLegibility;
     }
 
     /* ==========================================================================
-       Sidebar Navigation Styling & Smooth Collapse/Expand Transitions
-       ========================================================================== */
-    /* Base sidebar positioning and transition properties */
+        Global Browser Scrollbar Customization
+        ========================================================================== */
+    * {
+        scrollbar-width: thin !important;
+        scrollbar-color: rgba(255, 112, 67, 0.6) #f1f1f1 !important;
+    }
+
+    ::-webkit-scrollbar {
+        width: 8px !important;
+        height: 0px !important;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1 !important;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: rgba(255, 112, 67, 0.7) !important;
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 112, 67, 1) !important;
+    }
+
+    /* ==========================================================================
+        Sidebar & Main Panel Fixes (Preventing Inner Scrollbars)
+        ========================================================================== */
     .sidebar {
         position: fixed;
         top: 0;
@@ -34,32 +57,29 @@
         left: 0;
         z-index: 1030;
         width: 260px;
+        overflow-y: auto;
+        overflow-x: hidden;
         transition: width 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55), transform 0.3s ease;
     }
 
-    /* Mini sidebar state configuration when collapsed */
     .sidebar-mini .sidebar {
         width: 80px !important;
     }
 
-    /* Hide text labels, normal logos, and carets when sidebar is minimized */
     .sidebar-mini .sidebar .logo .logo-normal,
     .sidebar-mini .sidebar .nav p,
     .sidebar-mini .sidebar .caret {
         display: none !important;
         opacity: 0;
         visibility: hidden;
-        transition: opacity 0.2s ease;
     }
 
-    /* Show mini logo icon when sidebar is minimized */
     .sidebar-mini .sidebar .logo .logo-mini {
         display: block !important;
         opacity: 1;
         visibility: visible;
     }
 
-    /* Adjust link padding and icon alignment in mini state */
     .sidebar-mini .sidebar .nav li>a {
         padding-left: 25px !important;
     }
@@ -69,16 +89,19 @@
         margin-right: 0;
     }
 
-    /* Smoothly adjust main panel width when sidebar expands or collapses */
     .main-panel {
         position: relative !important;
         float: right !important;
         width: calc(100% - 260px) !important;
+        max-width: calc(100% - 260px) !important;
+        min-height: 100vh !important;
         transition: width 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        overflow: visible !important;
     }
 
     .sidebar-mini .main-panel {
         width: calc(100% - 80px) !important;
+        max-width: calc(100% - 80px) !important;
     }
 
     .sidebar .nav p {
@@ -111,8 +134,8 @@
     }
 
     /* ==========================================================================
-       Layout & Container Spacers
-       ========================================================================== */
+        Layout & Container Spacers
+        ========================================================================== */
     .main-panel,
     .content,
     body,
@@ -122,56 +145,78 @@
 
     .content,
     .container-fluid {
-        padding-left: 30px !important;
-        padding-right: 30px !important;
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+        box-sizing: border-box !important;
     }
 
-    .row.mt-4.mb-4.align-items-center {
-        margin-left: 10px !important;
-        margin-right: 10px !important;
+    .row {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
     }
 
     /* ==========================================================================
-       Data Table Design & Formatting (Projects & Tasks Tables)
-       ========================================================================== */
-    #projectsTable,
-    #projectsTable th,
-    #projectsTable td,
-    #tasksTable,
-    #tasksTable th,
-    #tasksTable td {
-        border: 1px solid #dee2e6 !important;
-        text-align: center !important;
-    }
-
+        Now UI Professional Data Table Styling
+        ========================================================================== */
     #projectsTable,
     #tasksTable {
+        width: 100% !important;
+        max-width: 100% !important;
+        table-layout: auto;
         border-collapse: collapse !important;
+        border: 2px solid #e3e3e3 !important;
+        background-color: #ffffff !important;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+        margin-bottom: 20px;
+        box-sizing: border-box !important;
+    }
+
+    #projectsTable thead,
+    #tasksTable thead,
+    .custom-table-header {
+        background: linear-gradient(135deg, #ff8a65 0%, #ff7043 100%) !important;
+        color: #ffffff !important;
     }
 
     #projectsTable th,
     #tasksTable th,
     .custom-table-header th {
-        font-size: 12px !important;
+        font-size: 11px !important;
         font-weight: 600 !important;
-        letter-spacing: 0.8px;
-        padding-top: 12px !important;
-        padding-bottom: 12px !important;
+        letter-spacing: 0.5px;
+        padding: 12px 8px !important;
         text-transform: uppercase;
         color: #ffffff !important;
-        border-top: none !important;
-        border-bottom: none !important;
+        border: 1px solid #ff7043 !important;
+        text-align: center !important;
     }
 
-    .custom-table-header {
-        background-color: #ff7043 !important;
+    #projectsTable tbody,
+    #tasksTable tbody {
+        background-color: #fcfcfc !important;
+    }
+
+    #projectsTable tbody tr:nth-child(even),
+    #tasksTable tbody tr:nth-child(even) {
+        background-color: #f7f9fa !important;
+    }
+
+    #projectsTable tbody tr:hover,
+    #tasksTable tbody tr:hover {
+        background-color: #f1f3f5 !important;
     }
 
     #projectsTable td,
     #tasksTable td {
-        padding: 14px 12px !important;
-        font-size: 14px !important;
+        border: 1px solid #e9ecef !important;
+        padding: 12px 8px !important;
+        font-size: 13px !important;
         vertical-align: middle !important;
+        color: #3c4858 !important;
+        text-align: center !important;
     }
 
     .project-title,
@@ -183,7 +228,7 @@
     .project-desc,
     .task-desc {
         color: #7f8c8d !important;
-        font-size: 13px !important;
+        font-size: 12px !important;
     }
 
     #projectsTable .badge,
@@ -194,8 +239,8 @@
     }
 
     /* ==========================================================================
-       Interactive Rounded Search Box Styling
-       ========================================================================== */
+        Interactive Rounded Search Box Styling
+        ========================================================================== */
     .search-container {
         position: relative;
         max-width: 320px;
@@ -231,8 +276,8 @@
     }
 
     /* ==========================================================================
-       Form Cards Styling (Create/Edit Projects & Tasks Forms)
-       ========================================================================== */
+        Form Cards Styling
+        ========================================================================== */
     .project-form-card,
     .tasks-table-card {
         border-radius: 12px;
@@ -298,44 +343,17 @@
     }
 
     /* ==========================================================================
-       Scrollbar for Dropdown Menus
-       ========================================================================== */
+        Scrollbar for Dropdown Menus
+        ========================================================================== */
     .dropdown-menu {
         max-height: 250px !important;
-        /* You can adjust the height as needed */
         overflow-y: auto !important;
         overflow-x: hidden !important;
     }
 
-    /* Customize the scrollbar appearance inside dropdown menus to appear on hover only */
-    .dropdown-menu {
-        scrollbar-width: thin !important;
-        scrollbar-color: transparent transparent !important;
-        transition: scrollbar-color 0.3s ease;
-    }
-
-    .dropdown-menu:hover {
-        scrollbar-color: rgba(0, 0, 0, 0.2) transparent !important;
-    }
-
-    .dropdown-menu::-webkit-scrollbar {
-        width: 5px !important;
-    }
-
-    .dropdown-menu::-webkit-scrollbar-thumb {
-        background-color: transparent !important;
-        border-radius: 10px;
-    }
-
-    .dropdown-menu:hover::-webkit-scrollbar-thumb {
-        background-color: rgba(0, 0, 0, 0.25) !important;
-    }
-
     /* ==========================================================================
-       Button Hover Effects
-       ========================================================================== */
-
-    /* Hover effect for the Login button */
+        Button Hover Effects
+        ========================================================================== */
     .navbar-nav .btn-neutral:hover {
         background-color: #ff6b00 !important;
         color: #ffffff !important;
@@ -343,21 +361,17 @@
         transform: translateY(-1px);
     }
 
-    /* Hover effect specifically for the Logout button */
     .navbar-nav .logout-btn:hover {
         background-color: #ef4444 !important;
-        /* Modern red warning color on hover */
         border-color: #ef4444 !important;
         color: #ffffff !important;
         box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
         transform: translateY(-1px);
     }
 
-
     /* ==========================================================================
-         Welcome Modal Styling (Persistent via LocalStorage)
-       ========================================================================== */
-    /* Fullscreen dark overlay with blur effect */
+        Welcome Modal Styling
+        ========================================================================== */
     .modal-backdrop-custom {
         position: fixed;
         top: 0;
@@ -373,7 +387,6 @@
         animation: fadeInModal 0.3s ease-out;
     }
 
-    /* Modern card layout with centered content alignment */
     .welcome-card {
         position: relative;
         width: 370px;
@@ -388,7 +401,6 @@
         text-align: center;
     }
 
-    /* Circular gradient icon wrapper with Pulse Animation */
     .welcome-icon-container {
         width: 54px;
         height: 54px;
@@ -402,7 +414,6 @@
         box-shadow: 0 6px 15px rgba(255, 94, 98, 0.4);
     }
 
-    /* Pulse keyframes for icon attention */
     .pulse-animation {
         animation: iconPulse 2s infinite;
     }
@@ -421,7 +432,6 @@
         }
     }
 
-    /* Close button styling positioned top-right */
     .close-welcome-btn {
         position: absolute;
         top: 12px;
@@ -438,7 +448,6 @@
         color: #fff;
     }
 
-    /* Content Area Container */
     .welcome-content-area {
         width: 100%;
         display: flex;
@@ -454,7 +463,6 @@
         margin-top: 0;
     }
 
-    /* Motivational message pill styling */
     .motivational-pill {
         display: flex;
         flex-direction: column;
@@ -482,7 +490,6 @@
         display: block;
     }
 
-    /* Action button styling */
     .welcome-action-area {
         width: 100%;
         margin-bottom: 10px;
@@ -507,7 +514,6 @@
         box-shadow: 0 6px 20px rgba(255, 94, 98, 0.6);
     }
 
-    /* Progress bar track container */
     .welcome-progress-track {
         width: 100%;
         height: 3px;
@@ -535,6 +541,5 @@
             transform: scale(1);
         }
     }
-</style>
 </style>
 @endpush

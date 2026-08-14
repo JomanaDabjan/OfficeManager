@@ -3,7 +3,7 @@
 
 <head>
     <!-- ================================================================= -->
-    <!-- META & HEAD CONFIGURATION SECTION                               -->
+    <!-- META & HEAD CONFIGURATION SECTION                                 -->
     <!-- ================================================================= -->
     <!-- Include core meta tags, charset, and viewport settings -->
     @include('includes.head')
@@ -29,7 +29,7 @@
 
 <body>
     <!-- ================================================================= -->
-    <!-- MAIN WRAPPER CONTAINER                                          -->
+    <!-- MAIN WRAPPER CONTAINER                                            -->
     <!-- ================================================================= -->
     <div class="wrapper">
 
@@ -46,29 +46,19 @@
             <!-- ========================================================= -->
             <!-- CONDITIONAL TOP HEADER NAVBAR                             -->
             <!-- ========================================================= -->
-            <!--
-              Render the header navbar only if the current route
-              is NOT part of the excluded project and task routes.
-            -->
-            @if(!request()->routeIs('admin.project.index') && !request()->routeIs('admin.project.create') &&
-            !request()->routeIs('admin.project.show') && !request()->routeIs('admin.project.edit') &&
-            !request()->routeIs('admin.task.index') && !request()->routeIs('admin.task.create'))
+            @if(request()->is('admin/dash'))
             @include('includes.Header')
             @endif
 
             <!-- ========================================================= -->
             <!-- DYNAMIC PAGE CONTENT PLACEHOLDER                          -->
             <!-- ========================================================= -->
-            <!-- Child views inject their main HTML content here using 'section' -->
             @yield('Main_Content')
 
             <!-- ========================================================= -->
             <!-- CONDITIONAL PAGE FOOTER                                   -->
             <!-- ========================================================= -->
-            <!-- Render the footer only on permitted pages (matching header condition) -->
-            @if(!request()->routeIs('admin.project.index') && !request()->routeIs('admin.project.create') &&
-            !request()->routeIs('admin.project.show') && !request()->routeIs('admin.project.edit') &&
-            !request()->routeIs('admin.task.index') && !request()->routeIs('admin.task.create'))
+            @if(request()->is('admin/dash'))
             @include('includes.Footer')
             @endif
 
