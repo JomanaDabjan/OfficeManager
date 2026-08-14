@@ -1,20 +1,20 @@
 <?php
 
-use App\Http\Controllers\admin\ProjectController;
-use App\Http\Controllers\admin\TaskController;
-use App\Http\Controllers\admin\DashController;
+use App\Http\Controllers\Admin\ProjectController;
+use App\Http\Controllers\Admin\TaskController;
+use App\Http\Controllers\Admin\DashController;
+use App\Http\Controllers\Admin\ReportController; // Import the Report Controller
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\admin\UserController;
-//use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
 /*
 |--------------------------------------------------------------------------
 | ROOT WEB ROUTE (HOME PAGE REDIRECTION)
 |--------------------------------------------------------------------------
 | This route intercepts requests to the root URL (/) and immediately
-| returns the Now UI login blade view, making the authentication page
-| the primary landing page of the application.
+| returns the login view if the user is a guest, or redirects to the
+| admin dashboard if they are already authenticated.
 */
 
 Route::get('/', function () {
@@ -30,7 +30,7 @@ Route::get('/', function () {
 |--------------------------------------------------------------------------
 | These routes are protected by the 'auth' middleware and prefixed with
 | 'admin'. They manage resources such as dashboard, projects, tasks,
-| and users, including custom task moderation actions.
+| users, and analytical reports.
 */
 Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 
@@ -51,6 +51,37 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 
     // Resource route for managing system users and roles
     Route::resource('user', UserController::class);
+
+    /*
+    | =====================================================================
+    | REPORTS MANAGEMENT ROUTES (RESOURCE + CUSTOM ANALYTICS)
+    | =====================================================================
+    | These routes handle analytical data and reporting views.
+    */
+
+    // ==========================================
+    // 1. TASK REPORT & EXPORT ROUTES
+    // ==========================================
+    Route::get('report/task-report', [ReportController::class, 'taskreport'])->name('report.task-report');
+    Route::get('report/task-report/pdf', [ReportController::class, 'exportTasksPdf'])->name('report.task-report.pdf');
+    Route::get('report/task-report/excel', [ReportController::class, 'exportTasksExcel'])->name('report.task-report.excel');
+    Route::get('report/task-report/print', [ReportController::class, 'printTasksReport'])->name('report.task-report.print');
+
+    // ==========================================
+    // 2. PROJECT REPORT & EXPORT ROUTES
+    // ==========================================
+    Route::get('report/project-report', [ReportController::class, 'projectreport'])->name('report.project-report');
+    Route::get('report/project-report/pdf', [ReportController::class, 'exportProjectsPdf'])->name('report.project-report.pdf');
+    Route::get('report/project-report/excel', [ReportController::class, 'exportProjectsExcel'])->name('report.project-report.excel');
+    Route::get('report/project-report/print', [ReportController::class, 'printProjectsReport'])->name('report.project-report.print');
+    
+    // ==========================================
+    // 3. GENERAL SYSTEM REPORTS & HUB
+    // ==========================================
+    Route::get('report/system-overview', [ReportController::class, 'systemOverview'])->name('report.overview');
+
+    // Standard resource route for reports hub (index, create, store, show, edit, update, destroy)
+    Route::resource('report', ReportController::class);
 });
 
 /*

@@ -152,7 +152,6 @@ class Task extends Model
         return $query;
     }
 
-
     /**
      * =====================================================================
      * CACHED STATUS COUNTS FOR DASHBOARD BADGES
@@ -174,5 +173,41 @@ class Task extends Model
                 ->groupBy('status')
                 ->pluck('total', 'status');
         });
+    }
+
+    /**
+     * =====================================================================
+     * SCOPE: ADVANCED REPORT FILTERS (FOR REPORT CONTROLLER)
+     * =====================================================================
+     * Centralized query filtering logic for task reports, supporting dropdowns,
+     * status checks, and relationships to keep report controllers completely clean.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeReportFilter($query, $request)
+    {
+        /* Filter by task title if provided and not set to 'all' */
+        if ($request->filled('title') && $request->title != 'all') {
+            $query->where('title', $request->title);
+        }
+
+        /* Filter by project ID if provided and not set to 'all' */
+        if ($request->filled('project_id') && $request->project_id != 'all') {
+            $query->where('project_id', $request->project_id);
+        }
+
+        /* Filter by user ID if provided and not set to 'all' */
+        if ($request->filled('user_id') && $request->user_id != 'all') {
+            $query->where('user_id', $request->user_id);
+        }
+
+        /* Filter by task status if provided and not set to 'all' */
+        if ($request->filled('status') && $request->status != 'all') {
+            $query->where('status', $request->status);
+        }
+
+        return $query;
     }
 }

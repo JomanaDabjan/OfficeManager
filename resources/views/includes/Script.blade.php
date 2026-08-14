@@ -1,57 +1,68 @@
 @push('Script')
 
-<!-- ========================================== -->
-<!-- CORE JS FILES AND PLUGINS                  -->
-<!-- ========================================== -->
+<!-- ========================================================================= -->
+<!-- CORE JS FILES AND PLUGINS                                                 -->
+<!-- Import foundational JavaScript libraries including jQuery, Popper,        -->
+<!-- Bootstrap, and custom UI scrollbar extensions.                          -->
+<!-- ========================================================================= -->
 <script src="{{ asset('assets/js/core/jquery.min.js') }}"></script>
 <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
 <script src="{{ asset('assets/js/core/bootstrap.min.js') }}"></script>
 <script src="{{ asset('assets/js/plugins/perfect-scrollbar.jquery.min.js') }}"></script>
 
-<!-- ========================================== -->
-<!-- GOOGLE MAPS AND CHART PLUGINS              -->
-<!-- ========================================== -->
+<!-- ========================================================================= -->
+<!-- GOOGLE MAPS AND CHART PLUGINS                                             -->
+<!-- Load external mapping services and chart-related assets for visualization.-->
+<!-- ========================================================================= -->
 <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY_HERE"></script>
 <script src="{{ asset('assets/js/plugins/chartjs.min.js') }}"></script>
 <script src="{{ asset('assets/js/plugins/bootstrap-notify.js') }}"></script>
 
-<!-- ========================================== -->
-<!-- NOW UI DASHBOARD CONTROL CENTER SCRIPTS    -->
-<!-- ========================================== -->
+<!-- ========================================================================= -->
+<!-- NOW UI DASHBOARD CONTROL CENTER SCRIPTS                                 -->
+<!-- Load dashboard core scripts, demo presets, and modern CDN libraries.      -->
+<!-- ========================================================================= -->
 <script src="{{ asset('assets/js/now-ui-dashboard.js?v=1.0.1') }}"></script>
 <script src="{{ asset('assets/demo/demo.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<!-- ========================================== -->
-<!-- INITIALIZE DASHBOARD CHARTS                -->
-<!-- ========================================== -->
+<!-- ========================================================================= -->
+<!-- INITIALIZE DASHBOARD CHARTS                                               -->
+<!-- Safely trigger default dashboard charts if demo object is available.      -->
+<!-- ========================================================================= -->
 <script>
     $(document).ready(function () {
-        // Initialize template default dashboard charts from demo.js
-        demo.initDashboardPageCharts();
+        // Check if demo object and initialization function exist before calling
+        if (typeof demo !== 'undefined' && typeof demo.initDashboardPageCharts === 'function') {
+            demo.initDashboardPageCharts();
+        }
     });
 </script>
 
-<!-- ========================================== -->
-<!-- LIVE SEARCH FILTER FOR PROJECTS TABLE      -->
-<!-- ========================================== -->
+<!-- ========================================================================= -->
+<!-- LIVE SEARCH FILTER FOR PROJECTS TABLE                                     -->
+<!-- Filter project rows dynamically as the user types in the search input.    -->
+<!-- ========================================================================= -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        // Get the search input element and all project rows from the table
         const projectSearchInput = document.getElementById("projectSearchInput");
-        const projectRows = document.querySelectorAll("#projectsTable tbody tr, .project-row");
+        const projectRows = document.querySelectorAll("#projectsTable tbody tr.project-row");
 
+        // Check if the search input exists on the current page
         if (projectSearchInput) {
+            // Listen for keyboard keyup events to process live filtering
             projectSearchInput.addEventListener("keyup", function () {
                 const query = this.value.toLowerCase().trim();
 
+                // Loop through each project row and toggle visibility based on query match
                 projectRows.forEach(row => {
                     const textContent = row.textContent.toLowerCase();
-                    // Toggle visibility dynamically as user types letters or words
                     if (textContent.includes(query)) {
-                        row.style.display = "";
+                        row.style.display = ""; // Show row if it matches
                     } else {
-                        row.style.display = "none";
+                        row.style.display = "none"; // Hide row if it doesn't match
                     }
                 });
             });
@@ -59,11 +70,13 @@
     });
 </script>
 
-<!-- ========================================== -->
-<!-- LIVE SEARCH FILTER FOR TASKS TABLE (FIXED) -->
-<!-- ========================================== -->
+<!-- ========================================================================= -->
+<!-- LIVE SEARCH FILTER FOR TASKS TABLE                                        -->
+<!-- Filter task rows dynamically based on real-time keyboard input.           -->
+<!-- ========================================================================= -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        // Get task search input and target table rows
         const taskSearchInput = document.getElementById("taskSearchInput");
         const taskRows = document.querySelectorAll("#tasksTable tbody tr, .task-row");
 
@@ -71,11 +84,9 @@
             taskSearchInput.addEventListener("keyup", function () {
                 const query = this.value.toLowerCase().trim();
 
+                // Iterate through rows and evaluate text inclusion
                 taskRows.forEach(row => {
-                    // Extract text content from the entire row to ensure matching works anywhere
                     const textContent = row.textContent.toLowerCase();
-
-                    // Show the row if the input is empty or if the text contains the typed query anywhere
                     if (query === "" || textContent.includes(query)) {
                         row.style.display = "";
                     } else {
@@ -87,154 +98,10 @@
     });
 </script>
 
-<!-- ========================================== -->
-<!-- DRAG AND DROP COLUMNS FOR PROJECTS TABLE   -->
-<!-- ========================================== -->
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const table = document.getElementById("projectsTable");
-        if (!table) return;
-
-        const headerRow = table.querySelector("thead tr");
-        const bodyRows = table.querySelectorAll("tbody tr.project-row");
-        const storageKey = "projects_table_column_order";
-
-        // Load saved column order from localStorage on page load
-        let savedOrder = JSON.parse(localStorage.getItem(storageKey));
-        if (savedOrder) {
-            reorderTable(headerRow, bodyRows, savedOrder);
-        }
-
-        let draggedHeader = null;
-
-        // Enable HTML5 drag and drop functionality for project table headers
-        headerRow.querySelectorAll("th").forEach(th => {
-            th.addEventListener("dragstart", function (e) {
-                draggedHeader = this;
-                e.dataTransfer.effectAllowed = "move";
-            });
-
-            th.addEventListener("dragover", function (e) {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = "move";
-            });
-
-            th.addEventListener("drop", function (e) {
-                e.preventDefault();
-                if (this !== draggedHeader) {
-                    let headers = Array.from(headerRow.children);
-                    let draggedIndex = headers.indexOf(draggedHeader);
-                    let targetIndex = headers.indexOf(this);
-
-                    if (draggedIndex < targetIndex) {
-                        headerRow.insertBefore(draggedHeader, this.nextSibling);
-                    } else {
-                        headerRow.insertBefore(draggedHeader, this);
-                    }
-
-                    // Get new column order based on data-column attributes
-                    let newOrder = Array.from(headerRow.children).map(th => th.getAttribute("data-column"));
-                    reorderTable(headerRow, bodyRows, newOrder);
-
-                    // Save the updated column order to localStorage
-                    localStorage.setItem(storageKey, JSON.stringify(newOrder));
-                }
-            });
-        });
-    });
-</script>
-
-<!-- ========================================== -->
-<!-- DRAG AND DROP COLUMNS FOR TASKS TABLE      -->
-<!-- ========================================== -->
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const table = document.getElementById("tasksTable");
-        if (!table) return;
-
-        const headerRow = table.querySelector("thead tr");
-        const bodyRows = table.querySelectorAll("tbody tr.task-row");
-        const storageKey = "tasks_table_column_order";
-
-        // Load saved column order from localStorage on page load
-        let savedOrder = JSON.parse(localStorage.getItem(storageKey));
-        if (savedOrder) {
-            reorderTable(headerRow, bodyRows, savedOrder);
-        }
-
-        let draggedHeader = null;
-
-        // Enable HTML5 drag and drop functionality for task table headers
-        headerRow.querySelectorAll("th").forEach(th => {
-            th.addEventListener("dragstart", function (e) {
-                draggedHeader = this;
-                e.dataTransfer.effectAllowed = "move";
-            });
-
-            th.addEventListener("dragover", function (e) {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = "move";
-            });
-
-            th.addEventListener("drop", function (e) {
-                e.preventDefault();
-                if (this !== draggedHeader) {
-                    let headers = Array.from(headerRow.children);
-                    let draggedIndex = headers.indexOf(draggedHeader);
-                    let targetIndex = headers.indexOf(this);
-
-                    if (draggedIndex < targetIndex) {
-                        headerRow.insertBefore(draggedHeader, this.nextSibling);
-                    } else {
-                        headerRow.insertBefore(draggedHeader, this);
-                    }
-
-                    // Get new column order based on data-column attributes
-                    let newOrder = Array.from(headerRow.children).map(th => th.getAttribute("data-column"));
-                    reorderTable(headerRow, bodyRows, newOrder);
-
-                    // Save the updated column order to localStorage
-                    localStorage.setItem(storageKey, JSON.stringify(newOrder));
-                }
-            });
-        });
-    });
-</script>
-
-<!-- ========================================== -->
-<!-- GLOBAL REORDER HELPER FUNCTION             -->
-<!-- ========================================== -->
-<script>
-    function reorderTable(headerRow, bodyRows, order) {
-        // Reorder header elements according to the saved column order array
-        let headerMap = {};
-        Array.from(headerRow.children).forEach(th => {
-            headerMap[th.getAttribute("data-column")] = th;
-        });
-        order.forEach(colName => {
-            if (headerMap[colName]) {
-                headerRow.appendChild(headerMap[colName]);
-            }
-        });
-
-        // Reorder corresponding table cells (td) for each row in the table body
-        bodyRows.forEach(row => {
-            let cellMap = {};
-            Array.from(row.children).forEach(td => {
-                cellMap[td.getAttribute("data-column")] = td;
-            });
-            order.forEach(colName => {
-                if (cellMap[colName]) {
-                    row.appendChild(cellMap[colName]);
-                }
-            });
-        });
-    }
-</script>
-
-<!-- ========================================== -->
-<!-- INITIALIZE AND RENDER TASK STATUS CHART    -->
-<!-- ========================================== -->
+<!-- ========================================================================= -->
+<!-- INITIALIZE AND RENDER TASK STATUS CHART                                   -->
+<!-- Build a dynamic doughnut chart representing task states using Chart.js.   -->
+<!-- ========================================================================= -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const canvasElement = document.getElementById('tasksChart');
@@ -253,11 +120,11 @@
                             {{ $rejectedTasks ?? 0 }}
                         ],
                         backgroundColor: [
-                            '#fbc658', // Yellow for Pending
-                            '#51cbce', // Cyan for In Progress
-                            '#6bd098', // Green for Completed
-                            '#9b59b6', // Blue/Teal for Accepted
-                            '#ef8157'  // Orange/Red for Rejected
+                            '#fbc658', // Pending color
+                            '#51cbce', // In Progress color
+                            '#6bd098', // Completed color
+                            '#9b59b6', // Accepted color
+                            '#ef8157'  // Rejected color
                         ],
                         borderWidth: 1
                     }]
@@ -267,7 +134,7 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'bottom',
+                            position: 'bottom', // Align chart legend at the bottom
                         }
                     }
                 }
@@ -276,57 +143,13 @@
     });
 </script>
 
-<!-- ========================================== -->
-<!-- DYNAMIC FILE UPLOAD PREVIEW HANDLER        -->
-<!-- ========================================== -->
-<script>
-    const attachmentInput = document.getElementById('attachmentInput');
-    if (attachmentInput) {
-        attachmentInput.addEventListener('change', function(event) {
-            const files = event.target.files;
-            const uploadPrompt = document.getElementById('uploadPrompt');
-            const filePreviewContainer = document.getElementById('filePreviewContainer');
-            const fileNameDisplay = document.getElementById('fileNameDisplay');
-            const fileSizeDisplay = document.getElementById('fileSizeDisplay');
-
-            if (files.length > 0) {
-                uploadPrompt.classList.add('d-none');
-                filePreviewContainer.classList.remove('d-none');
-                filePreviewContainer.classList.add('d-flex');
-
-                if (files.length === 1) {
-                    fileNameDisplay.textContent = files[0].name;
-                    fileSizeDisplay.textContent = (files[0].size / (1024 * 1024)).toFixed(2) + ' MB';
-                } else {
-                    fileNameDisplay.textContent = files.length + ' files selected';
-                    let totalSize = Array.from(files).reduce((acc, file) => acc + file.size, 0);
-                    fileSizeDisplay.textContent = 'Total size: ' + (totalSize / (1024 * 1024)).toFixed(2) + ' MB';
-                }
-            }
-        });
-    }
-
-    const removeFileBtn = document.getElementById('removeFileBtn');
-    if (removeFileBtn) {
-        removeFileBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const fileInput = document.getElementById('attachmentInput');
-            const uploadPrompt = document.getElementById('uploadPrompt');
-            const filePreviewContainer = document.getElementById('filePreviewContainer');
-
-            fileInput.value = '';
-            filePreviewContainer.classList.remove('d-flex');
-            filePreviewContainer.classList.add('d-none');
-            uploadPrompt.classList.remove('d-none');
-        });
-    }
-</script>
-
-<!-- ==================================================================== -->
-<!-- CONFIRM DELETE DIALOG USING SWEETALERT2 (UPDATED FOR PROJECTS & TASKS) -->
-<!-- ==================================================================== -->
+<!-- ========================================================================= -->
+<!-- CONFIRM DELETE DIALOG USING SWEETALERT2                                   -->
+<!-- Prompt the user for confirmation before submitting individual delete forms. -->
+<!-- ========================================================================= -->
 <script>
     function confirmDelete(type, id) {
+        // Trigger SweetAlert confirmation popup
         Swal.fire({
             title: 'Are you sure?',
             text: "You won't be able to revert this!",
@@ -342,17 +165,18 @@
             },
             buttonsStyling: true
         }).then((result) => {
+            // Submit form if user confirms action
             if (result.isConfirmed) {
-                // Dynamically submit the correct delete form based on type and id
                 document.getElementById('delete-form-' + type + '-' + id).submit();
             }
         });
     }
 </script>
 
-<!-- ==================================================================== -->
-<!-- AUTOMATIC ALERT DISMISSAL SCRIPT MESSAGE                             -->
-<!-- ==================================================================== -->
+<!-- ========================================================================= -->
+<!-- AUTOMATIC ALERT DISMISSAL SCRIPT                                          -->
+<!-- Automatically close custom flash notification alerts after a set timeout. -->
+<!-- ========================================================================= -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         setTimeout(function () {
@@ -360,105 +184,191 @@
             alerts.forEach(function (alert) {
                 let dismissBtn = alert.querySelector('.close');
                 if (dismissBtn) {
-                    dismissBtn.click();
+                    dismissBtn.click(); // Trigger close button click programmatically
                 }
             });
-        }, 4000);
+        }, 4000); // Wait 4 seconds before dismissing alerts
     });
 </script>
 
-<!-- ==================================================================== -->
-<!-- FORCE REMOVE PLUGIN-BASED INTERNAL SCROLL WRAPPERS                           -->
-<!-- ==================================================================== -->
+<!-- ========================================================================= -->
+<!-- WELCOME MODAL CONTROL SCRIPT WITH AUTO-DISMISS & ANIMATED PROGRESS BAR    -->
+<!-- Handles closing the welcome popup via buttons, icon, or automatic timer   -->
+<!-- while synchronizing the visual progress bar fill animation.               -->
+<!-- ========================================================================= -->
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // Force remove any plugin-based internal scroll wrappers if initialized by the template
-        const mainPanel = document.querySelector('.main-panel');
-        if (mainPanel) {
-            mainPanel.style.overflow = "visible";
-            mainPanel.style.height = "auto";
-        }
-        const sidebarWrapper = document.querySelector('.sidebar-wrapper');
-        if (sidebarWrapper) {
-            sidebarWrapper.style.overflow = "visible";
-        }
-    });
-</script>
-
-
-<!-- ==================================================================== -->
-<!-- SIDEBAR MINIMIZATION SCRIPT                                          -->
-<!-- ==================================================================== -->
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const minimizeBtn = document.getElementById("minimizeSidebar");
-        const bodyElement = document.body;
-
-        if (minimizeBtn) {
-            minimizeBtn.addEventListener("click", function () {
-                // Toggle mini sidebar class smoothly
-                bodyElement.classList.toggle("sidebar-mini");
-            });
-        }
-    });
-</script>
-
-<!-- ==================================================================== -->
-<!-- WELCOME MODAL SCRIPT                                                 -->
-<!-- ==================================================================== -->
-@php
-// Safely check if the welcome session flag is set
-$isFirstLoginValid = session('show_welcome_modal', false);
-@endphp
-
-<!-- JavaScript to handle modal auto-hide and manual dismissal -->
-<script>
-    // Function to hide the welcome modal smoothly with fade out effect
+    /**
+     * Smoothly hide the welcome modal element from the page DOM.
+     */
     function dismissWelcomeModal() {
         const modal = document.getElementById('custom-welcome-modal');
         if (modal) {
-            modal.style.opacity = '0';
+            // Apply smooth fade-out CSS transition
             modal.style.transition = 'opacity 0.3s ease';
+            modal.style.opacity = '0';
+
+            // Completely hide the element after transition ends
             setTimeout(() => {
                 modal.style.display = 'none';
             }, 300);
         }
     }
 
-    // Trigger script execution once the DOM content is fully loaded
-    document.addEventListener('DOMContentLoaded', function () {
-        const modal = document.getElementById('custom-welcome-modal');
+    /**
+     * Automatically trigger modal dismissal after a 5-second delay
+     * and animate the bottom progress bar to visually match the countdown.
+     */
+    document.addEventListener("DOMContentLoaded", function () {
         const progressBar = document.getElementById('welcome-progress-bar');
+        const timeoutDuration = 5000; // 5000 milliseconds = 5 seconds
 
-        // Only trigger modal logic if the modal element exists on the page
-        if (modal) {
-            // Use safe boolean evaluation from backend without direct variable crashing
-            const shouldShow = @json($isFirstLoginValid);
+        if (progressBar) {
+            // Force browser reflow to ensure CSS transition triggers properly
+            progressBar.style.transition = 'none';
+            progressBar.style.width = '0%';
 
-            if (shouldShow) {
-                // Display the modal in the center of the screen
-                modal.style.display = 'flex';
+            setTimeout(() => {
+                progressBar.style.transition = `width ${timeoutDuration}ms linear`;
+                progressBar.style.width = '100%';
+            }, 50);
+        }
 
-                // Define how long the modal stays visible in milliseconds (e.g., 5000ms = 5 seconds)
-                const displayDuration = 5000;
+        // Automatically hide the modal after the duration completes
+        setTimeout(function () {
+            dismissWelcomeModal();
+        }, timeoutDuration);
+    });
+</script>
 
-                // Animate progress bar width reduction over time
-                if (progressBar) {
-                    progressBar.style.transitionDuration = (displayDuration / 1000) + 's';
-                    setTimeout(() => {
-                        progressBar.style.width = '0%';
-                    }, 50);
+<!-- ========================================================================= -->
+<!-- EXPORT AND PRINT REPORT ACTIONS HANDLER                                   -->
+<!-- Manage PDF export confirmations and handle direct Excel downloads.       -->
+<!-- ========================================================================= -->
+<script>
+    /**
+     * Handle actions for PDF confirmation or direct Excel triggering.
+     *
+     * @param {string} type - The report export type ('pdf', 'excel', or 'print')
+     */
+    function confirmAndExport(type) {
+        let titleText = "";
+        let confirmButtonText = "";
+
+        // Customize confirmation dialog text based on selected format
+        if (type === 'pdf') {
+            titleText = "Are you sure you want to download the PDF report?";
+            confirmButtonText = "Yes, download";
+        } else if (type === 'excel') {
+            // DIRECT EXCEL DOWNLOAD: Skip confirmation alert and execute action immediately
+            executeExportAction('excel');
+            return;
+        } else {
+            titleText = "Are you sure you want to print the report?";
+            confirmButtonText = "Yes, print now";
+        }
+
+        // Show SweetAlert confirmation for PDF or Print actions
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: titleText,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#f96332',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: confirmButtonText,
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    executeExportAction(type);
                 }
-
-                // Automatically close the modal after the specified duration expires
-                setTimeout(() => {
-                    dismissWelcomeModal();
-                }, displayDuration);
-            } else {
-                // Ensure modal remains hidden on page refreshes or subsequent navigation clicks
-                modal.style.display = 'none';
+            });
+        } else {
+            // Fallback to native browser confirm dialog if SweetAlert is missing
+            if (confirm(titleText)) {
+                executeExportAction(type);
             }
         }
-    });
+    }
+
+    /**
+     * Execute the underlying URL redirection or print command with active filters.
+     *
+     * @param {string} type - Export format type
+     */
+    function executeExportAction(type) {
+        // Grab current URL parameters to preserve active user filters and search queries
+        let urlParams = new URLSearchParams(window.location.search);
+        urlParams.delete('search'); // Remove live search filter to export full clean dataset
+
+        if (type === 'pdf') {
+            // Updated route to match the corrected project report pdf route name
+            let basePdfUrl = "{{ route('admin.report.task-report.pdf') }}";
+            let finalUrl = basePdfUrl;
+
+            // Append query parameters if they exist
+            if (urlParams.toString() !== "") {
+                finalUrl += "?" + urlParams.toString();
+            }
+
+            // Redirect browser to trigger PDF download
+            window.location.href = finalUrl;
+
+        } else if (type === 'excel') {
+            // -----------------------------------------------------------------
+            // EXCEL EXPORT DIRECT ROUTE HANDLING
+            // Pull the base route for Excel export and append current filter query params
+            // -----------------------------------------------------------------
+            let baseExcelUrl = "{{ route('admin.report.project-report.excel') }}";
+            let finalUrl = baseExcelUrl;
+
+            if (urlParams.toString() !== "") {
+                finalUrl += "?" + urlParams.toString();
+            }
+
+            // Redirect browser to trigger direct Excel file download
+            window.location.href = finalUrl;
+
+        } else {
+            // -----------------------------------------------------------------
+            // HIDDEN IFRAME PRINT HANDLER (Triggers native print dialog locally)
+            // -----------------------------------------------------------------
+            let basePrintUrl = "{{ route('admin.report.project-report.print') }}";
+            let finalPrintUrl = basePrintUrl;
+
+            if (urlParams.toString() !== "") {
+                finalPrintUrl += "?" + urlParams.toString();
+            }
+
+            // Remove existing temporary iframe if present
+            const existingIframe = document.getElementById('print-iframe');
+            if (existingIframe) {
+                existingIframe.remove();
+            }
+
+            // Create a hidden iframe to load the print route and invoke local print window
+            const iframe = document.createElement('iframe');
+            iframe.id = 'print-iframe';
+            iframe.style.position = 'fixed';
+            iframe.style.right = '0';
+            iframe.style.bottom = '0';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = '0';
+
+            iframe.src = finalPrintUrl;
+
+            iframe.onload = function5 = function() {
+                try {
+                    iframe.contentWindow.focus();
+                    iframe.contentWindow.print();
+                } catch (error) {
+                    console.error('Print execution error: ', error);
+                    window.open(finalPrintUrl, '_blank');
+                }
+            };
+
+            document.body.appendChild(iframe);
+        }
+    }
 </script>
 @endpush

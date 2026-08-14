@@ -13,7 +13,7 @@
 <div class="row justify-content-center">
     <div class="col-lg-9 col-md-10">
 
-        <!-- Include Session Alert Message Component -->
+        <!-- Include Centralized Alert Message Component -->
         <x-alert-message />
 
         <div class="card shadow-sm border-0 project-form-card">
@@ -45,14 +45,10 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label class="form-control-label font-weight-bold text-dark">Project Title</label>
-                                <!-- Input field retaining old values upon validation failure -->
-                                <input type="text" name="title" class="form-control"
+                                <!-- Input field retaining old values with error indicator styling -->
+                                <input type="text" name="title"
+                                    class="form-control @error('title') is-invalid @enderror"
                                     placeholder="Enter project title..." value="{{ old('title') }}" required>
-
-                                <!-- Display validation error message for title -->
-                                @error('title')
-                                <span class="text-danger text-sm mt-1 d-block">{{ $message }}</span>
-                                @enderror
                             </div>
                         </div>
 
@@ -60,7 +56,8 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label class="form-control-label font-weight-bold text-dark">Assign Manager</label>
-                                <select name="manager_id" class="form-control" required>
+                                <select name="manager_id" class="form-control @error('manager_id') is-invalid @enderror"
+                                    required>
                                     <option value="" selected disabled>Select project manager...</option>
                                     @foreach($managers as $manager)
                                     <option value="{{ $manager->id }}" {{ old('manager_id')==$manager->id ? 'selected' :
@@ -69,9 +66,6 @@
                                     </option>
                                     @endforeach
                                 </select>
-                                @error('manager_id')
-                                <span class="text-danger text-sm mt-1 d-block">{{ $message }}</span>
-                                @enderror
                             </div>
                         </div>
                     </div>
@@ -82,7 +76,7 @@
                             <div class="form-group">
                                 <label class="form-control-label font-weight-bold text-dark">Project Status</label>
                                 <!-- Status dropdown using lower case values matching backend enums -->
-                                <select name="status" class="form-control">
+                                <select name="status" class="form-control @error('status') is-invalid @enderror">
                                     <option value="in_progress" {{ old('status')=='in_progress' ? 'selected' : '' }}>In
                                         Progress</option>
                                     <option value="pending" {{ old('status')=='pending' ? 'selected' : '' }}>Pending
@@ -90,11 +84,28 @@
                                     <option value="completed" {{ old('status')=='completed' ? 'selected' : '' }}>
                                         Completed</option>
                                 </select>
+                            </div>
+                        </div>
 
-                                <!-- Display validation error message for status -->
-                                @error('status')
-                                <span class="text-danger text-sm mt-1 d-block">{{ $message }}</span>
-                                @enderror
+                        <!-- Project Start Date Field -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label font-weight-bold text-dark">Start Date</label>
+                                <input type="date" name="start_date"
+                                    class="form-control @error('start_date') is-invalid @enderror"
+                                    value="{{ old('start_date') }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <!-- Project End Date Field -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label font-weight-bold text-dark">End Date</label>
+                                <input type="date" name="end_date"
+                                    class="form-control @error('end_date') is-invalid @enderror"
+                                    value="{{ old('end_date') }}">
                             </div>
                         </div>
                     </div>
@@ -105,13 +116,9 @@
                             <div class="form-group">
                                 <label class="form-control-label font-weight-bold text-dark">Description</label>
                                 <!-- Textarea preserving long description input text -->
-                                <textarea name="description" rows="4" class="form-control"
+                                <textarea name="description" rows="4"
+                                    class="form-control @error('description') is-invalid @enderror"
                                     placeholder="Enter project description and objectives...">{{ old('description') }}</textarea>
-
-                                <!-- Display validation error message for description -->
-                                @error('description')
-                                <span class="text-danger text-sm mt-1 d-block">{{ $message }}</span>
-                                @enderror
                             </div>
                         </div>
                     </div>

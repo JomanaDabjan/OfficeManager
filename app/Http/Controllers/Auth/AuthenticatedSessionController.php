@@ -54,6 +54,22 @@ class AuthenticatedSessionController extends Controller
 
 
         // =====================================================================
+        // REMEMBER ME HANDLING: Explicit Cookie Token Management
+        // =====================================================================
+        // Check if the user checked the 'remember me' input checkbox in the form.
+        if ($request->boolean('remember')) {
+            // If checked, we explicitly instruct Laravel's auth guard to remember 
+            // the currently authenticated user by generating a persistent token cookie.
+            $user = Auth::user();
+            Auth::login($user, remember: true);
+        } else {
+            // If NOT checked, ensure any lingering remember tokens are cleared 
+            // so the session expires immediately when the browser is closed.
+            $user = Auth::user();
+            Auth::login($user, remember: false);
+        }
+
+        // =====================================================================
         // SESSION STATE: One-time Flash Flag for First-Login Welcome Modal
         // =====================================================================
         // Set a temporary flash session that triggers the welcome modal exclusively
