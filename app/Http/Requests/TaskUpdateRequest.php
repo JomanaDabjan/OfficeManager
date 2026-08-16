@@ -39,6 +39,12 @@ class TaskUpdateRequest extends FormRequest
             // Status is optional; must be one of the allowed workflow states.
             'status'      => ['sometimes', 'in:pending,accepted,in_progress,completed,rejected'],
 
+            // Started at date/time is optional, must be a valid date if provided.
+            'started_at'  => ['nullable', 'date'],
+
+            // Due date/time is optional, must be a valid date if provided.
+            'due_date'    => ['nullable', 'date'],
+
             // Attachment is optional during update, but if provided, must be a valid file within size limits.
             'attachment'  => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,png,jpeg', 'max:2048'],
         ];

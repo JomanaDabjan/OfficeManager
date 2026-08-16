@@ -28,24 +28,21 @@
 <div class="row mb-4">
     <div class="col-md-12">
         <div class="card border-0 shadow-sm" style="border-radius: 16px; background: #ffffff; overflow: visible;">
-            <div class="card-body p-3" style="overflow: visible;">
+            <div class="card-body p-3 p-md-4" style="overflow: visible;">
                 <div class="d-flex flex-wrap align-items-center justify-content-between" style="gap: 12px;">
 
                     <!-- Filters Grouping -->
-                    <div class="d-flex flex-wrap align-items-center" style="gap: 12px;">
-                        <span class="text-muted font-weight-bold mr-2" style="font-size: 13px;">
-                            <i class="now-ui-icons ui-1_zoom-bold mr-1 text-primary"></i> Filter By:
-                        </span>
+                    <div class="d-flex flex-wrap align-items-center flex-grow-1" style="gap: 10px;">
 
                         <!-- Title Filter Dropdown -->
-                        <div class="dropdown">
+                        <div class="dropdown flex-fill">
                             <button
-                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border"
+                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-truncate"
                                 type="button" id="dropdownTitle" data-toggle="dropdown" aria-haspopup="true"
                                 aria-expanded="false"
-                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important;">
-                                {{ request('title') && request('title') != 'all' ? Str::limit(request('title'), 15) :
-                                'All Titles' }}
+                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important; height: 35px; display: flex; align-items: center; justify-content: space-between;">
+                                <span>{{ request('title') && request('title') != 'all' ? Str::limit(request('title'),
+                                    15) : 'All Titles' }}</span>
                             </button>
                             <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownTitle"
                                 style="border-radius: 12px; min-width: 180px;">
@@ -63,16 +60,17 @@
                         </div>
 
                         <!-- Manager Filter Dropdown -->
-                        <div class="dropdown">
+                        <div class="dropdown flex-fill">
                             <button
-                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border"
+                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-truncate"
                                 type="button" id="dropdownManager" data-toggle="dropdown" aria-haspopup="true"
                                 aria-expanded="false"
-                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important;">
+                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important; height: 35px; display: flex; align-items: center; justify-content: space-between;">
                                 @php
                                 $selectedManager = $managers->firstWhere('id', request('manager_id'));
                                 @endphp
-                                {{ $selectedManager ? $selectedManager->name : 'Assigned Manager' }}
+                                <span class="text-truncate">{{ $selectedManager ? $selectedManager->name : 'Assigned
+                                    Manager' }}</span>
                             </button>
                             <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownManager"
                                 style="border-radius: 12px; min-width: 180px;">
@@ -90,14 +88,14 @@
                         </div>
 
                         <!-- Status Filter Dropdown -->
-                        <div class="dropdown">
+                        <div class="dropdown flex-fill">
                             <button
-                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border"
+                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-truncate"
                                 type="button" id="dropdownStatus" data-toggle="dropdown" aria-haspopup="true"
                                 aria-expanded="false"
-                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important;">
-                                {{ request('status') && request('status') != 'all' ? ucfirst(str_replace('_', ' ',
-                                request('status'))) : 'All Statuses' }}
+                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important; height: 35px; display: flex; align-items: center; justify-content: space-between;">
+                                <span>{{ request('status') && request('status') != 'all' ? ucfirst(str_replace('_', ' ',
+                                    request('status'))) : 'All Statuses' }}</span>
                             </button>
                             <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownStatus"
                                 style="border-radius: 12px; min-width: 160px;">
@@ -114,14 +112,65 @@
                             </div>
                         </div>
 
+                        <!-- Price Filter Dropdown -->
+                        <div class="dropdown flex-fill">
+                            <button
+                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-truncate"
+                                type="button" id="dropdownPrice" data-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false"
+                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important; height: 35px; display: flex; align-items: center; justify-content: space-between;">
+                                <span>{{ request('price') && request('price') != 'all' ? 'Price: ' . request('price') :
+                                    'All Prices' }}</span>
+                            </button>
+                            <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownPrice"
+                                style="border-radius: 12px; min-width: 160px;">
+                                <a class="dropdown-item py-2 px-3 text-sm {{ !request('price') || request('price') == 'all' ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.project.index', array_merge(request()->except(['price', 'page']), ['price' => 'all'])) }}">All
+                                    Prices</a>
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('price') == 'low' ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.project.index', array_merge(request()->except(['price', 'page']), ['price' => 'low'])) }}">Low
+                                    Price</a>
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('price') == 'medium' ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.project.index', array_merge(request()->except(['price', 'page']), ['price' => 'medium'])) }}">Medium
+                                    Price</a>
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('price') == 'high' ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.project.index', array_merge(request()->except(['price', 'page']), ['price' => 'high'])) }}">High
+                                    Price</a>
+                            </div>
+                        </div>
+
+                        <!-- Date From & To Filters Group -->
+                        <form method="GET" action="{{ route('admin.project.index') }}"
+                            class="d-flex align-items-center flex-fill" style="gap: 8px; min-width: 260px;">
+                            @foreach(request()->except(['date_from', 'date_to', 'page']) as $key => $value)
+                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                            @endforeach
+                            <div class="d-flex align-items-center flex-fill"
+                                style="background-color: #f8f9fa; border: 1px solid #e3e6f0 !important; border-radius: 50rem; padding: 2px 10px; height: 35px;">
+                                <span class="text-muted mr-1" style="font-size: 11px; white-space: nowrap;">From:</span>
+                                <input type="date" name="date_from" value="{{ request('date_from') }}"
+                                    class="form-control form-control-sm border-0 bg-transparent shadow-none px-0 py-0 w-100"
+                                    style="font-size: 11px;" onchange="this.form.submit()">
+                            </div>
+                            <div class="d-flex align-items-center flex-fill"
+                                style="background-color: #f8f9fa; border: 1px solid #e3e6f0 !important; border-radius: 50rem; padding: 2px 10px; height: 35px;">
+                                <span class="text-muted mr-1" style="font-size: 11px; white-space: nowrap;">To:</span>
+                                <input type="date" name="date_to" value="{{ request('date_to') }}"
+                                    class="form-control form-control-sm border-0 bg-transparent shadow-none px-0 py-0 w-100"
+                                    style="font-size: 11px;" onchange="this.form.submit()">
+                            </div>
+                        </form>
+
                     </div>
 
-                    <!-- Reset Filters Button (Appears only if a filter is active) -->
-                    @if(request()->anyFilled(['title', 'manager_id', 'status', 'search']))
+                    <!-- Reset Filters Button -->
+                    @if(request()->anyFilled(['title', 'manager_id', 'status', 'price', 'date_from', 'date_to',
+                    'search']))
                     <div>
                         <a href="{{ route('admin.project.index') }}"
-                            class="btn btn-outline-danger btn-sm rounded-pill px-3 py-2" style="font-size: 12px;">
-                            <i class="now-ui-icons ui-1_simple-remove mr-1"></i> Reset Filters
+                            class="btn btn-outline-danger btn-sm rounded-pill px-3 py-2"
+                            style="font-size: 12px; white-space: nowrap; height: 35px;">
+                            <i class="now-ui-icons ui-1_simple-remove mr-1"></i> Reset
                         </a>
                     </div>
                     @endif

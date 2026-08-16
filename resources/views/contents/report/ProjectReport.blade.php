@@ -199,133 +199,154 @@
 </div>
 
 <!-- ========================================== -->
-<!-- PROJECT FILTERS DROPDOWNS SECTION (SERVER) -->
+<!-- COLUMN FILTERS DROPDOWNS SECTION (SERVER)  -->
 <!-- ========================================== -->
 <div class="row mb-4">
     <div class="col-md-12">
         <div class="card border-0 shadow-sm" style="border-radius: 16px; background: #ffffff; overflow: visible;">
-            <div class="card-body p-3" style="overflow: visible;">
+            <div class="card-body p-3 p-md-4" style="overflow: visible;">
                 <div class="d-flex flex-wrap align-items-center justify-content-between" style="gap: 12px;">
 
-                    <!-- Filters Grouping Container -->
-                    <div class="d-flex flex-wrap align-items-center w-100 w-md-auto" style="gap: 10px;">
-                        <!-- Filter Icon Label -->
-                        <span class="text-muted font-weight-bold mr-2 d-none d-sm-inline-block"
-                            style="font-size: 13px;">
-                            <i class="now-ui-icons ui-1_zoom-bold mr-1 text-primary"></i> Filter By:
-                        </span>
+                    <!-- Filters Grouping -->
+                    <div class="d-flex flex-wrap align-items-center flex-grow-1" style="gap: 10px;">
 
-                        <!-- 1. Project Title Filter Dropdown -->
-                        <div class="dropdown flex-fill flex-md-grow-0">
+                        <!-- Title Filter Dropdown -->
+                        <div class="dropdown flex-fill">
                             <button
-                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-left text-md-center d-flex justify-content-between align-items-center"
-                                type="button" id="dropdownProjectTitle" data-toggle="dropdown" aria-haspopup="true"
+                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-truncate"
+                                type="button" id="dropdownTitle" data-toggle="dropdown" aria-haspopup="true"
                                 aria-expanded="false"
-                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important;">
-                                <span class="text-truncate">
-                                    {{ request('title') && request('title') != 'all' ? Str::limit(request('title'), 15)
-                                    : 'All Projects' }}
-                                </span>
+                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important; height: 35px; display: flex; align-items: center; justify-content: space-between;">
+                                <span>{{ request('title') && request('title') != 'all' ? Str::limit(request('title'),
+                                    15) : 'All Titles' }}</span>
                             </button>
-                            <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownProjectTitle"
+                            <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownTitle"
                                 style="border-radius: 12px; min-width: 180px;">
                                 <a class="dropdown-item py-2 px-3 text-sm {{ !request('title') || request('title') == 'all' ? 'active font-weight-bold text-primary' : '' }}"
-                                    href="{{ route('admin.report.project-report', array_merge(request()->except(['title', 'page']), ['title' => 'all'])) }}">
-                                    <i class="now-ui-icons ui-1_simple-add mr-2"></i> All Projects
+                                    href="{{ route('admin.report.project-report', array_merge(request()->except(['title', 'page']), [])) }}">
+                                    <i class="now-ui-icons ui-1_simple-add mr-2"></i> All Titles
                                 </a>
-                                @if(isset($projects))
-                                @foreach($projects as $projectItem)
-                                <a class="dropdown-item py-2 px-3 text-sm {{ request('title') == $projectItem->title ? 'active font-weight-bold text-primary' : '' }}"
-                                    href="{{ route('admin.report.project-report', array_merge(request()->except(['title', 'page']), ['title' => $projectItem->title])) }}">
-                                    {{ $projectItem->title }}
+                                @foreach($allTitles as $projTitle)
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('title') == $projTitle ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.report.project-report', array_merge(request()->except(['title', 'page']), ['title' => $projTitle])) }}">
+                                    {{ $projTitle }}
                                 </a>
                                 @endforeach
-                                @endif
                             </div>
                         </div>
 
-                        <!-- 2. Project Manager Filter Dropdown -->
-                        <div class="dropdown flex-fill flex-md-grow-0">
+                        <!-- Manager Filter Dropdown -->
+                        <div class="dropdown flex-fill">
                             <button
-                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-left text-md-center d-flex justify-content-between align-items-center"
+                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-truncate"
                                 type="button" id="dropdownManager" data-toggle="dropdown" aria-haspopup="true"
                                 aria-expanded="false"
-                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important;">
+                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important; height: 35px; display: flex; align-items: center; justify-content: space-between;">
                                 @php
-                                $selectedManager = isset($managers) ? $managers->firstWhere('id', request('manager_id'))
-                                : null;
+                                $selectedManager = $managers->firstWhere('id', request('manager_id'));
                                 @endphp
-                                <span class="text-truncate">
-                                    {{ $selectedManager ? $selectedManager->name : 'Project Manager' }}
-                                </span>
+                                <span class="text-truncate">{{ $selectedManager ? $selectedManager->name : 'Assigned
+                                    Manager' }}</span>
                             </button>
                             <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownManager"
                                 style="border-radius: 12px; min-width: 180px;">
                                 <a class="dropdown-item py-2 px-3 text-sm {{ !request('manager_id') || request('manager_id') == 'all' ? 'active font-weight-bold text-primary' : '' }}"
-                                    href="{{ route('admin.report.project-report', array_merge(request()->except(['manager_id', 'page']), ['manager_id' => 'all'])) }}">
+                                    href="{{ route('admin.report.project-report', array_merge(request()->except(['manager_id', 'page']), [])) }}">
                                     All Managers
                                 </a>
-                                @if(isset($managers))
                                 @foreach($managers as $manager)
                                 <a class="dropdown-item py-2 px-3 text-sm {{ request('manager_id') == $manager->id ? 'active font-weight-bold text-primary' : '' }}"
                                     href="{{ route('admin.report.project-report', array_merge(request()->except(['manager_id', 'page']), ['manager_id' => $manager->id])) }}">
                                     {{ $manager->name }}
                                 </a>
                                 @endforeach
-                                @endif
                             </div>
                         </div>
 
-                        <!-- 3. Project Status Filter Dropdown -->
-                        <div class="dropdown flex-fill flex-md-grow-0">
+                        <!-- Status Filter Dropdown -->
+                        <div class="dropdown flex-fill">
                             <button
-                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-left text-md-center d-flex justify-content-between align-items-center"
-                                type="button" id="dropdownProjectStatus" data-toggle="dropdown" aria-haspopup="true"
+                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-truncate"
+                                type="button" id="dropdownStatus" data-toggle="dropdown" aria-haspopup="true"
                                 aria-expanded="false"
-                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important;">
-                                <span class="text-truncate">
-                                    {{ request('status') && request('status') != 'all' ? ucfirst(str_replace('_', ' ',
-                                    request('status'))) : 'All Statuses' }}
-                                </span>
+                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important; height: 35px; display: flex; align-items: center; justify-content: space-between;">
+                                <span>{{ request('status') && request('status') != 'all' ? ucfirst(str_replace('_', ' ',
+                                    request('status'))) : 'All Statuses' }}</span>
                             </button>
-                            <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownProjectStatus"
+                            <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownStatus"
                                 style="border-radius: 12px; min-width: 160px;">
-
-                                <!-- All Statuses Option -->
                                 <a class="dropdown-item py-2 px-3 text-sm {{ !request('status') || request('status') == 'all' ? 'active font-weight-bold text-primary' : '' }}"
-                                    href="{{ route('admin.report.project-report', array_merge(request()->except(['status', 'page']), ['status' => 'all'])) }}">
-                                    All Statuses
-                                </a>
-
-                                <!-- Pending Option -->
+                                    href="{{ route('admin.report.project-report', array_merge(request()->except(['status', 'page']), ['status' => 'all'])) }}">All
+                                    Statuses</a>
                                 <a class="dropdown-item py-2 px-3 text-sm {{ request('status') == 'pending' ? 'active font-weight-bold text-primary' : '' }}"
-                                    href="{{ route('admin.report.project-report', array_merge(request()->except(['status', 'page']), ['status' => 'pending'])) }}">
-                                    Pending
-                                </a>
-
-                                <!-- In Progress Option -->
+                                    href="{{ route('admin.report.project-report', array_merge(request()->except(['status', 'page']), ['status' => 'pending'])) }}">Pending</a>
                                 <a class="dropdown-item py-2 px-3 text-sm {{ request('status') == 'in_progress' ? 'active font-weight-bold text-primary' : '' }}"
-                                    href="{{ route('admin.report.project-report', array_merge(request()->except(['status', 'page']), ['status' => 'in_progress'])) }}">
-                                    In Progress
-                                </a>
-
-                                <!-- Completed Option -->
+                                    href="{{ route('admin.report.project-report', array_merge(request()->except(['status', 'page']), ['status' => 'in_progress'])) }}">In
+                                    Progress</a>
                                 <a class="dropdown-item py-2 px-3 text-sm {{ request('status') == 'completed' ? 'active font-weight-bold text-primary' : '' }}"
-                                    href="{{ route('admin.report.project-report', array_merge(request()->except(['status', 'page']), ['status' => 'completed'])) }}">
-                                    Completed
-                                </a>
+                                    href="{{ route('admin.report.project-report', array_merge(request()->except(['status', 'page']), ['status' => 'completed'])) }}">Completed</a>
                             </div>
                         </div>
+
+                        <!-- Price Filter Dropdown -->
+                        <div class="dropdown flex-fill">
+                            <button
+                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-truncate"
+                                type="button" id="dropdownPrice" data-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false"
+                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important; height: 35px; display: flex; align-items: center; justify-content: space-between;">
+                                <span>{{ request('price') && request('price') != 'all' ? 'Price: ' . request('price') :
+                                    'All Prices' }}</span>
+                            </button>
+                            <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownPrice"
+                                style="border-radius: 12px; min-width: 160px;">
+                                <a class="dropdown-item py-2 px-3 text-sm {{ !request('price') || request('price') == 'all' ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.report.project-report', array_merge(request()->except(['price', 'page']), ['price' => 'all'])) }}">All
+                                    Prices</a>
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('price') == 'low' ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.report.project-report', array_merge(request()->except(['price', 'page']), ['price' => 'low'])) }}">Low
+                                    Price</a>
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('price') == 'medium' ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.report.project-report', array_merge(request()->except(['price', 'page']), ['price' => 'medium'])) }}">Medium
+                                    Price</a>
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('price') == 'high' ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.report.project-report', array_merge(request()->except(['price', 'page']), ['price' => 'high'])) }}">High
+                                    Price</a>
+                            </div>
+                        </div>
+
+                        <!-- Date From & To Filters Group -->
+                        <form method="GET" action="{{ route('admin.report.project-report') }}"
+                            class="d-flex align-items-center flex-fill" style="gap: 8px; min-width: 260px;">
+                            @foreach(request()->except(['date_from', 'date_to', 'page']) as $key => $value)
+                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                            @endforeach
+                            <div class="d-flex align-items-center flex-fill"
+                                style="background-color: #f8f9fa; border: 1px solid #e3e6f0 !important; border-radius: 50rem; padding: 2px 10px; height: 35px;">
+                                <span class="text-muted mr-1" style="font-size: 11px; white-space: nowrap;">From:</span>
+                                <input type="date" name="date_from" value="{{ request('date_from') }}"
+                                    class="form-control form-control-sm border-0 bg-transparent shadow-none px-0 py-0 w-100"
+                                    style="font-size: 11px;" onchange="this.form.submit()">
+                            </div>
+                            <div class="d-flex align-items-center flex-fill"
+                                style="background-color: #f8f9fa; border: 1px solid #e3e6f0 !important; border-radius: 50rem; padding: 2px 10px; height: 35px;">
+                                <span class="text-muted mr-1" style="font-size: 11px; white-space: nowrap;">To:</span>
+                                <input type="date" name="date_to" value="{{ request('date_to') }}"
+                                    class="form-control form-control-sm border-0 bg-transparent shadow-none px-0 py-0 w-100"
+                                    style="font-size: 11px;" onchange="this.form.submit()">
+                            </div>
+                        </form>
 
                     </div>
 
-                    <!-- Reset Filters Button (Appears only when a filter is active) -->
-                    @if(request()->anyFilled(['title', 'manager_id', 'status']))
-                    <div class="w-100 w-md-auto text-md-right">
+                    <!-- Reset Filters Button -->
+                    @if(request()->anyFilled(['title', 'manager_id', 'status', 'price', 'date_from', 'date_to',
+                    'search']))
+                    <div>
                         <a href="{{ route('admin.report.project-report') }}"
-                            class="btn btn-outline-danger btn-sm rounded-pill px-3 py-2 w-100 w-md-auto"
-                            style="font-size: 12px;">
-                            <i class="now-ui-icons ui-1_simple-remove mr-1"></i> Reset Filters
+                            class="btn btn-outline-danger btn-sm rounded-pill px-3 py-2"
+                            style="font-size: 12px; white-space: nowrap; height: 35px;">
+                            <i class="now-ui-icons ui-1_simple-remove mr-1"></i> Reset
                         </a>
                     </div>
                     @endif
@@ -346,12 +367,15 @@
             <div class="card-body px-0 pb-0">
                 <div class="table-responsive">
                     <table class="table align-items-center table-flush mb-0" id="projectsTable"
-                        style="min-width: 800px;">
+                        style="min-width: 1000px;">
                         <thead style="background: linear-gradient(135deg, #f96332 0%, #ff8c42 100%); color: white;">
                             <tr>
                                 <th class="py-3 font-weight-bold text-white pl-4">Project Title</th>
                                 <th class="py-3 font-weight-bold text-white">Description</th>
                                 <th class="py-3 font-weight-bold text-white">Project Manager</th>
+                                <th class="py-3 font-weight-bold text-white">Start Date</th>
+                                <th class="py-3 font-weight-bold text-white">End Date</th>
+                                <th class="py-3 font-weight-bold text-white">Budget</th>
                                 <th class="py-3 font-weight-bold text-white text-center">Total Tasks</th>
                                 <th class="py-3 font-weight-bold text-white">Project Tasks & Assigned Employees</th>
                                 <th class="py-3 font-weight-bold text-white text-right pr-4">Status & Progress</th>
@@ -451,6 +475,23 @@
                                     </div>
                                 </td>
 
+                                <!-- Start Date -->
+                                <td class="align-middle text-muted">
+                                    {{ $project->start_date ?
+                                    \Carbon\Carbon::parse($project->start_date)->format('Y-m-d') : 'N/A' }}
+                                </td>
+
+                                <!-- End Date -->
+                                <td class="align-middle text-muted">
+                                    {{ $project->end_date ? \Carbon\Carbon::parse($project->end_date)->format('Y-m-d') :
+                                    'N/A' }}
+                                </td>
+
+                                <!-- Budget -->
+                                <td class="align-middle font-weight-bold text-success">
+                                    {{ $project->budget ? '$' . number_format($project->budget, 2) : 'N/A' }}
+                                </td>
+
                                 <!-- Total Tasks Count -->
                                 <td class="align-middle text-center">
                                     <span
@@ -462,12 +503,15 @@
                                 </td>
 
                                 <!-- Project Tasks & Assigned Employees Column -->
-                                <td class="align-middle">
+                                <td class="align-middle" style="max-width: 220px;">
                                     @if(isset($project->tasks) && $project->tasks->count() > 0)
-                                    <div style="max-height: 120px; overflow-y: auto; padding-right: 5px;"
-                                        class="custom-scrollbar">
-                                        <ul class="list-unstyled mb-0" style="font-size: 12px;">
-                                            @foreach($project->tasks as $task)
+                                    @php
+                                    $hasManyTasks = $project->tasks->count() > 2;
+                                    @endphp
+
+                                    <div class="{{ $hasManyTasks ? '' : '' }}">
+                                        <ul class="list-unstyled mb-1" style="font-size: 12px;">
+                                            @foreach($project->tasks->take(2) as $task)
                                             <li class="mb-1 pb-1 border-bottom border-light">
                                                 <span class="font-weight-bold text-dark">{{ $task->title ?? $task->name
                                                     }}</span>
@@ -480,6 +524,66 @@
                                             </li>
                                             @endforeach
                                         </ul>
+
+                                        @if($hasManyTasks)
+                                        <!-- Button to open Tasks Modal -->
+                                        <button type="button"
+                                            class="btn btn-link btn-icon btn-sm text-primary p-0 d-print-none font-weight-bold"
+                                            data-toggle="modal" data-target="#tasksModal{{ $project->id }}"
+                                            style="font-size: 12px; text-decoration: underline;">
+                                            More ({{ $project->tasks->count() }} Tasks)
+                                        </button>
+
+                                        <!-- Modal for All Tasks -->
+                                        <div class="modal fade d-print-none" id="tasksModal{{ $project->id }}"
+                                            tabindex="-1" role="dialog"
+                                            aria-labelledby="tasksModalLabel{{ $project->id }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"
+                                                role="document">
+                                                <div class="modal-content shadow-lg border-0"
+                                                    style="border-radius: 12px; overflow: hidden;">
+                                                    <div class="modal-header text-white"
+                                                        style="background: linear-gradient(135deg, #f96332 0%, #ff8c42 100%);">
+                                                        <h5 class="modal-title font-weight-bold text-white"
+                                                            id="tasksModalLabel{{ $project->id }}">
+                                                            <i class="now-ui-icons design_bullet-list-67 mr-2"></i>
+                                                            Project Tasks & Employees
+                                                        </h5>
+                                                        <button type="button" class="close text-white"
+                                                            data-dismiss="modal" aria-label="Close" style="opacity: 1;">
+                                                            <span aria-hidden="true">&times;</span>
+                                                        </button>
+                                                    </div>
+                                                    <div class="modal-body p-4 bg-white text-dark">
+                                                        <h6 class="font-weight-bold text-primary mb-2">{{
+                                                            $project->title }}</h6>
+                                                        <hr class="mt-1 mb-3">
+                                                        <ul class="list-unstyled mb-0">
+                                                            @foreach($project->tasks as $task)
+                                                            <li class="mb-3 pb-2 border-bottom">
+                                                                <span class="font-weight-bold text-dark"
+                                                                    style="font-size: 14px;">{{ $task->title ??
+                                                                    $task->name }}</span>
+                                                                <br>
+                                                                <small class="text-muted" style="font-size: 12px;">
+                                                                    <i class="now-ui-icons users_single-02 mr-1"></i>
+                                                                    Assigned to: <span
+                                                                        class="text-primary font-weight-bold">{{
+                                                                        optional($task->assignedUser ??
+                                                                        $task->employee)->name ?? 'Unassigned' }}</span>
+                                                                </small>
+                                                            </li>
+                                                            @endforeach
+                                                        </ul>
+                                                    </div>
+                                                    <div class="modal-footer bg-light px-4 py-3">
+                                                        <button type="button" class="btn btn-secondary btn-round btn-sm"
+                                                            data-dismiss="modal">Close</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @endif
                                     </div>
                                     @else
                                     <span class="text-muted font-italic" style="font-size: 12px;">No tasks
@@ -521,7 +625,7 @@
 
                                             <!-- Battery Tip Element -->
                                             <div
-                                                style="width: 4px; height: 7px; background-column: #dcdcdc; border-top-right-radius: 2px; border-bottom-right-radius: 2px; margin-left: 1px;">
+                                                style="width: 4px; height: 7px; background-color: #dcdcdc; border-top-right-radius: 2px; border-bottom-right-radius: 2px; margin-left: 1px;">
                                             </div>
                                         </div>
                                     </div>
@@ -529,7 +633,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-5">
+                                <td colspan="9" class="text-center text-muted py-5">
                                     <div class="py-4">
                                         <i class="now-ui-icons business_briefcase-24 mb-3 text-muted"
                                             style="font-size: 28px;"></i>

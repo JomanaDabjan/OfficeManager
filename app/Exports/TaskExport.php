@@ -7,7 +7,8 @@ namespace App\Exports;
 // =========================================================================
 use App\Models\Task;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Concerns\FromCollection;
+use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
@@ -17,7 +18,7 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 
-class TaskExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithColumnWidths
+class TaskExport implements FromQuery, WithHeadings, WithMapping, WithStyles, WithColumnWidths
 {
     protected $request;
 
@@ -28,45 +29,17 @@ class TaskExport implements FromCollection, WithHeadings, WithMapping, WithStyle
 
     /**
      * =========================================================================
-     * COLLECTION METHOD (Filtered Support)
+     * QUERY METHOD (Filtered Support matching Controller and PDF/Print)
      * =========================================================================
      */
-    public function collection()
+    public function query()
     {
-        // ابدأ بإنشاء Query مع جلب العلاقات المطلوبة مسبقاً لتحسين الأداء (Eager Loading)
-        $query = Task::with(['project', 'assignedUser']);
+        $user = Auth::user();
+        $request = $this->request ?? request();
 
-        // التحقق من وجود الطلب وتطبيق الفلاتر إذا وجدت
-        if ($this->request) {
-
-            // 1. الفلترة حسب حالة المهمة (Status)
-            if ($this->request->filled('status')) {
-                $query->where('status', $this->request->status);
-            }
-
-            // 2. الفلترة حسب المشروع (Project ID)
-            if ($this->request->filled('project_id')) {
-                $query->where('project_id', $this->request->project_id);
-            }
-
-            // 3. الفلترة حسب الموظف المسؤول (Assigned User ID)
-            if ($this->request->filled('user_id') || $this->request->filled('employee_id')) {
-                $userId = $this->request->input('user_id') ?? $this->request->input('employee_id');
-                $query->where('assigned_to', $userId); // استبدل assigned_to باسم عمود المفتاح الأجنبي لديك إن كان مختلفاً
-            }
-
-            // 4. البحث النصي العام (Search query) إن وجد
-            if ($this->request->filled('search') || $this->request->filled('keyword')) {
-                $keyword = $this->request->input('search') ?? $this->request->input('keyword');
-                $query->where(function ($q) use ($keyword) {
-                    $q->where('title', 'like', "%{$keyword}%")
-                        ->orWhere('description', 'like', "%{$keyword}%");
-                });
-            }
-        }
-
-        // إرجاع البيانات المطابقة للفلتر أو كل البيانات إن لم توجد فلاتر
-        return $query->get();
+        // استخدام نفس الـ Scope تماماً المستخدم في الكونترولر لتطبيق الفلاتر وصلاحيات الموظف
+        return Task::with(['project', 'assignedUser', 'user'])
+            ->filterAndSearch($user, $request);
     }
 
     public function headings(): array
@@ -76,6 +49,8 @@ class TaskExport implements FromCollection, WithHeadings, WithMapping, WithStyle
             'Description',
             'Project',
             'Assigned Employee',
+            'Start Date',
+            'End Date',
             'Last Update',
             'Status',
             'Progress'
@@ -98,6 +73,8 @@ class TaskExport implements FromCollection, WithHeadings, WithMapping, WithStyle
             $task->description ?? 'No description',
             optional($task->project)->title ?? 'No Project',
             optional($task->assignedUser ?? $task->employee)->name ?? 'Unassigned',
+            $task->started_at ? \Carbon\Carbon::parse($task->started_at)->format('Y-m-d') : 'N/A',
+            $task->due_date ? \Carbon\Carbon::parse($task->due_date)->format('Y-m-d') : 'N/A',
             $task->updated_at ? $task->updated_at->format('Y-m-d H:i:s') : 'N/A',
             ucfirst(str_replace('_', ' ', $task->status ?? 'in_progress')),
             $progressPercent . '%'
@@ -111,9 +88,11 @@ class TaskExport implements FromCollection, WithHeadings, WithMapping, WithStyle
             'B' => 35,
             'C' => 20,
             'D' => 22,
-            'E' => 20,
-            'F' => 18,
-            'G' => 15,
+            'E' => 16,
+            'F' => 16,
+            'G' => 20,
+            'H' => 18,
+            'I' => 15,
         ];
     }
 

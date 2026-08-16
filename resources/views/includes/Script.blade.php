@@ -1,6 +1,12 @@
 @push('Script')
 
 <!-- ========================================================================= -->
+<!-- START OF STACKED SCRIPTS PUSH SECTION                                     -->
+<!-- This Laravel Blade directive pushes the enclosed script stack to the      -->
+<!-- master layout template, ensuring scripts load at the correct page section.-->
+<!-- ========================================================================= -->
+
+<!-- ========================================================================= -->
 <!-- CORE JS FILES AND PLUGINS                                                 -->
 <!-- Import foundational JavaScript libraries including jQuery, Popper,        -->
 <!-- Bootstrap, and custom UI scrollbar extensions.                          -->
@@ -28,13 +34,37 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <!-- ========================================================================= -->
-<!-- INITIALIZE DASHBOARD CHARTS                                               -->
+<!-- FLATPICKR DATEPICKER CDN (CSS & JS)                                      -->
+<!-- Added to format date inputs to DD/MM/YYYY while keeping backend Y-m-d.    -->
+<!-- ========================================================================= -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<!-- ========================================================================= -->
+<!-- INITIALIZE FLATPICKR ON DATE INPUTS                                     -->
+<!-- ========================================================================= -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Apply flatpickr to all date inputs or specific classes/IDs
+        flatpickr("input[type='date'], .datepicker", {
+            dateFormat: "Y-m-d",      // التنسيق الذي يتم إرساله للسيرفر وقاعدة البيانات
+            altInput: true,           // تفعيل حقل عرض بديل للمستخدم
+            altFormat: "d/m/Y",       // الشكل الذي يظهر للمستخدم (اليوم/الشهر/السنة)
+            allowInput: true
+        });
+    });
+</script>
+
+<!-- ========================================================================= -->
+<!-- INITIALIZE DASHBOARD CHARTS                                             -->
 <!-- Safely trigger default dashboard charts if demo object is available.      -->
 <!-- ========================================================================= -->
 <script>
+    // Wait until the HTML document is fully loaded and parsed
     $(document).ready(function () {
-        // Check if demo object and initialization function exist before calling
+        // Check if the demo object and its chart initialization function both exist
         if (typeof demo !== 'undefined' && typeof demo.initDashboardPageCharts === 'function') {
+            // Execute the dashboard page chart initialization function
             demo.initDashboardPageCharts();
         }
     });
@@ -42,28 +72,28 @@
 
 <!-- ========================================================================= -->
 <!-- LIVE SEARCH FILTER FOR PROJECTS TABLE                                     -->
-<!-- Filter project rows dynamically as the user types in the search input.    -->
 <!-- ========================================================================= -->
 <script>
+    // Wait for the DOM content to be fully loaded before running script logic
     document.addEventListener("DOMContentLoaded", function () {
-        // Get the search input element and all project rows from the table
+        // Get the search input element for projects by its ID
         const projectSearchInput = document.getElementById("projectSearchInput");
+        // Select all table rows inside the projects table that have the class 'project-row'
         const projectRows = document.querySelectorAll("#projectsTable tbody tr.project-row");
 
-        // Check if the search input exists on the current page
+        // Check if the search input element actually exists on the current view
         if (projectSearchInput) {
-            // Listen for keyboard keyup events to process live filtering
+            // Listen for keyup events (when a user types something in the search field)
             projectSearchInput.addEventListener("keyup", function () {
+                // Convert input value to lowercase and remove surrounding whitespace
                 const query = this.value.toLowerCase().trim();
 
-                // Loop through each project row and toggle visibility based on query match
+                // Loop through each individual project table row
                 projectRows.forEach(row => {
+                    // Extract all text content from the row and convert to lowercase
                     const textContent = row.textContent.toLowerCase();
-                    if (textContent.includes(query)) {
-                        row.style.display = ""; // Show row if it matches
-                    } else {
-                        row.style.display = "none"; // Hide row if it doesn't match
-                    }
+                    // Show the row (empty string) if it includes the query string, otherwise hide it ('none')
+                    row.style.display = textContent.includes(query) ? "" : "none";
                 });
             });
         }
@@ -72,26 +102,28 @@
 
 <!-- ========================================================================= -->
 <!-- LIVE SEARCH FILTER FOR TASKS TABLE                                        -->
-<!-- Filter task rows dynamically based on real-time keyboard input.           -->
 <!-- ========================================================================= -->
 <script>
+    // Wait for the DOM content to be fully loaded
     document.addEventListener("DOMContentLoaded", function () {
-        // Get task search input and target table rows
+        // Get the search input element for tasks by its ID
         const taskSearchInput = document.getElementById("taskSearchInput");
+        // Select all table rows or elements matching the task row selectors
         const taskRows = document.querySelectorAll("#tasksTable tbody tr, .task-row");
 
+        // Verify if the task search input exists
         if (taskSearchInput) {
+            // Trigger filtering logic whenever a key is released inside the input field
             taskSearchInput.addEventListener("keyup", function () {
+                // Normalize search query string (lowercase and trimmed)
                 const query = this.value.toLowerCase().trim();
 
-                // Iterate through rows and evaluate text inclusion
+                // Iterate through each task row
                 taskRows.forEach(row => {
+                    // Convert row inner text to lowercase for case-insensitive matching
                     const textContent = row.textContent.toLowerCase();
-                    if (query === "" || textContent.includes(query)) {
-                        row.style.display = "";
-                    } else {
-                        row.style.display = "none";
-                    }
+                    // Display row if query is empty or matches the row content; hide otherwise
+                    row.style.display = (query === "" || textContent.includes(query)) ? "" : "none";
                 });
             });
         }
@@ -99,19 +131,28 @@
 </script>
 
 <!-- ========================================================================= -->
-<!-- INITIALIZE AND RENDER TASK STATUS CHART                                   -->
-<!-- Build a dynamic doughnut chart representing task states using Chart.js.   -->
+<!-- INITIALIZE AND RENDER TASK STATUS CHART                                 -->
 <!-- ========================================================================= -->
 <script>
+    // Wait for the document to be ready
     document.addEventListener("DOMContentLoaded", function () {
+        // Find the canvas element meant for the task status chart
         const canvasElement = document.getElementById('tasksChart');
+
+        // Proceed only if the canvas element is present on the page
         if (canvasElement) {
+            // Get the 2D drawing context for the chart canvas
             const ctx = canvasElement.getContext('2d');
+
+            // Create a new Chart.js doughnut chart instance
             new Chart(ctx, {
+                // Specify chart type as a doughnut graph
                 type: 'doughnut',
                 data: {
+                    // Define categories/labels for the chart segments
                     labels: ['Pending', 'In Progress', 'Completed', 'Accepted', 'Rejected'],
                     datasets: [{
+                        // Inject dynamic data values from Laravel backend variables safely
                         data: [
                             {{ $pendingTasks ?? 0 }},
                             {{ $inProgressTasks ?? 0 }},
@@ -119,22 +160,26 @@
                             {{ $acceptedTasks ?? 0 }},
                             {{ $rejectedTasks ?? 0 }}
                         ],
+                        // Define matching background colors for each chart segment
                         backgroundColor: [
-                            '#fbc658', // Pending color
-                            '#51cbce', // In Progress color
-                            '#6bd098', // Completed color
-                            '#9b59b6', // Accepted color
-                            '#ef8157'  // Rejected color
+                            '#fbc658', // Yellow for Pending
+                            '#51cbce', // Blue for In Progress
+                            '#6bd098', // Green for Completed
+                            '#9b59b6', // Purple for Accepted
+                            '#ef8157'  // Orange/Red for Rejected
                         ],
                         borderWidth: 1
                     }]
                 },
                 options: {
+                    // Make the chart responsive to screen size changes
                     responsive: true,
+                    // Prevent the chart from maintaining an unwanted rigid aspect ratio
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'bottom', // Align chart legend at the bottom
+                            // Position the chart legend at the bottom of the canvas
+                            position: 'bottom',
                         }
                     }
                 }
@@ -144,12 +189,12 @@
 </script>
 
 <!-- ========================================================================= -->
-<!-- CONFIRM DELETE DIALOG USING SWEETALERT2                                   -->
-<!-- Prompt the user for confirmation before submitting individual delete forms. -->
+<!-- CONFIRM DELETE DIALOG USING SWEETALERT2                                 -->
 <!-- ========================================================================= -->
 <script>
+    // Function triggered to show a confirmation popup before deleting a record
     function confirmDelete(type, id) {
-        // Trigger SweetAlert confirmation popup
+        // Invoke SweetAlert2 configuration modal window
         Swal.fire({
             title: 'Are you sure?',
             text: "You won't be able to revert this!",
@@ -159,14 +204,16 @@
             cancelButtonColor: '#888888',
             confirmButtonText: 'Yes, delete it!',
             cancelButtonText: 'Cancel',
+            // Apply custom Bootstrap/Theme classes to modal buttons
             customClass: {
                 confirmButton: 'btn btn-primary btn-round px-4',
                 cancelButton: 'btn btn-secondary btn-round px-4'
             },
             buttonsStyling: true
         }).then((result) => {
-            // Submit form if user confirms action
+            // Check if the user clicked the confirmation button
             if (result.isConfirmed) {
+                // Find and programmatically submit the corresponding hidden delete form
                 document.getElementById('delete-form-' + type + '-' + id).submit();
             }
         });
@@ -175,65 +222,65 @@
 
 <!-- ========================================================================= -->
 <!-- AUTOMATIC ALERT DISMISSAL SCRIPT                                          -->
-<!-- Automatically close custom flash notification alerts after a set timeout. -->
 <!-- ========================================================================= -->
 <script>
+    // Wait for the HTML document to fully load
     document.addEventListener("DOMContentLoaded", function () {
+        // Set a timer to execute code after a 4-second delay (4000 milliseconds)
         setTimeout(function () {
+            // Select all alert elements that have the auto-dismiss class
             let alerts = document.querySelectorAll('.custom-auto-dismiss-alert');
+
+            // Loop through each found alert box
             alerts.forEach(function (alert) {
+                // Find the close button inside the alert element
                 let dismissBtn = alert.querySelector('.close');
+                // If close button exists, trigger a click event to dismiss it automatically
                 if (dismissBtn) {
-                    dismissBtn.click(); // Trigger close button click programmatically
+                    dismissBtn.click();
                 }
             });
-        }, 4000); // Wait 4 seconds before dismissing alerts
+        }, 4000);
     });
 </script>
 
 <!-- ========================================================================= -->
-<!-- WELCOME MODAL CONTROL SCRIPT WITH AUTO-DISMISS & ANIMATED PROGRESS BAR    -->
-<!-- Handles closing the welcome popup via buttons, icon, or automatic timer   -->
-<!-- while synchronizing the visual progress bar fill animation.               -->
+<!-- WELCOME MODAL CONTROL SCRIPT                                              -->
 <!-- ========================================================================= -->
 <script>
-    /**
-     * Smoothly hide the welcome modal element from the page DOM.
-     */
+    // Function to hide the welcome modal smoothly with opacity transition
     function dismissWelcomeModal() {
         const modal = document.getElementById('custom-welcome-modal');
         if (modal) {
-            // Apply smooth fade-out CSS transition
+            // Apply a smooth CSS transition effect to opacity
             modal.style.transition = 'opacity 0.3s ease';
             modal.style.opacity = '0';
-
-            // Completely hide the element after transition ends
+            // Hide the modal element completely after the fade-out transition finishes
             setTimeout(() => {
                 modal.style.display = 'none';
             }, 300);
         }
     }
 
-    /**
-     * Automatically trigger modal dismissal after a 5-second delay
-     * and animate the bottom progress bar to visually match the countdown.
-     */
+    // Run code after the DOM content is fully loaded
     document.addEventListener("DOMContentLoaded", function () {
         const progressBar = document.getElementById('welcome-progress-bar');
-        const timeoutDuration = 5000; // 5000 milliseconds = 5 seconds
+        const timeoutDuration = 5000; // Duration set to 5 seconds
 
+        // Check if the progress bar element exists
         if (progressBar) {
-            // Force browser reflow to ensure CSS transition triggers properly
+            // Reset transition and set initial width to 0%
             progressBar.style.transition = 'none';
             progressBar.style.width = '0%';
 
+            // Animate progress bar filling up smoothly over the specified timeout duration
             setTimeout(() => {
                 progressBar.style.transition = `width ${timeoutDuration}ms linear`;
                 progressBar.style.width = '100%';
-            }, 50);
+            }, 500);
         }
 
-        // Automatically hide the modal after the duration completes
+        // Automatically dismiss the welcome modal after the timeout finishes
         setTimeout(function () {
             dismissWelcomeModal();
         }, timeoutDuration);
@@ -241,25 +288,20 @@
 </script>
 
 <!-- ========================================================================= -->
-<!-- EXPORT AND PRINT REPORT ACTIONS HANDLER                                   -->
-<!-- Manage PDF export confirmations and handle direct Excel downloads.       -->
+<!-- EXPORT AND PRINT REPORT ACTIONS HANDLER                                 -->
 <!-- ========================================================================= -->
 <script>
-    /**
-     * Handle actions for PDF confirmation or direct Excel triggering.
-     *
-     * @param {string} type - The report export type ('pdf', 'excel', or 'print')
-     */
+    // Function to confirm and manage report exporting actions (PDF, Excel, Print)
     function confirmAndExport(type) {
         let titleText = "";
         let confirmButtonText = "";
 
-        // Customize confirmation dialog text based on selected format
+        // Determine dialog message configuration based on export type
         if (type === 'pdf') {
             titleText = "Are you sure you want to download the PDF report?";
             confirmButtonText = "Yes, download";
         } else if (type === 'excel') {
-            // DIRECT EXCEL DOWNLOAD: Skip confirmation alert and execute action immediately
+            // Directly trigger excel export without confirmation popup if needed
             executeExportAction('excel');
             return;
         } else {
@@ -267,7 +309,7 @@
             confirmButtonText = "Yes, print now";
         }
 
-        // Show SweetAlert confirmation for PDF or Print actions
+        // Check if SweetAlert2 is available to show a fancy confirmation dialog
         if (typeof Swal !== 'undefined') {
             Swal.fire({
                 title: titleText,
@@ -278,74 +320,67 @@
                 confirmButtonText: confirmButtonText,
                 cancelButtonText: 'Cancel'
             }).then((result) => {
+                // Execute export action if user confirms the prompt
                 if (result.isConfirmed) {
                     executeExportAction(type);
                 }
             });
         } else {
-            // Fallback to native browser confirm dialog if SweetAlert is missing
+            // Fallback to native browser confirmation box if SweetAlert is missing
             if (confirm(titleText)) {
                 executeExportAction(type);
             }
         }
     }
 
-    /**
-     * Execute the underlying URL redirection or print command with active filters.
-     *
-     * @param {string} type - Export format type
-     */
+    // Function to build URLs and execute the chosen report export/print action
     function executeExportAction(type) {
-        // Grab current URL parameters to preserve active user filters and search queries
+        // Capture existing URL search parameters to preserve active filters
         let urlParams = new URLSearchParams(window.location.search);
-        urlParams.delete('search'); // Remove live search filter to export full clean dataset
+        urlParams.delete('search'); // Remove search parameter if necessary
 
+        // Handle PDF export route generation
         if (type === 'pdf') {
-            // Updated route to match the corrected project report pdf route name
             let basePdfUrl = "{{ route('admin.report.task-report.pdf') }}";
             let finalUrl = basePdfUrl;
-
-            // Append query parameters if they exist
+            // Append parameters string if filters exist
             if (urlParams.toString() !== "") {
                 finalUrl += "?" + urlParams.toString();
             }
-
-            // Redirect browser to trigger PDF download
             window.location.href = finalUrl;
-
-        } else if (type === 'excel') {
-            // -----------------------------------------------------------------
-            // EXCEL EXPORT DIRECT ROUTE HANDLING
-            // Pull the base route for Excel export and append current filter query params
-            // -----------------------------------------------------------------
+        }
+        // Handle Excel export route generation
+        else if (type === 'excel') {
             let baseExcelUrl = "{{ route('admin.report.project-report.excel') }}";
             let finalUrl = baseExcelUrl;
-
             if (urlParams.toString() !== "") {
                 finalUrl += "?" + urlParams.toString();
             }
-
-            // Redirect browser to trigger direct Excel file download
             window.location.href = finalUrl;
+        }
+        // Handle Print report view generation using a hidden iframe
+        else {
+            // تحديد مسار الطباعة بناءً على الصفحة الحالية (مهام أو مشاريع)
+            // تم إضافة التحقق لمعرفة ما إذا كنا في صفحة تقارير المهام أو المشاريع لتحديد مسار الطباعة المناسب
+            let basePrintUrl = "";
+            if (window.location.href.includes('task')) {
+                basePrintUrl = "{{ route('admin.report.task-report.print') }}";
+            } else {
+                basePrintUrl = "{{ route('admin.report.project-report.print') }}";
+            }
 
-        } else {
-            // -----------------------------------------------------------------
-            // HIDDEN IFRAME PRINT HANDLER (Triggers native print dialog locally)
-            // -----------------------------------------------------------------
-            let basePrintUrl = "{{ route('admin.report.project-report.print') }}";
             let finalPrintUrl = basePrintUrl;
-
             if (urlParams.toString() !== "") {
                 finalPrintUrl += "?" + urlParams.toString();
             }
 
-            // Remove existing temporary iframe if present
+            // Remove any leftover temporary print iframes from the document body
             const existingIframe = document.getElementById('print-iframe');
             if (existingIframe) {
                 existingIframe.remove();
             }
 
-            // Create a hidden iframe to load the print route and invoke local print window
+            // Create a hidden iframe dynamically to fetch and print the report view
             const iframe = document.createElement('iframe');
             iframe.id = 'print-iframe';
             iframe.style.position = 'fixed';
@@ -354,21 +389,98 @@
             iframe.style.width = '0';
             iframe.style.height = '0';
             iframe.style.border = '0';
-
             iframe.src = finalPrintUrl;
 
-            iframe.onload = function5 = function() {
+            // Trigger print command once the hidden iframe content loads successfully
+            iframe.onload = function() {
                 try {
                     iframe.contentWindow.focus();
                     iframe.contentWindow.print();
                 } catch (error) {
                     console.error('Print execution error: ', error);
+                    // Fallback to opening the report in a new browser tab if iframe printing fails
                     window.open(finalPrintUrl, '_blank');
                 }
             };
 
+            // Append the iframe element to the body to trigger loading
             document.body.appendChild(iframe);
         }
     }
+</script>
+
+<!-- ================================================================= -->
+<!-- START OF SCRIPT: DYNAMIC REMAINING DAYS CALCULATOR                -->
+<!-- ================================================================= -->
+<script>
+    // Wait for the DOM content to be fully loaded before calculating remaining days
+    document.addEventListener("DOMContentLoaded", function () {
+        // Ensure the Laravel task variable exists before injecting values into JS
+        @isset($task)
+        // Retrieve start date and due date values safely from the Blade task object
+        const startStr = "{{ $task->start_date ?? '' }}";
+        const dueStr = "{{ $task->due_date ?? '' }}";
+        // Locate the HTML container element that displays the remaining days counter
+        const counterElement = document.getElementById("live-actual-hours");
+
+        // Proceed if the counter element exists on the page
+        if (counterElement) {
+            // Check if the due date is missing; display fallback text if true
+            if (!dueStr) {
+                counterElement.innerHTML = "No Deadline";
+                return;
+            }
+
+            // Initialize today's date and reset time components to 00:00:00 for accurate day comparison
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Parse and normalize the due date time object
+            const dueTime = new Date(dueStr);
+            dueTime.setHours(0, 0, 0, 0);
+
+            // Parse and normalize the start date time object if it exists
+            const startTime = startStr ? new Date(startStr) : null;
+            if (startTime) {
+                startTime.setHours(0, 0, 0, 0);
+            }
+
+            // Variable to hold the calculated day difference
+            let diffDays;
+
+            // Calculate total duration or remaining days based on whether a start date is provided
+            if (startTime) {
+                // Calculate total duration time span between start date and due date
+                const diffTime = dueTime.getTime() - startTime.getTime();
+                // Convert millisecond difference into total days using Math.ceil
+                diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            } else {
+                // Fallback: calculate countdown remaining days from today's date to the due date
+                const diffTime = dueTime.getTime() - today.getText ? dueTime.getTime() - today.getTime() : dueTime.getTime() - today.getTime();
+                diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            }
+
+            // Build the readable text message based on the calculated day difference value
+            let displayText = "";
+            if (diffDays > 1) {
+                displayText = `${diffDays} Days Remaining`;
+            } else if (diffDays === 1) {
+                displayText = `1 Day Remaining`;
+            } else if (diffDays === 0) {
+                displayText = `Due Today`;
+            } else {
+                displayText = `Overdue by ${Math.abs(diffDays)} Days`;
+            }
+
+            // Check if the task has not started yet (today's date is strictly before start date)
+            if (startTime && today.getTime() < startTime.getTime()) {
+                displayText += ` <span class="text-danger" style="font-size: 12px;">(Not Started)</span>`;
+            }
+
+            // Render the final formatted text string inside the target HTML counter element
+            counterElement.innerHTML = displayText;
+        }
+        @endisset
+    });
 </script>
 @endpush

@@ -125,7 +125,35 @@
                     </div>
 
                     <!-- ========================================================= -->
-                    <!-- ROW 3: TASK DESCRIPTION TEXTAREA                          -->
+                    <!-- ROW 3: STARTED AT & DUE DATE                              -->
+                    <!-- ========================================================= -->
+                    <div class="row mt-3">
+                        <!-- Started At Field -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label font-weight-bold text-dark">Started At</label>
+                                <input type="date" name="started_at" class="form-control"
+                                    value="{{ old('started_at') }}">
+                                @error('started_at')
+                                <span class="text-danger text-sm mt-1 d-block">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <!-- Due Date Field -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label font-weight-bold text-dark">Due Date</label>
+                                <input type="date" name="due_date" class="form-control" value="{{ old('due_date') }}">
+                                @error('due_date')
+                                <span class="text-danger text-sm mt-1 d-block">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================================================= -->
+                    <!-- ROW 4: TASK DESCRIPTION TEXTAREA                          -->
                     <!-- ========================================================= -->
                     <div class="row mt-3">
                         <!-- Task Description Field -->
@@ -144,7 +172,7 @@
                     </div>
 
                     <!-- ========================================================= -->
-                    <!-- ROW 4: MULTIPLE FILE ATTACHMENTS UPLOAD BOX               -->
+                    <!-- ROW 5: MULTIPLE FILE ATTACHMENTS UPLOAD BOX               -->
                     <!-- ========================================================= -->
                     <div class="row mt-3">
                         <div class="col-md-12">

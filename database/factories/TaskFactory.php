@@ -47,6 +47,10 @@ class TaskFactory extends Factory
             // $attachments = $files[0];
         }
 
+        // توليد تواريخ زمنية متناسقة للمهمة
+        $startDate = $this->faker->dateTimeBetween('-1 month', '+1 month');
+        $dueDate = (clone $startDate)->modify('+' . $this->faker->numberBetween(1, 14) . ' days');
+
         return [
             // ========================================================= //
             // TASK BASIC ATTRIBUTES //
@@ -77,6 +81,12 @@ class TaskFactory extends Factory
 
             // Add simulated attachments data
             'attachment' => $attachments, // This will be either a JSON string of file paths or null if no attachments are present
+
+            // ========================================================= //
+            // TASK TIMELINE (START & DUE DATES) //
+            // ========================================================= //
+            'started_at' => $startDate,
+            'due_date' => $dueDate,
         ];
     }
 }

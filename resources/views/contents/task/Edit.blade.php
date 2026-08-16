@@ -128,6 +128,35 @@
                     </div>
 
                     <!-- ========================================================= -->
+                    <!-- ROW NEW: STARTED AT AND DUE DATE FIELDS                   -->
+                    <!-- ========================================================= -->
+                    <div class="row mt-3">
+                        <!-- Started At Field -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label font-weight-bold text-dark">Started At</label>
+                                <input type="date" name="started_at" class="form-control"
+                                    value="{{ old('started_at', optional($task->started_at)->format('Y-m-d')) }}">
+                                @error('started_at')
+                                <span class="text-danger text-sm mt-1 d-block">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <!-- Due Date Field -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label font-weight-bold text-dark">Due Date</label>
+                                <input type="date" name="due_date" class="form-control"
+                                    value="{{ old('due_date', optional($task->due_date)->format('Y-m-d')) }}">
+                                @error('due_date')
+                                <span class="text-danger text-sm mt-1 d-block">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================================================= -->
                     <!-- ROW 3: TASK DESCRIPTION TEXTAREA                          -->
                     <!-- ========================================================= -->
                     <div class="row mt-3">

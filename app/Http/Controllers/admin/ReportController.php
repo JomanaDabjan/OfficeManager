@@ -118,24 +118,28 @@ class ReportController extends Controller
 
     public function printProjectsReport(Request $request): View
     {
-        // Using chunking collection approach to prevent memory overload for large reports
         $projects = collect();
         Project::with(['manager', 'tasks.assignedUser'])->reportFilter($request)->chunk(500, function ($chunk) use (&$projects) {
             $projects = $projects->concat($chunk);
         });
 
-        return view('contents.report.partial.Project_table', compact('projects'));
+        // تقسيم البيانات إلى أجزاء (كل جزء 6 عناصر للطباعة المنظمة)
+        $chunks = $projects->values()->chunk(6);
+
+        return view('contents.report.partial.Project_table', compact('chunks'));
     }
 
     public function printTasksReport(Request $request): View
     {
-        // Using chunking collection approach for memory safety
         $tasks = collect();
         Task::with(['project', 'assignedUser'])->reportFilter($request)->chunk(500, function ($chunk) use (&$tasks) {
             $tasks = $tasks->concat($chunk);
         });
 
-        return view('contents.report.partial.Task_table', compact('tasks'));
+        // تقسيم البيانات إلى أجزاء (كل جزء 6 مهام)
+        $chunks = $tasks->values()->chunk(6);
+
+        return view('contents.report.partial.Task_table', compact('chunks'));
     }
 
     /**
@@ -146,29 +150,29 @@ class ReportController extends Controller
 
     public function exportProjectsPdf(Request $request)
     {
-        // Using chunking to safely load large datasets for PDF generation
         $projects = collect();
         Project::with(['manager', 'tasks.assignedUser'])->reportFilter($request)->chunk(500, function ($chunk) use (&$projects) {
             $projects = $projects->concat($chunk);
         });
 
+        $chunks = $projects->values()->chunk(6);
         $isPdf = true;
 
-        $pdf = Pdf::loadView('contents.report.partial.Project_table', compact('projects', 'isPdf'));
+        $pdf = Pdf::loadView('contents.report.partial.Project_table', compact('chunks', 'isPdf'));
         return $pdf->download('projects-report.pdf');
     }
 
     public function exportTasksPdf(Request $request)
     {
-        // Using chunking to safely load large datasets for PDF generation
         $tasks = collect();
         Task::with(['project', 'assignedUser'])->reportFilter($request)->chunk(500, function ($chunk) use (&$tasks) {
             $tasks = $tasks->concat($chunk);
         });
 
+        $chunks = $tasks->values()->chunk(6);
         $isPdf = true;
 
-        $pdf = Pdf::loadView('contents.report.partial.Task_table', compact('tasks', 'isPdf'));
+        $pdf = Pdf::loadView('contents.report.partial.Task_table', compact('chunks', 'isPdf'));
         return $pdf->download('tasks-report.pdf');
     }
 

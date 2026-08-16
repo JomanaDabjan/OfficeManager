@@ -10,7 +10,7 @@
 <!-- ========================================================================= -->
 
 <div class="row justify-content-center">
-    <div class="col-lg-10 col-md-12">
+    <div class="col-lg-12 col-md-12">
 
         <!-- Include Session Alert Message Component for Feedback -->
         <x-alert-message />
@@ -54,13 +54,13 @@
             </div>
 
             <!-- CARD BODY DETAILS SECTION -->
-            <div class="card-body px-5 py-4">
+            <div class="card-body px-4 py-4">
                 <div class="row">
 
                     <!-- Project Status Information Box -->
-                    <div class="col-md-4 mb-3">
-                        <div class="p-3 bg-light rounded shadow-sm h-100">
-                            <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-1">Project
+                    <div class="col-xl-3 col-md-6 mb-3">
+                        <div class="p-3 bg-light rounded shadow-sm h-100 d-flex flex-column justify-content-between">
+                            <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-2">Project
                                 Status</span>
 
                             @php
@@ -95,28 +95,44 @@
                             };
                             @endphp
 
-                            <span class="badge {{ $statusClass }} px-3 py-2 text-uppercase font-weight-bold">
-                                {{ str_replace('_', ' ', $currentStatus) }}
-                            </span>
+                            <div>
+                                <span class="badge {{ $statusClass }} px-3 py-2 text-uppercase font-weight-bold">
+                                    {{ str_replace('_', ' ', $currentStatus) }}
+                                </span>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Assigned Manager Information Box -->
-                    <div class="col-md-4 mb-3">
-                        <div class="p-3 bg-light rounded shadow-sm h-100">
-                            <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-1">Assigned
+                    <div class="col-xl-3 col-md-6 mb-3">
+                        <div class="p-3 bg-light rounded shadow-sm h-100 d-flex flex-column justify-content-between">
+                            <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-2">Assigned
                                 Manager</span>
-                            <span class="text-dark font-weight-bold text-md">
+                            <span class="text-dark font-weight-bold text-md text-truncate"
+                                title="{{ $project->manager->name ?? 'Not Assigned' }}">
                                 <i class="now-ui-icons users_circle-08 mr-1 text-primary"></i>
                                 {{ $project->manager->name ?? 'Not Assigned' }}
                             </span>
                         </div>
                     </div>
 
+                    <!-- Project Budget / Price Information Box -->
+                    <div class="col-xl-3 col-md-6 mb-3">
+                        <div class="p-3 bg-light rounded shadow-sm h-100 d-flex flex-column justify-content-between">
+                            <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-2">Project
+                                Budget</span>
+                            <span class="text-success font-weight-bold text-md">
+                                <i class="now-ui-icons business_money-coins mr-1 text-success"></i>
+                                {{ isset($project->budget) && $project->budget !== null ?
+                                number_format($project->budget, 2) . ' $' : 'Not Specified' }}
+                            </span>
+                        </div>
+                    </div>
+
                     <!-- Creation Date Information Box -->
-                    <div class="col-md-4 mb-3">
-                        <div class="p-3 bg-light rounded shadow-sm h-100">
-                            <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-1">Created
+                    <div class="col-xl-3 col-md-6 mb-3">
+                        <div class="p-3 bg-light rounded shadow-sm h-100 d-flex flex-column justify-content-between">
+                            <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-2">Created
                                 At</span>
                             <span class="text-dark font-weight-bold text-md">
                                 <i class="now-ui-icons ui-1_calendar-60 mr-1 text-primary"></i>
@@ -126,12 +142,12 @@
                     </div>
                 </div>
 
-                <!-- PROJECT TIMELINE SUB-SECTION (START & END WITH CONSUMED TIME) -->
+                <!-- PROJECT TIMELINE SUB-SECTION (START & END WITH REMAINING TIME) -->
                 <div class="row">
                     <!-- Start Date Box -->
-                    <div class="col-md-6 mb-3">
-                        <div class="p-3 bg-light rounded shadow-sm h-100">
-                            <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-1">Start
+                    <div class="col-lg-6 mb-3">
+                        <div class="p-3 bg-light rounded shadow-sm h-100 d-flex flex-column justify-content-between">
+                            <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-2">Start
                                 Date</span>
                             <span class="text-dark font-weight-bold text-md">
                                 <i class="now-ui-icons ui-1_calendar-60 mr-1 text-primary"></i>
@@ -141,184 +157,175 @@
                         </div>
                     </div>
 
-                    <!-- End Date & Consumed Time Box -->
-                    <div class="col-md-6 mb-3">
-                        <div class="p-3 bg-light rounded shadow-sm h-100">
-                            <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-1">End Date &
-                                Consumed Time</span>
-                            <span
-                                class="text-dark font-weight-bold text-md d-flex justify-content-between align-items-center">
-                                <span>
+                    <!-- End Date & Remaining Time Box -->
+                    <div class="col-lg-6 mb-3">
+                        <div class="p-3 bg-light rounded shadow-sm h-100 d-flex flex-column justify-content-between">
+                            <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-2">End Date &
+                                Remaining Time</span>
+
+                            <div class="d-flex flex-wrap align-items-center justify-content-between mt-1">
+                                <!-- End Date -->
+                                <span class="text-dark font-weight-bold text-md mb-1 mb-sm-0">
                                     <i class="now-ui-icons ui-1_calendar-60 mr-1 text-primary"></i>
                                     {{ $project->end_date ? \Carbon\Carbon::parse($project->end_date)->format('Y-m-d') :
                                     'Not Specified' }}
                                 </span>
-                                <span class="badge badge-neutral text-primary border px-2 py-1 shadow-sm"
-                                    style="font-size: 85%;">
+
+                                <!-- Remaining Time Badge -->
+                                <span
+                                    class="badge badge-neutral text-primary border px-2 py-2 shadow-sm text-wrap text-left"
+                                    style="font-size: 80%; line-height: 1.4;">
                                     <i class="now-ui-icons ui-2_time-alarm mr-1"></i>
                                     @php
-                                    $consumedText = 'N/A';
-                                    if ($startDate && $endDate) {
-                                    $totalDays = $startDate->diffInDays($endDate);
+                                    $remainingText = 'N/A';
+                                    if ($endDate) {
+                                    $todayDate = \Carbon\Carbon::today();
 
-                                    if ($today->greaterThan($endDate)) {
-                                    $consumedText = $totalDays . ' Days Elapsed / ' . $totalDays . ' Total Days
-                                    (Ended)';
-                                    } elseif ($today->lessThan($startDate)) {
-                                    $consumedText = '0 Days Elapsed / ' . $totalDays . ' Total Days (Not Started)';
+                                    if ($todayDate->greaterThan($endDate)) {
+                                    $remainingText = '0 Days Remaining (Ended)';
+                                    } elseif ($startDate && $todayDate->lessThan($startDate)) {
+                                    $daysRemaining = $todayDate->diffInDays($endDate);
+                                    $remainingText = $daysRemaining . ' Days Remaining (Not Started)';
                                     } else {
-                                    $daysPassed = $startDate->diffInDays($today);
-                                    $consumedText = $daysPassed . ' Days Elapsed / ' . $totalDays . ' Total Days';
+                                    $daysRemaining = $todayDate->diffInDays($endDate);
+                                    $remainingText = $daysRemaining . ' Days Remaining';
                                     }
-                                    } elseif ($startDate) {
-                                    $daysPassed = $startDate->diffInDays($today);
-                                    $consumedText = $daysPassed . ' Days Elapsed / N/A Total Days';
                                     }
                                     @endphp
-                                    {{ $consumedText }}
+                                    {{ $remainingText }}
                                 </span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- PROJECT DESCRIPTION SUB-SECTION -->
-                <div class="row mt-3">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label class="form-control-label font-weight-bold text-dark">Project Description &
-                                Objectives</label>
-                            <div class="p-3 bg-light rounded text-muted shadow-sm"
-                                style="min-height: 100px; line-height: 1.6;">
-                                {!! nl2br(e($project->description)) ?: 'No description provided for this project.' !!}
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- ASSOCIATED TASKS SECTION -->
-        <div class="card shadow-sm border-0 project-tasks-card">
-            <div class="card-header bg-white py-3 px-4 border-bottom">
-                <h5 class="font-weight-bold text-dark mb-0">
-                    <i class="now-ui-icons design_bullet-list-67 text-primary mr-2"></i> Associated Tasks
-                </h5>
-            </div>
+                <!-- ASSOCIATED TASKS SECTION -->
+                <div class="card shadow-sm border-0 project-tasks-card">
+                    <div class="card-header bg-white py-3 px-4 border-bottom">
+                        <h5 class="font-weight-bold text-dark mb-0">
+                            <i class="now-ui-icons design_bullet-list-67 text-primary mr-2"></i> Associated Tasks
+                        </h5>
+                    </div>
 
-            <div class="card-body px-4 py-3">
-                @if(isset($project->tasks) && $project->tasks->count() > 0)
-                <div class="table-responsive">
-                    <table class="table align-items-center table-flush">
-                        <thead class="thead-light">
-                            <tr>
-                                <th scope="col">Task Title</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Assigned Users</th>
-                                <th scope="col">Last Status Update Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($project->tasks as $task)
-                            <tr>
-                                <td class="font-weight-bold text-dark">{{ $task->title }}</td>
-                                <td class="align-middle project-status">
-                                    @php
-                                    $taskStatus = strtolower($task->status);
-                                    @endphp
-                                    <span class="badge badge-pill
+                    <div class="card-body px-4 py-3">
+                        @if(isset($project->tasks) && $project->tasks->count() > 0)
+                        <div class="table-responsive">
+                            <table class="table align-items-center table-flush">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th scope="col">Task Title</th>
+                                        <th scope="col">Status</th>
+                                        <th scope="col">Assigned Users</th>
+                                        <th scope="col">Last Status Update Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($project->tasks as $task)
+                                    <tr>
+                                        <td class="font-weight-bold text-dark">{{ $task->title }}</td>
+                                        <td class="align-middle project-status">
+                                            @php
+                                            $taskStatus = strtolower($task->status);
+                                            @endphp
+                                            <span class="badge badge-pill
                                         @if($taskStatus == 'complete' || $taskStatus == 'completed') badge-success
                                         @elseif($taskStatus == 'in_progress') badge-info
                                         @elseif($taskStatus == 'pending') badge-warning
                                         @else badge-secondary @endif px-3 py-2 text-white shadow-sm font-weight-bold">
-                                        {{ ucfirst(str_replace('_', ' ', $task->status ?? 'in_progress')) }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <button type="button" class="btn btn-primary btn-round btn-sm px-3 shadow-sm"
-                                        data-toggle="modal" data-target="#assignedUsersModal-{{ $task->id }}">
-                                        <i class="now-ui-icons users_single-02 mr-1"></i> View Users
-                                    </button>
-                                </td>
-                                <td>
-                                    <span class="text-muted">
-                                        <i class="now-ui-icons ui-1_calendar-60 mr-1 text-primary"></i>
-                                        {{ $task->updated_at ? $task->updated_at->format('Y-m-d H:i') :
-                                        ($task->created_at ? $task->created_at->format('Y-m-d H:i') : 'N/A') }}
-                                    </span>
-                                </td>
-                            </tr>
-
-                            <!-- Modal for Assigned Users -->
-                            <div class="modal fade" id="assignedUsersModal-{{ $task->id }}" tabindex="-1" role="dialog"
-                                aria-labelledby="assignedUsersModalLabel-{{ $task->id }}" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered" role="document">
-                                    <div class="modal-content border-0 shadow-lg">
-                                        <div class="modal-header bg-primary text-white">
-                                            <h5 class="modal-title font-weight-bold text-white"
-                                                id="assignedUsersModalLabel-{{ $task->id }}">
-                                                <i class="now-ui-icons users_single-02 mr-2"></i> Users for: {{
-                                                $task->title }}
-                                            </h5>
-                                            <button type="button" class="close text-white" data-dismiss="modal"
-                                                aria-label="Close">
-                                                <span aria-hidden="true">&times;</span>
+                                                {{ ucfirst(str_replace('_', ' ', $task->status ?? 'in_progress')) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button type="button"
+                                                class="btn btn-primary btn-round btn-sm px-3 shadow-sm"
+                                                data-toggle="modal" data-target="#assignedUsersModal-{{ $task->id }}">
+                                                <i class="now-ui-icons users_single-02 mr-1"></i> View Users
                                             </button>
-                                        </div>
-                                        <div class="modal-body p-4">
-                                            @php
-                                            $assignedUsers = collect();
-                                            if (isset($task->assignedUsers) && $task->assignedUsers->count() > 0) {
-                                            $assignedUsers = $task->assignedUsers;
-                                            } elseif (isset($task->user) && $task->user) {
-                                            $assignedUsers = collect([$task->user]);
-                                            }
-                                            @endphp
+                                        </td>
+                                        <td>
+                                            <span class="text-muted">
+                                                <i class="now-ui-icons ui-1_calendar-60 mr-1 text-primary"></i>
+                                                {{ $task->updated_at ? $task->updated_at->format('Y-m-d H:i') :
+                                                ($task->created_at ? $task->created_at->format('Y-m-d H:i') : 'N/A') }}
+                                            </span>
+                                        </td>
+                                    </tr>
 
-                                            @if($assignedUsers->count() > 0)
-                                            <div class="list-group">
-                                                @foreach($assignedUsers as $assignedUser)
-                                                <div
-                                                    class="list-group-item list-group-item-action d-flex align-items-center border-0 mb-2 rounded bg-light shadow-sm">
-                                                    <div class="icon icon-shape icon-sm bg-primary text-white rounded-circle shadow-sm mr-3 d-flex align-items-center justify-content-center"
-                                                        style="width: 35px; height: 35px;">
-                                                        <i class="now-ui-icons users_circle-08"></i>
-                                                    </div>
-                                                    <div>
-                                                        <h6 class="font-weight-bold text-dark mb-0">{{
-                                                            $assignedUser->name }}</h6>
-                                                        <small class="text-muted">{{ $assignedUser->email ?? 'No email
-                                                            provided' }}</small>
-                                                    </div>
+                                    <!-- Modal for Assigned Users -->
+                                    <div class="modal fade" id="assignedUsersModal-{{ $task->id }}" tabindex="-1"
+                                        role="dialog" aria-labelledby="assignedUsersModalLabel-{{ $task->id }}"
+                                        aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered" role="document">
+                                            <div class="modal-content border-0 shadow-lg">
+                                                <div class="modal-header bg-primary text-white">
+                                                    <h5 class="modal-title font-weight-bold text-white"
+                                                        id="assignedUsersModalLabel-{{ $task->id }}">
+                                                        <i class="now-ui-icons users_single-02 mr-2"></i> Users for: {{
+                                                        $task->title }}
+                                                    </h5>
+                                                    <button type="button" class="close text-white" data-dismiss="modal"
+                                                        aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
                                                 </div>
-                                                @endforeach
+                                                <div class="modal-body p-4">
+                                                    @php
+                                                    $assignedUsers = collect();
+                                                    if (isset($task->assignedUsers) && $task->assignedUsers->count() >
+                                                    0) {
+                                                    $assignedUsers = $task->assignedUsers;
+                                                    } elseif (isset($task->user) && $task->user) {
+                                                    $assignedUsers = collect([$task->user]);
+                                                    }
+                                                    @endphp
+
+                                                    @if($assignedUsers->count() > 0)
+                                                    <div class="list-group">
+                                                        @foreach($assignedUsers as $assignedUser)
+                                                        <div
+                                                            class="list-group-item list-group-item-action d-flex align-items-center border-0 mb-2 rounded bg-light shadow-sm">
+                                                            <div class="icon icon-shape icon-sm bg-primary text-white rounded-circle shadow-sm mr-3 d-flex align-items-center justify-content-center"
+                                                                style="width: 35px; height: 35px;">
+                                                                <i class="now-ui-icons users_circle-08"></i>
+                                                            </div>
+                                                            <div>
+                                                                <h6 class="font-weight-bold text-dark mb-0">{{
+                                                                    $assignedUser->name }}</h6>
+                                                                <small class="text-muted">{{ $assignedUser->email ?? 'No
+                                                                    email
+                                                                    provided' }}</small>
+                                                            </div>
+                                                        </div>
+                                                        @endforeach
+                                                    </div>
+                                                    @else
+                                                    <div class="text-center py-5">
+                                                        <i class="now-ui-icons objects_support-17 text-muted"
+                                                            style="font-size: 30px;"></i>
+                                                        <p class="text-muted mt-2 mb-0">No users assigned to this task
+                                                            yet.</p>
+                                                    </div>
+                                                    @endif
+                                                </div>
+                                                <div class="modal-footer bg-light">
+                                                    <button type="button"
+                                                        class="btn btn-secondary btn-round btn-sm px-4"
+                                                        data-dismiss="modal">Close</button>
+                                                </div>
                                             </div>
-                                            @else
-                                            <div class="text-center py-4">
-                                                <i class="now-ui-icons objects_support-17 text-muted"
-                                                    style="font-size: 30px;"></i>
-                                                <p class="text-muted mt-2 mb-0">No users assigned to this task yet.</p>
-                                            </div>
-                                            @endif
-                                        </div>
-                                        <div class="modal-footer bg-light">
-                                            <button type="button" class="btn btn-secondary btn-round btn-sm px-4"
-                                                data-dismiss="modal">Close</button>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                            @endforeach
-                        </tbody>
-                    </table>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        @else
+                        <p class="text-muted text-center py-3 mb-0">No tasks found associated with this project.</p>
+                        @endif
+                    </div>
                 </div>
-                @else
-                <p class="text-muted text-center py-3 mb-0">No tasks found associated with this project.</p>
-                @endif
+
             </div>
         </div>
 
-    </div>
-</div>
-
-@endsection
+        @endsection

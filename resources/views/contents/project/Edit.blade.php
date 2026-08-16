@@ -103,6 +103,16 @@
                                     value="{{ old('end_date', optional($project->end_date)->format('Y-m-d') ?? $project->end_date) }}">
                             </div>
                         </div>
+
+                        <!-- Project Budget Field (Added) -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-control-label font-weight-bold text-dark">Project Budget ($)</label>
+                                <input type="number" step="0.01" name="budget"
+                                    class="form-control @error('budget') is-invalid @enderror"
+                                    placeholder="Enter project budget..." value="{{ old('budget', $project->budget) }}">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="row mt-3">
@@ -127,7 +137,7 @@
                     <div class="row mt-4">
                         <div class="col-md-12 text-right">
                             <!-- Cancel and return to index route -->
-                            <a href="{{ route('admin.project.edit', $project->id) }}"
+                            <a href="{{ route('admin.project.index') }}"
                                 class="btn btn-secondary btn-round px-4 mr-2 shadow-sm">
                                 Cancel
                             </a>

@@ -96,16 +96,15 @@
 </style>
 
 <!-- ========================================================================== -->
-<!-- 2. MAIN REPORT TASK TABLE CARD SECTION (CONTAINER WITH UNIQUE ID)          -->
+<!-- MAIN REPORT TASK TABLE CARD SECTION -->
 <!-- ========================================================================== -->
 <div class="row">
     <div class="col-md-12">
-        <!-- Target container wrapper for printing isolated report content -->
         <div class="card shadow-sm border-0" id="printable-report">
             <div class="card-body px-0 pb-0">
                 <div class="table-responsive">
-                    @forelse($tasks->chunk(6) as $pageIndex => $chunkedTasks)
-                    <!-- Chunk container to force 6 records per page for both print and PDF engines -->
+                    @forelse($chunks as $pageIndex => $chunkedTasks)
+                    <!-- Chunk container to force structured pages for print and PDF -->
                     <div class="{{ $pageIndex > 0 ? 'page-break-container' : '' }}"
                         style="{{ $pageIndex > 0 ? 'margin-top: 20px;' : '' }}">
                         <table class="table align-items-center table-flush mb-0" id="tasksTable_{{ $pageIndex }}">
@@ -115,6 +114,8 @@
                                     <th>Description</th>
                                     <th>Project</th>
                                     <th>Assigned Employee</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
                                     <th>Last Update</th>
                                     <th>Status & Progress</th>
                                 </tr>
@@ -123,7 +124,6 @@
                                 @foreach($chunkedTasks as $task)
                                 @php
                                 $taskStatus = strtolower($task->status ?? 'in_progress');
-
                                 $progressPercent = $task->progress ?? match($taskStatus) {
                                 'completed' => 100,
                                 'in_progress' => 50,
@@ -152,21 +152,38 @@
                                         {{ optional($task->assignedUser ?? $task->employee)->name ?? 'Unassigned' }}
                                     </td>
 
-                                    <!-- Last Update Column -->
+                                    <!-- Start Date Column -->
                                     <td>
-                                        @if($task->updated_at)
-                                        <div style="font-weight: bold;">{{ $task->updated_at->format('Y-m-d') }}</div>
-                                        <div style="font-size: 8.5px;">{{ $task->updated_at->format('h:i A') }}</div>
-                                        <div style="font-size: 7.5px; color: #5e72e4;">{{
-                                            $task->updated_at->diffForHumans() }}</div>
+                                        @if($task->started_at)
+                                        <div style="font-weight: bold;">{{
+                                            \Carbon\Carbon::parse($task->started_at)->format('Y-m-d') }}</div>
                                         @else
                                         <span>N/A</span>
                                         @endif
                                     </td>
 
-                                    <!-- Status Badge & Centered Progress Battery Column -->
+                                    <!-- End Date Column -->
                                     <td>
-                                        <!-- Status Pill Badge -->
+                                        @if($task->due_date)
+                                        <div style="font-weight: bold;">{{
+                                            \Carbon\Carbon::parse($task->due_date)->format('Y-m-d') }}</div>
+                                        @else
+                                        <span>N/A</span>
+                                        @endif
+                                    </td>
+
+                                    <!-- Last Update Column -->
+                                    <td>
+                                        @if($task->updated_at)
+                                        <div style="font-weight: bold;">{{ $task->updated_at->format('Y-m-d') }}</div>
+                                        <div style="font-size: 8.5px;">{{ $task->updated_at->format('h:i A') }}</div>
+                                        @else
+                                        <span>N/A</span>
+                                        @endif
+                                    </td>
+
+                                    <!-- Status & Progress Column -->
+                                    <td>
                                         <div style="margin-bottom: 4px;">
                                             <span
                                                 style="display: inline-block; padding: 2px 8px; border-radius: 10px; font-weight: bold; font-size: 8px; color: #fff; background-color: @if($taskStatus == 'completed') #2dce89 @elseif($taskStatus == 'in_progress') #fbb140 @else #11cdef @endif;">
@@ -174,33 +191,17 @@
                                             </span>
                                         </div>
 
-                                        <!-- Centered Battery Style Progress Bar -->
                                         <div style="text-align: center; width: 100%;">
                                             <div
                                                 style="font-size: 7.5px; font-weight: bold; color: #666; margin-bottom: 2px; text-align: center;">
                                                 {{ $progressPercent }}%
                                             </div>
-
-                                            <table
-                                                style="width: auto !important; margin: 0 auto !important; border: none !important; background: transparent !important;">
-                                                <tr>
-                                                    <td
-                                                        style="padding: 0 !important; border: none !important; background: transparent !important; vertical-align: middle !important;">
-                                                        <div
-                                                            style="height: 6px; width: 45px; background-color: #f1f3f5; border: 1px solid #dcdcdc; border-radius: 2px; overflow: hidden; padding: 0.5px;">
-                                                            <div
-                                                                style="height: 100%; width: {{ $progressPercent }}%; border-radius: 1px; background: @if($taskStatus == 'completed') #2dce89 @elseif($taskStatus == 'in_progress') #fbb140 @else #11cdef @endif;">
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td
-                                                        style="padding: 0 !important; border: none !important; background: transparent !important; vertical-align: middle !important;">
-                                                        <div
-                                                            style="width: 1.5px; height: 3px; background-color: #dcdcdc; border-top-right-radius: 1px; border-bottom-right-radius: 1px; margin-left: 1px;">
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            </table>
+                                            <div
+                                                style="height: 6px; width: 45px; background-color: #f1f3f5; border: 1px solid #dcdcdc; border-radius: 2px; overflow: hidden; margin: 0 auto;">
+                                                <div
+                                                    style="height: 100%; width: {{ $progressPercent }}%; background: @if($taskStatus == 'completed') #2dce89 @elseif($taskStatus == 'in_progress') #fbb140 @else #11cdef @endif;">
+                                                </div>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -212,7 +213,7 @@
                     <table class="table align-items-center table-flush mb-0">
                         <tbody>
                             <tr>
-                                <td colspan="6" style="padding: 30px; color: #777;">
+                                <td colspan="8" style="padding: 30px; color: #777; text-align: center;">
                                     No task data available for report.
                                 </td>
                             </tr>

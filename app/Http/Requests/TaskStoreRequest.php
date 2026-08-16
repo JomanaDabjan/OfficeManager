@@ -39,6 +39,12 @@ class TaskStoreRequest extends FormRequest
             // Status is required and must match one of the allowed workflow states.
             'status'      => ['required', 'in:pending,accepted,in_progress,completed,rejected'],
 
+            // Started at date/time is optional, but if provided, must be a valid date.
+            'started_at'  => ['nullable', 'date'],
+
+            // Due date/time is optional, but if provided, must be a valid date, and can include after_or_equal if needed.
+            'due_date'    => ['nullable', 'date'],
+
             // Attachment is optional, but if provided, must be a valid file type and within size limits.
             'attachment'  => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,png,jpeg', 'max:2048'],
         ];

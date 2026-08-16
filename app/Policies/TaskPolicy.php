@@ -29,6 +29,29 @@ class TaskPolicy
     }
 
     /**
+     * Determine whether the user can view the task details.
+     *
+     * @param \App\Models\User $user
+     * @param \App\Models\Task $task
+     * @return \Illuminate\Auth\Access\Response
+     */
+    public function view(User $user, Task $task): Response
+    {
+        $role = strtolower(trim($user->role));
+
+        // 1. Admin can view any task
+        // 2. Manager can view the task ONLY if they manage the project associated with this task
+        // 3. Employee can view the task ONLY if it is assigned to them
+        $isAdmin = ($role === 'admin');
+        $isProjectManager = ($role === 'manager' && $task->project && $task->project->manager_id === $user->id);
+        $isAssignedEmployee = ($role === 'employee' && $task->user_id === $user->id);
+
+        return ($isAdmin || $isProjectManager || $isAssignedEmployee)
+            ? Response::allow()
+            : Response::deny('Unauthorized action. You do not have permission to view this task.');
+    }
+
+    /**
      * Determine whether the user can create tasks.
      *
      * @param \App\Models\User $user

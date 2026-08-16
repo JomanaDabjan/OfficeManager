@@ -83,6 +83,9 @@ class ProjectsExport implements FromQuery, WithHeadings, WithMapping, WithColumn
             'Project Title',
             'Description',
             'Project Manager',
+            'Start Date',
+            'End Date',
+            'Budget',
             'Total Tasks',
             'Project Tasks & Assigned Employees',
             'Status & Progress'
@@ -98,12 +101,15 @@ class ProjectsExport implements FromQuery, WithHeadings, WithMapping, WithColumn
     public function columnWidths(): array
     {
         return [
-            'A' => 25, // Project Title: Medium width
-            'B' => 35, // Description: Fixed at 35 so text wraps to multiple lines
-            'C' => 20, // Manager: Standard width
-            'D' => 15, // Total Tasks: Compact width
-            'E' => 40, // Tasks list: Wider to accommodate multi-line content
-            'F' => 25, // Status: Medium width
+            'A' => 25, // Project Title
+            'B' => 35, // Description
+            'C' => 20, // Project Manager
+            'D' => 16, // Start Date
+            'E' => 16, // End Date
+            'F' => 18, // Budget
+            'G' => 15, // Total Tasks
+            'H' => 40, // Tasks list
+            'I' => 25, // Status
         ];
     }
 
@@ -142,10 +148,17 @@ class ProjectsExport implements FromQuery, WithHeadings, WithMapping, WithColumn
         $statusText = ucfirst(str_replace('_', ' ', $project->status ?? 'in_progress'));
         $statusAndProgress = $statusText . " (" . $progressPercent . "%)";
 
+        $startDate = $project->start_date ? \Carbon\Carbon::parse($project->start_date)->format('Y-m-d') : 'N/A';
+        $endDate = $project->end_date ? \Carbon\Carbon::parse($project->end_date)->format('Y-m-d') : 'N/A';
+        $budget = $project->budget ? '$' . number_format($project->budget, 2) : 'N/A';
+
         return [
             $project->title,
             $project->description ?? 'No description',
             optional($project->manager)->name ?? 'No Manager',
+            $startDate,
+            $endDate,
+            $budget,
             $tasksCount . ' Tasks',
             $tasksList,
             $statusAndProgress

@@ -8,15 +8,15 @@
         color: #333333 !important;
         background-color: #ffffff !important;
         margin: 0;
-        padding: 15px;
+        padding: 10px;
     }
 
     /* Styling for the main dynamic report heading */
     h2 {
         text-align: center;
         color: #f96332 !important;
-        margin-bottom: 20px;
-        font-size: 20px;
+        margin-bottom: 15px;
+        font-size: 18px;
         text-transform: uppercase;
     }
 
@@ -26,28 +26,32 @@
         border-collapse: collapse !important;
         background-color: #ffffff !important;
         border: 1px solid #e3e3e3 !important;
-        margin-top: 10px;
+        margin-top: 5px;
+        table-layout: fixed;
+        /* Fix table layout to respect column widths */
     }
 
     /* Table Header styling - Centered */
     th {
         background-color: #f96332 !important;
         color: #ffffff !important;
-        padding: 12px 8px !important;
-        font-size: 11px !important;
+        padding: 10px 4px !important;
+        font-size: 10px !important;
         text-transform: uppercase;
         text-align: center !important;
         border: 1px solid #e65100 !important;
+        word-wrap: break-word;
     }
 
     /* Table Data cells styling - Centered */
     td {
         border: 1px solid #dee2e6 !important;
-        padding: 10px 8px !important;
+        padding: 8px 4px !important;
         vertical-align: middle !important;
         text-align: center !important;
-        font-size: 10px !important;
+        font-size: 9px !important;
         color: #333333 !important;
+        word-wrap: break-word;
     }
 
     /* Zebra striping: Alternating background color for even rows for better readability */
@@ -65,8 +69,8 @@
 
     /* Individual list items formatting */
     ul li {
-        font-size: 9.5px;
-        padding: 3px 0;
+        font-size: 8.5px;
+        padding: 2px 0;
         border-bottom: 1px dashed #eee;
     }
 
@@ -75,11 +79,12 @@
         body {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+            padding: 0;
         }
 
         @page {
             size: A4 portrait;
-            margin: 20mm 15mm 20mm 15mm;
+            margin: 10mm 10mm 10mm 10mm;
         }
 
         th {
@@ -119,19 +124,22 @@
         <div class="card shadow-sm border-0" id="printable-report">
             <div class="card-body px-0 pb-0">
                 <div class="table-responsive">
-                    @forelse($projects->chunk(6) as $pageIndex => $chunkedProjects)
+                    @forelse($chunks as $pageIndex => $chunkedProjects)
                     <!-- Chunk container to force 6 records per page for both print and PDF engines -->
                     <div class="{{ $pageIndex > 0 ? 'page-break-container' : '' }}"
-                        style="{{ $pageIndex > 0 ? 'margin-top: 20px;' : '' }}">
+                        style="{{ $pageIndex > 0 ? 'margin-top: 10px;' : '' }}">
                         <table class="table align-items-center table-flush mb-0" id="projectsTable_{{ $pageIndex }}">
                             <thead>
                                 <tr>
-                                    <th>Project Title</th>
-                                    <th>Description</th>
-                                    <th>Project Manager</th>
-                                    <th>Total Tasks</th>
-                                    <th>Project Tasks & Assigned Employees</th>
-                                    <th>Status & Progress</th>
+                                    <th style="width: 13%;">Project Title</th>
+                                    <th style="width: 15%;">Description</th>
+                                    <th style="width: 11%;">Project Manager</th>
+                                    <th style="width: 10%;">Start Date</th>
+                                    <th style="width: 10%;">End Date</th>
+                                    <th style="width: 9%;">Budget</th>
+                                    <th style="width: 7%;">Total Tasks</th>
+                                    <th style="width: 13%;">Tasks & Employees</th>
+                                    <th style="width: 12%;">Status & Progress</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -153,7 +161,7 @@
                                     </td>
 
                                     <!-- Project Description Column -->
-                                    <td style="max-width: 180px; word-break: break-word;">
+                                    <td>
                                         {{ $project->description ?? 'No description' }}
                                     </td>
 
@@ -162,10 +170,26 @@
                                         {{ optional($project->manager)->name ?? 'No Manager' }}
                                     </td>
 
+                                    <!-- Start Date Column -->
+                                    <td>
+                                        {{ $project->start_date ?
+                                        \Carbon\Carbon::parse($project->start_date)->format('Y-m-d') : 'N/A' }}
+                                    </td>
+
+                                    <!-- End Date Column -->
+                                    <td>
+                                        {{ $project->end_date ?
+                                        \Carbon\Carbon::parse($project->end_date)->format('Y-m-d') : 'N/A' }}
+                                    </td>
+
+                                    <!-- Budget Column -->
+                                    <td style="font-weight: bold; color: #2dce89 !important;">
+                                        {{ $project->budget ? '$' . number_format($project->budget, 2) : 'N/A' }}
+                                    </td>
+
                                     <!-- Total Tasks Count Column -->
                                     <td>
                                         {{ $project->tasks_count ?? ($project->tasks ? $project->tasks->count() : 0) }}
-                                        Tasks
                                     </td>
 
                                     <!-- Project Tasks & Assigned Employees Column -->
@@ -181,7 +205,7 @@
                                             @endforeach
                                         </ul>
                                         @else
-                                        <span style="color: #888; font-style: italic;">No tasks assigned</span>
+                                        <span style="color: #888; font-style: italic;">No tasks</span>
                                         @endif
                                     </td>
 
@@ -190,7 +214,7 @@
                                         <!-- Status Pill Badge -->
                                         <div style="margin-bottom: 4px;">
                                             <span
-                                                style="display: inline-block; padding: 2px 8px; border-radius: 10px; font-weight: bold; font-size: 8px; color: #fff; background-color: @if($projectStatus == 'completed') #2dce89 @elseif($projectStatus == 'in_progress') #fbb140 @else #11cdef @endif;">
+                                                style="display: inline-block; padding: 2px 6px; border-radius: 10px; font-weight: bold; font-size: 7.5px; color: #fff; background-color: @if($projectStatus == 'completed') #2dce89 @elseif($projectStatus == 'in_progress') #fbb140 @else #11cdef @endif;">
                                                 {{ ucfirst(str_replace('_', ' ', $project->status ?? 'in_progress')) }}
                                             </span>
                                         </div>
@@ -198,7 +222,7 @@
                                         <!-- Centered Battery Style Progress Bar -->
                                         <div style="text-align: center; width: 100%;">
                                             <div
-                                                style="font-size: 7.5px; font-weight: bold; color: #666; margin-bottom: 2px; text-align: center;">
+                                                style="font-size: 7px; font-weight: bold; color: #666; margin-bottom: 2px; text-align: center;">
                                                 {{ $progressPercent }}%
                                             </div>
 
@@ -208,7 +232,7 @@
                                                     <td
                                                         style="padding: 0 !important; border: none !important; background: transparent !important; vertical-align: middle !important;">
                                                         <div
-                                                            style="height: 6px; width: 45px; background-color: #f1f3f5; border: 1px solid #dcdcdc; border-radius: 2px; overflow: hidden; padding: 0.5px;">
+                                                            style="height: 5px; width: 38px; background-color: #f1f3f5; border: 1px solid #dcdcdc; border-radius: 2px; overflow: hidden; padding: 0.5px;">
                                                             <div
                                                                 style="height: 100%; width: {{ $progressPercent }}%; border-radius: 1px; background: @if($projectStatus == 'completed') #2dce89 @elseif($projectStatus == 'in_progress') #fbb140 @else #11cdef @endif;">
                                                             </div>
@@ -217,7 +241,7 @@
                                                     <td
                                                         style="padding: 0 !important; border: none !important; background: transparent !important; vertical-align: middle !important;">
                                                         <div
-                                                            style="width: 1.5px; height: 3px; background-color: #dcdcdc; border-top-right-radius: 1px; border-bottom-right-radius: 1px; margin-left: 1px;">
+                                                            style="width: 1px; height: 2.5px; background-color: #dcdcdc; border-top-right-radius: 1px; border-bottom-right-radius: 1px; margin-left: 1px;">
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -233,7 +257,7 @@
                     <table class="table align-items-center table-flush mb-0">
                         <tbody>
                             <tr>
-                                <td colspan="6" style="padding: 30px; color: #777;">
+                                <td colspan="9" style="padding: 30px; color: #777;">
                                     No project data available for report.
                                 </td>
                             </tr>

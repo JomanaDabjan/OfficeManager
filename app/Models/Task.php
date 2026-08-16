@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 /**
  * =========================================================================
@@ -30,6 +31,19 @@ class Task extends Model
         'status',
         'attachment',
         'rejection_reason',
+        'estimated_hours',
+        'started_at',
+        'due_date',
+    ];
+
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'started_at' => 'datetime',
+        'due_date' => 'datetime',
     ];
 
     /**
@@ -67,6 +81,37 @@ class Task extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * =====================================================================
+     * ACCESSORS FOR DYNAMIC CALCULATIONS
+     * =====================================================================
+     */
+
+    /**
+     * Accessor: Dynamically calculate the actual hours consumed based on started_at.
+     *
+     * @return string
+     */
+    public function getActualHoursAttribute()
+    {
+        if (!$this->started_at) {
+            return '0 Hours';
+        }
+
+        $endTime = ($this->status === 'completed' && $this->updated_at) ? $this->updated_at : Carbon::now();
+
+        $totalMinutes = $this->started_at->diffInMinutes($endTime);
+        $hours = floor($totalMinutes / 60);
+        $days = floor($hours / 24);
+
+        if ($days > 0) {
+            $remainingHours = $hours % 24;
+            return "{$days} Days, {$remainingHours} Hours";
+        }
+
+        return "{$hours} Hours";
     }
 
     /**
@@ -138,7 +183,19 @@ class Task extends Model
         }
 
         // =====================================================================
-        // 6. TEXT SEARCH (TITLE & DESCRIPTION)
+        // 6. DATE RANGE FILTERING (STARTED_AT & DUE_DATE)
+        // =====================================================================
+        // Filter tasks using started_at for date_from and due_date for date_to.
+        if ($request->filled('date_from')) {
+            $query->whereDate('started_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('due_date', '<=', $request->date_to);
+        }
+
+        // =====================================================================
+        // 7. TEXT SEARCH (TITLE & DESCRIPTION)
         // =====================================================================
         // Perform a flexible search matching keywords inside the title or description.
         if ($request->filled('search')) {
@@ -154,7 +211,7 @@ class Task extends Model
 
     /**
      * =====================================================================
-     * CACHED STATUS COUNTS FOR DASHBOARD BADGES
+     * CACHED STATUS COUNTERS FOR DASHBOARD BADGES
      * =====================================================================
      * This method retrieves the count of tasks grouped by their status.
      * It uses caching to reduce database load and improve performance.
@@ -193,7 +250,7 @@ class Task extends Model
             $query->where('title', $request->title);
         }
 
-        /* Filter by project ID if provided and not set to 'all' */
+        /* Filter by project_id if provided and not set to 'all' */
         if ($request->filled('project_id') && $request->project_id != 'all') {
             $query->where('project_id', $request->project_id);
         }
@@ -206,6 +263,16 @@ class Task extends Model
         /* Filter by task status if provided and not set to 'all' */
         if ($request->filled('status') && $request->status != 'all') {
             $query->where('status', $request->status);
+        }
+
+        /* Filter by date_from (Tasks starting from or after this date) */
+        if ($request->filled('date_from')) {
+            $query->whereDate('started_at', '>=', $request->date_from);
+        }
+
+        /* Filter by date_to (Tasks due on or before this date) */
+        if ($request->filled('date_to')) {
+            $query->whereDate('due_date', '<=', $request->date_to);
         }
 
         return $query;
