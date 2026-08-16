@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+// =========================================================================
+// IMPORT NECESSARY CLASSES AND PACKAGES
+// =========================================================================
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -16,6 +19,14 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Exception;
+
+// Import Barryvdh DomPDF facade for PDF export functionality
+use Barryvdh\DomPDF\Facade\Pdf;
+// Import custom Excel export class for tasks
+use App\Exports\TaskExport;
+// Import Excel facade from Maatwebsite package
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\View\View;
 
 /**
  * =========================================================================
@@ -87,7 +98,7 @@ class TaskController extends Controller
         // -----------------------------------------------------------------
         $data = [
             'tasks'           => $tasks,
-            'pendingTasks'    => $statusCounts['pending'] ?? 0,
+            'pendingTasks'   => $statusCounts['pending'] ?? 0,
             'inProgressTasks' => $statusCounts['in_progress'] ?? 0,
             'completedTasks'  => $statusCounts['completed'] ?? 0,
             'acceptedTasks'   => $statusCounts['accepted'] ?? 0,
@@ -104,6 +115,72 @@ class TaskController extends Controller
 
         // Return the view with packed data variables
         return view('contents.task.Index', $data);
+    }
+
+    /**
+     * =====================================================================
+     * PRINT, PDF, AND EXCEL EXPORT METHODS FOR TASKS (WITH FILTERING APPLIED)
+     * =====================================================================
+     */
+
+    public function printTasksReport(Request $request): View
+    {
+        $user = Auth::user();
+        $tasks = collect();
+
+        // استخدام نطاق الفلترة والصلاحيات الخاص بالمهام
+        Task::with(['user', 'project'])->filterAndSearch($user, $request)->chunk(500, function ($chunk) use (&$tasks) {
+            $tasks = $tasks->concat($chunk);
+        });
+
+        $chunks = $tasks->values()->chunk(6);
+
+        return view('contents.report.partial.Task_table', compact('chunks'));
+    }
+
+    public function exportTasksPdf(Request $request)
+    {
+        $user = Auth::user();
+        $tasks = collect();
+
+        Task::with(['user', 'project'])->filterAndSearch($user, $request)->chunk(500, function ($chunk) use (&$tasks) {
+            $tasks = $tasks->concat($chunk);
+        });
+
+        $chunks = $tasks->values()->chunk(6);
+        $isPdf = true;
+
+        $pdf = Pdf::loadView('contents.report.partial.Task_table', compact('chunks', 'isPdf'));
+        return $pdf->download('tasks-report.pdf');
+    }
+
+    public function exportTasksExcel(Request $request)
+    {
+        return Excel::download(new TaskExport($request), 'tasks-report.xlsx');
+    }
+
+    /**
+     * =====================================================================
+     * SHOW TASK DETAILS
+     * =====================================================================
+     * Display detailed view for a specific task along with its relationships.
+     *
+     * @param \App\Models\Task $task
+     * @return \Illuminate\View\View
+     */
+    public function show(Task $task)
+    {
+        // Authorize action using TaskPolicy (Ensures only authorized users can view details)
+        $this->authorize('view', $task);
+
+        // Load necessary relationships to prevent N+1 query issues in the view
+        $task->load(['project', 'assignedUser', 'user']);
+
+        // Then fetch the project associated with the task
+        $project = $task->project;
+
+        // Return the view with the task instance
+        return view('contents.task.Show', compact('task', 'project'));
     }
 
     /**
@@ -249,14 +326,13 @@ class TaskController extends Controller
      * @return \Illuminate\Http\RedirectResponse
      */
     public function accept(Task $task)
+    // ... (rest of the methods remain unchanged)
     {
-        // Authorize status modification capability
         $this->authorize('modifyStatus', $task);
 
         try {
             DB::beginTransaction();
 
-            // Update status and clear any prior rejection reason text
             $task->update([
                 'status' => 'accepted',
                 'rejection_reason' => null
@@ -273,25 +349,13 @@ class TaskController extends Controller
         }
     }
 
-    /**
-     * =====================================================================
-     * REJECT TASK STATUS
-     * =====================================================================
-     * Allows an assigned employee to reject a task by providing a reason.
-     *
-     * @param \App\Http\Requests\EmpTaskUpdateRequest $request
-     * @param \App\Models\Task $task
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function reject(EmpTaskUpdateRequest $request, Task $task)
     {
-        // Authorize status modification capability
         $this->authorize('modifyStatus', $task);
 
         try {
             DB::beginTransaction();
 
-            // Update status and save the employee's rejection reason
             $task->update([
                 'status' => 'rejected',
                 'rejection_reason' => $request->rejection_reason
@@ -310,28 +374,14 @@ class TaskController extends Controller
         }
     }
 
-    /**
-     * =====================================================================
-     * DELETE A TASK
-     * =====================================================================
-     * Securely remove a task record from the database and clean up its
-     * associated uploaded files from the storage server.
-     *
-     * @param \App\Models\Task $task
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function destroy(Task $task)
     {
-        // Authorize deletion through policy
         $this->authorize('delete', $task);
 
         try {
             DB::beginTransaction();
 
-            // Delete associated physical storage files via service class
             $this->attachmentService->deleteAttachments($task->attachment);
-
-            // Delete the database row entry
             $task->delete();
 
             DB::commit();

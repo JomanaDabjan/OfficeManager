@@ -72,8 +72,8 @@
             </li>
 
             <!-- Report (Direct Link without Submenu) -->
-            <li class="{{ request()->routeIs('admin.reports*') ? 'active' : '' }}">
-                <a href="#">
+            <li class="{{ request()->routeIs('admin.report*') ? 'active' : '' }}">
+                <a href="{{ route('admin.report.index') }}">
                     <i class="now-ui-icons files_paper"></i>
                     <p>Report</p>
                 </a>

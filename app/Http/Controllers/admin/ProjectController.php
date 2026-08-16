@@ -236,13 +236,13 @@ class ProjectController extends Controller
             // Rollback database changes if any error occurs
             DB::rollBack();
 
-            // اعرض الخطأ مباشرة على الشاشة للتأكد من السبب
-            dd($e->getMessage());
+            // Show a generic error message
+            //dd($e->getMessage());
 
             // Log the error message for developer debugging
-            //Log::error('Project Deletion Error: ' . $e->getMessage());
+            Log::error('Project Deletion Error: ' . $e->getMessage());
 
-            //return redirect()->back()->with('error', 'Something went wrong while deleting the project. Please try again later.');
+            return redirect()->back()->with('error', 'Something went wrong while deleting the project. Please try again later.');
         }
     }
 }

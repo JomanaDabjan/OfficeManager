@@ -34,6 +34,12 @@ class ProjectStoreRequest extends FormRequest
 
             // Status is optional; if provided, it must match one of the defined statuses.
             'status'      => ['sometimes', 'in:pending,in_progress,completed'],
+
+            // Project start date must be a valid date format.
+            'start_date'  => ['nullable', 'date'],
+
+            // Project end date must be a valid date and must not be earlier than the start date.
+            'end_date'    => ['nullable', 'date', 'after_or_equal:start_date'],
         ];
     }
 }

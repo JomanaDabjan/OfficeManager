@@ -35,6 +35,12 @@ class ProjectUpdateRequest extends FormRequest
 
             // Status is optional; if provided, it must be one of the specified allowed values
             'status'      => ['sometimes', 'in:pending,in_progress,completed'],
+
+            // Project start date is optional; must be a valid date if provided
+            'start_date'  => ['sometimes', 'nullable', 'date'],
+
+            // Project end date is optional; must be a valid date and not earlier than start date if provided
+            'end_date'    => ['sometimes', 'nullable', 'date', 'after_or_equal:start_date'],
         ];
     }
 }

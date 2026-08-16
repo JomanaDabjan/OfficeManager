@@ -1,5 +1,8 @@
 @extends('layouts.app')
 
+<!-- Set the dynamic title for this specific page -->
+@section('title', 'Task Table View')
+
 @section('Main_Content')
 
 <!-- ========================================== -->
@@ -28,19 +31,19 @@
                 <div class="d-flex flex-wrap align-items-center justify-content-between" style="gap: 12px;">
 
                     <!-- Filters Grouping -->
-                    <div class="d-flex flex-wrap align-items-center" style="gap: 12px;">
-                        <span class="text-muted font-weight-bold mr-2" style="font-size: 13px;">
+                    <div class="d-flex flex-wrap align-items-center flex-grow-1" style="gap: 10px;">
+                        <span class="text-muted font-weight-bold mr-1 d-none d-xl-inline-block" style="font-size: 13px;">
                             <i class="now-ui-icons ui-1_zoom-bold mr-1 text-primary"></i> Filter By:
                         </span>
 
                         <!-- Title Filter Dropdown -->
-                        <div class="dropdown">
+                        <div class="dropdown flex-fill">
                             <button
-                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border"
+                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-truncate"
                                 type="button" id="dropdownTitle" data-toggle="dropdown" aria-haspopup="true"
                                 aria-expanded="false"
-                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important;">
-                                {{ request('title') ? Str::limit(request('title'), 15) : 'All Titles' }}
+                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important; height: 35px; display: flex; align-items: center; justify-content: space-between;">
+                                <span>{{ request('title') ? Str::limit(request('title'), 15) : 'All Titles' }}</span>
                             </button>
                             <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownTitle"
                                 style="border-radius: 12px; min-width: 180px;">
@@ -58,16 +61,16 @@
                         </div>
 
                         <!-- Assigned To Filter Dropdown -->
-                        <div class="dropdown">
+                        <div class="dropdown flex-fill">
                             <button
-                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border"
+                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-truncate"
                                 type="button" id="dropdownAssigned" data-toggle="dropdown" aria-haspopup="true"
                                 aria-expanded="false"
-                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important;">
+                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important; height: 35px; display: flex; align-items: center; justify-content: space-between;">
                                 @php
                                 $selectedUser = $allUsers->firstWhere('id', request('assigned_to'));
                                 @endphp
-                                {{ $selectedUser ? $selectedUser->name : 'Assigned To' }}
+                                <span class="text-truncate">{{ $selectedUser ? $selectedUser->name : 'Assigned To' }}</span>
                             </button>
                             <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownAssigned"
                                 style="border-radius: 12px; min-width: 180px;">
@@ -85,15 +88,17 @@
                         </div>
 
                         <!-- Attachment Filter Dropdown -->
-                        <div class="dropdown">
+                        <div class="dropdown flex-fill">
                             <button
-                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border"
+                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-truncate"
                                 type="button" id="dropdownAttachment" data-toggle="dropdown" aria-haspopup="true"
                                 aria-expanded="false"
-                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important;">
-                                @if(request('has_attachment') == 'yes') With Attachment
-                                @elseif(request('has_attachment') == 'no') No File
-                                @else Attachment @endif
+                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important; height: 35px; display: flex; align-items: center; justify-content: space-between;">
+                                <span>
+                                    @if(request('has_attachment') == 'yes') With Attachment
+                                    @elseif(request('has_attachment') == 'no') No File
+                                    @else Attachment @endif
+                                </span>
                             </button>
                             <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownAttachment"
                                 style="border-radius: 12px; min-width: 160px;">
@@ -110,14 +115,13 @@
                         </div>
 
                         <!-- Status Filter Dropdown -->
-                        <div class="dropdown">
+                        <div class="dropdown flex-fill">
                             <button
-                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border"
+                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-truncate"
                                 type="button" id="dropdownStatus" data-toggle="dropdown" aria-haspopup="true"
                                 aria-expanded="false"
-                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important;">
-                                {{ request('filter') ? ucfirst(str_replace('_', ' ', request('filter'))) : 'All
-                                Statuses' }}
+                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important; height: 35px; display: flex; align-items: center; justify-content: space-between;">
+                                <span>{{ request('filter') ? ucfirst(str_replace('_', ' ', request('filter'))) : 'All Statuses' }}</span>
                             </button>
                             <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownStatus"
                                 style="border-radius: 12px; min-width: 160px;">
@@ -138,14 +142,35 @@
                             </div>
                         </div>
 
+                        <!-- Date From & To Filters Group -->
+                        <form method="GET" action="{{ route('admin.task.index') }}" class="d-flex align-items-center flex-fill" style="gap: 8px; min-width: 260px;">
+                            @foreach(request()->except(['date_from', 'date_to', 'page']) as $key => $value)
+                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                            @endforeach
+                            <div class="d-flex align-items-center flex-fill"
+                                style="background-color: #f8f9fa; border: 1px solid #e3e6f0 !important; border-radius: 50rem; padding: 2px 10px; height: 35px;">
+                                <span class="text-muted mr-1" style="font-size: 11px; white-space: nowrap;">From:</span>
+                                <input type="date" name="date_from" value="{{ request('date_from') }}"
+                                    class="form-control form-control-sm border-0 bg-transparent shadow-none px-0 py-0 w-100"
+                                    style="font-size: 11px;" onchange="this.form.submit()">
+                            </div>
+                            <div class="d-flex align-items-center flex-fill"
+                                style="background-color: #f8f9fa; border: 1px solid #e3e6f0 !important; border-radius: 50rem; padding: 2px 10px; height: 35px;">
+                                <span class="text-muted mr-1" style="font-size: 11px; white-space: nowrap;">To:</span>
+                                <input type="date" name="date_to" value="{{ request('date_to') }}"
+                                    class="form-control form-control-sm border-0 bg-transparent shadow-none px-0 py-0 w-100"
+                                    style="font-size: 11px;" onchange="this.form.submit()">
+                            </div>
+                        </form>
+
                     </div>
 
                     <!-- Reset Filters Button (Appears only if a filter is active) -->
-                    @if(request()->anyFilled(['title', 'assigned_to', 'has_attachment', 'filter', 'search']))
+                    @if(request()->anyFilled(['title', 'assigned_to', 'has_attachment', 'filter', 'date_from', 'date_to', 'search']))
                     <div>
                         <a href="{{ route('admin.task.index') }}"
-                            class="btn btn-outline-danger btn-sm rounded-pill px-3 py-2" style="font-size: 12px;">
-                            <i class="now-ui-icons ui-1_simple-remove mr-1"></i> Reset Filters
+                            class="btn btn-outline-danger btn-sm rounded-pill px-3 py-2" style="font-size: 12px; white-space: nowrap; height: 35px;">
+                            <i class="now-ui-icons ui-1_simple-remove mr-1"></i> Reset
                         </a>
                     </div>
                     @endif
@@ -223,7 +248,7 @@
                                 <!-- Assigned User Column with Avatar Initials Matching Project Manager Style -->
                                 <td class="align-middle task-user" data-column="assigned_to">
                                     <div class="d-flex align-items-center">
-                                        @if($task->user && $task->user->role !== 'admin')
+                                        @if($task->user)
                                         <span
                                             class="avatar-sm rounded-circle bg-light text-primary font-weight-bold d-flex align-items-center justify-content-center shadow-sm mr-2"
                                             style="width: 32px; height: 32px; font-size: 12px;">
@@ -330,9 +355,18 @@
                                     @endif
                                 </td>
 
-                                <!-- STANDARD ACTIONS COLUMN (EDIT, DELETE WITH SWEETALERT) -->
+                                <!-- STANDARD ACTIONS COLUMN (SHOW, EDIT, DELETE WITH SWEETALERT) -->
                                 <td class="text-right pr-4 align-middle" data-column="actions">
                                     <div class="btn-group" role="group" aria-label="Task Actions">
+
+                                        <!-- View Task Details Button -->
+                                        <a href="{{ route('admin.task.show', $task->id) }}"
+                                            class="btn btn-info btn-sm btn-icon shadow-sm mx-1 rounded"
+                                            title="View Task Details"
+                                            style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
+                                            <i class="now-ui-icons business_bulb-63" style="font-size: 13px;"></i>
+                                        </a>
+
                                         <!-- Edit Task Button -->
                                         <a href="{{ route('admin.task.edit', $task->id) }}"
                                             class="btn btn-warning btn-sm btn-icon shadow-sm mx-1 rounded"

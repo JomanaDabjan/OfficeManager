@@ -2,44 +2,78 @@
 <html lang="en">
 
 <head>
-    <!-- Head Section -->
+    <!-- ================================================================= -->
+    <!-- META & HEAD CONFIGURATION SECTION                                 -->
+    <!-- ================================================================= -->
+    <!-- Include core meta tags, charset, and viewport settings -->
     @include('includes.head')
 
-    <!-- Include CSS Styles -->
+    <!-- ================================================================= -->
+    <!-- DYNAMIC BROWSER WINDOW TITLE                                    -->
+    <!-- ================================================================= -->
+    <!--
+      This allows child pages to pass a custom title using '@section('title')'.
+      If no title is provided by the child page, it defaults to 'System Dashboard'.
+    -->
+    <title>@yield('title', 'CoreTask - System Dashboard')</title>
+
+    <!-- ================================================================= -->
+    <!-- STYLESHEETS INCLUSION SECTION                                   -->
+    <!-- ================================================================= -->
+    <!-- Include global CSS stylesheet files -->
     @include('includes.Style')
+
+    <!-- Allow child views to push page-specific CSS styles -->
     @stack('Style')
 </head>
 
 <body>
+    <!-- ================================================================= -->
+    <!-- MAIN WRAPPER CONTAINER                                            -->
+    <!-- ================================================================= -->
     <div class="wrapper">
-        <!-- Sidebar Navigation -->
+
+        <!-- ============================================================= -->
+        <!-- SIDEBAR NAVIGATION MENU                                       -->
+        <!-- ============================================================= -->
         @include('includes.Sidebar')
 
-        <!-- Main Panel Container -->
+        <!-- ============================================================= -->
+        <!-- MAIN PANEL CONTENT AREA                                       -->
+        <!-- ============================================================= -->
         <div class="main-panel" id="main-panel">
-            <!-- Top Header Navbar -->
-            @if(!request()->routeIs('admin.project.index') && !request()->routeIs('admin.project.create') &&
-            !request()->routeIs('admin.project.show') && !request()->routeIs('admin.project.edit') &&
-            !request()->routeIs('admin.task.index') && !request()->routeIs('admin.task.create'))
+
+            <!-- ========================================================= -->
+            <!-- CONDITIONAL TOP HEADER NAVBAR                             -->
+            <!-- ========================================================= -->
+            @if(request()->is('admin/dash'))
             @include('includes.Header')
             @endif
 
-            <!-- Dynamic Page Content -->
+            <!-- ========================================================= -->
+            <!-- DYNAMIC PAGE CONTENT PLACEHOLDER                          -->
+            <!-- ========================================================= -->
             @yield('Main_Content')
 
-            <!-- Page Footer -->
-            @if(!request()->routeIs('admin.project.index') && !request()->routeIs('admin.project.create') &&
-            !request()->routeIs('admin.project.show') && !request()->routeIs('admin.project.edit') &&
-            !request()->routeIs('admin.task.index') && !request()->routeIs('admin.task.create'))
+            <!-- ========================================================= -->
+            <!-- CONDITIONAL PAGE FOOTER                                   -->
+            <!-- ========================================================= -->
+            @if(request()->is('admin/dash'))
             @include('includes.Footer')
             @endif
-        </div>
-    </div>
 
-    <!-- JavaScript Files and Scripts -->
+        </div> <!-- End of main-panel -->
+
+    </div> <!-- End of wrapper -->
+
+    <!-- ================================================================= -->
+    <!-- JAVASCRIPT SCRIPTS INCLUSION SECTION                              -->
+    <!-- ================================================================= -->
+    <!-- Include global application JavaScript files -->
     @include('includes.Script')
+
+    <!-- Allow child views to push page-specific JavaScript scripts -->
     @stack('Script')
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 
 </html>
