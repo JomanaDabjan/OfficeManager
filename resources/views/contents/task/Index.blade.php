@@ -32,7 +32,8 @@
 
                     <!-- Filters Grouping -->
                     <div class="d-flex flex-wrap align-items-center flex-grow-1" style="gap: 10px;">
-                        <span class="text-muted font-weight-bold mr-1 d-none d-xl-inline-block" style="font-size: 13px;">
+                        <span class="text-muted font-weight-bold mr-1 d-none d-xl-inline-block"
+                            style="font-size: 13px;">
                             <i class="now-ui-icons ui-1_zoom-bold mr-1 text-primary"></i> Filter By:
                         </span>
 
@@ -70,7 +71,8 @@
                                 @php
                                 $selectedUser = $allUsers->firstWhere('id', request('assigned_to'));
                                 @endphp
-                                <span class="text-truncate">{{ $selectedUser ? $selectedUser->name : 'Assigned To' }}</span>
+                                <span class="text-truncate">{{ $selectedUser ? $selectedUser->name : 'Assigned To'
+                                    }}</span>
                             </button>
                             <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownAssigned"
                                 style="border-radius: 12px; min-width: 180px;">
@@ -121,7 +123,8 @@
                                 type="button" id="dropdownStatus" data-toggle="dropdown" aria-haspopup="true"
                                 aria-expanded="false"
                                 style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important; height: 35px; display: flex; align-items: center; justify-content: space-between;">
-                                <span>{{ request('filter') ? ucfirst(str_replace('_', ' ', request('filter'))) : 'All Statuses' }}</span>
+                                <span>{{ request('filter') ? ucfirst(str_replace('_', ' ', request('filter'))) : 'All
+                                    Statuses' }}</span>
                             </button>
                             <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownStatus"
                                 style="border-radius: 12px; min-width: 160px;">
@@ -139,11 +142,17 @@
                                     href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'accepted'])) }}">Accepted</a>
                                 <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'rejected' ? 'active font-weight-bold text-primary' : '' }}"
                                     href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'rejected'])) }}">Rejected</a>
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'overdue' ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'overdue'])) }}">Overdue</a>
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'due_today' ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'due_today'])) }}">Due
+                                    Today</a>
                             </div>
                         </div>
 
                         <!-- Date From & To Filters Group -->
-                        <form method="GET" action="{{ route('admin.task.index') }}" class="d-flex align-items-center flex-fill" style="gap: 8px; min-width: 260px;">
+                        <form method="GET" action="{{ route('admin.task.index') }}"
+                            class="d-flex align-items-center flex-fill" style="gap: 8px; min-width: 260px;">
                             @foreach(request()->except(['date_from', 'date_to', 'page']) as $key => $value)
                             <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                             @endforeach
@@ -166,10 +175,12 @@
                     </div>
 
                     <!-- Reset Filters Button (Appears only if a filter is active) -->
-                    @if(request()->anyFilled(['title', 'assigned_to', 'has_attachment', 'filter', 'date_from', 'date_to', 'search']))
+                    @if(request()->anyFilled(['title', 'assigned_to', 'has_attachment', 'filter', 'date_from',
+                    'date_to', 'search']))
                     <div>
                         <a href="{{ route('admin.task.index') }}"
-                            class="btn btn-outline-danger btn-sm rounded-pill px-3 py-2" style="font-size: 12px; white-space: nowrap; height: 35px;">
+                            class="btn btn-outline-danger btn-sm rounded-pill px-3 py-2"
+                            style="font-size: 12px; white-space: nowrap; height: 35px;">
                             <i class="now-ui-icons ui-1_simple-remove mr-1"></i> Reset
                         </a>
                     </div>
@@ -195,7 +206,7 @@
 </div>
 
 <!-- ========================================== -->
-<!-- MAIN TASKS TABLE CARD SECTION              -->
+<!-- MAIN TASKS TABLE CARD SECTION            -->
 <!-- ========================================== -->
 <div class="row">
     <div class="col-md-12">
@@ -226,6 +237,22 @@
                         <tbody>
                             <!-- Loop through each task record using Laravel forelse directive -->
                             @forelse($tasks as $task)
+                            @php
+                            // تحديد الحالة الديناميكية بناءً على تاريخ الاستحقاق (end_date أو due_date)
+                            $displayStatus = $task->status;
+                            $dueDate = $task->end_date ?? $task->due_date ?? null;
+
+                            if ($dueDate && !in_array($task->status, ['completed', 'accepted'])) {
+                            $today = \Carbon\Carbon::today();
+                            $taskDate = \Carbon\Carbon::parse($dueDate)->startOfDay();
+
+                            if ($taskDate->lt($today)) {
+                            $displayStatus = 'overdue';
+                            } elseif ($taskDate->eq($today)) {
+                            $displayStatus = 'due_today';
+                            }
+                            }
+                            @endphp
                             <tr class="border-bottom task-row">
                                 <!-- Task Title Column -->
                                 <td class="font-weight-bold text-dark pl-4 align-middle task-title" data-column="title">
@@ -293,13 +320,15 @@
                                 <!-- Task Status Column with Matching Dynamic Colors & Rejection Reason Tooltip/Modal Trigger -->
                                 <td class="align-middle task-status" data-column="status">
                                     <span class="badge badge-pill
-                                        @if($task->status == 'completed') badge-success
-                                        @elseif($task->status == 'accepted') badge-primary
-                                        @elseif($task->status == 'in_progress') badge-warning
-                                        @elseif($task->status == 'pending') badge-info
-                                        @elseif($task->status == 'rejected') badge-danger
+                                        @if($displayStatus == 'completed') badge-success
+                                        @elseif($displayStatus == 'accepted') badge-primary
+                                        @elseif($displayStatus == 'in_progress') badge-warning
+                                        @elseif($displayStatus == 'pending') badge-info
+                                        @elseif($displayStatus == 'rejected') badge-danger
+                                        @elseif($displayStatus == 'overdue') badge-danger
+                                        @elseif($displayStatus == 'due_today') badge-warning
                                         @else badge-secondary @endif px-3 py-2 text-white shadow-sm">
-                                        {{ ucfirst(str_replace('_', ' ', $task->status ?? 'pending')) }}
+                                        {{ ucfirst(str_replace('_', ' ', $displayStatus ?? 'pending')) }}
                                     </span>
 
                                     <!-- Show reason button if status is rejected and rejection_reason exists -->
@@ -407,23 +436,27 @@
                         </tbody>
                     </table>
                 </div>
-
-                <!-- PAGINATION CONTROLS SECTION -->
-                @if(method_exists($tasks, 'hasPages') && $tasks->hasPages())
-                <div class="card-footer bg-white py-4 d-flex justify-content-between align-items-center">
-                    <div class="text-muted text-sm">
-                        Showing <b>{{ $tasks->firstItem() }}</b> to <b>{{ $tasks->lastItem() }}</b> of <b>{{
-                            $tasks->total() }}</b> entries
-                    </div>
-                    <div>
-                        {{ $tasks->appends(request()->query())->links('pagination::bootstrap-4') }}
-                    </div>
-                </div>
-                @endif
-
             </div>
         </div>
     </div>
+</div>
+
+<!-- PAGINATION CONTROLS SECTION -->
+@if(method_exists($tasks, 'hasPages') && $tasks->hasPages())
+<div class="card-footer bg-white py-4 d-flex justify-content-between align-items-center">
+    <div class="text-muted text-sm">
+        Showing <b>{{ $tasks->firstItem() }}</b> to <b>{{ $tasks->lastItem() }}</b> of <b>{{
+            $tasks->total() }}</b> entries
+    </div>
+    <div>
+        {{ $tasks->appends(request()->query())->links('pagination::bootstrap-4') }}
+    </div>
+</div>
+@endif
+
+</div>
+</div>
+</div>
 </div>
 
 <!-- ========================================== -->

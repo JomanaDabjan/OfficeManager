@@ -1,15 +1,15 @@
 @push('Script')
 
 <!-- ========================================================================= -->
-<!-- START OF STACKED SCRIPTS PUSH SECTION                                     -->
+<!-- START OF STACKED SCRIPTS PUSH SECTION     -->
 <!-- This Laravel Blade directive pushes the enclosed script stack to the      -->
 <!-- master layout template, ensuring scripts load at the correct page section.-->
 <!-- ========================================================================= -->
 
 <!-- ========================================================================= -->
-<!-- CORE JS FILES AND PLUGINS                                                 -->
+<!-- CORE JS FILES AND PLUGINS     -->
 <!-- Import foundational JavaScript libraries including jQuery, Popper,        -->
-<!-- Bootstrap, and custom UI scrollbar extensions.                          -->
+<!-- Bootstrap, and custom UI scrollbar extensions.    -->
 <!-- ========================================================================= -->
 <script src="{{ asset('assets/js/core/jquery.min.js') }}"></script>
 <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
@@ -17,7 +17,7 @@
 <script src="{{ asset('assets/js/plugins/perfect-scrollbar.jquery.min.js') }}"></script>
 
 <!-- ========================================================================= -->
-<!-- GOOGLE MAPS AND CHART PLUGINS                                             -->
+<!-- GOOGLE MAPS AND CHART PLUGINS     -->
 <!-- Load external mapping services and chart-related assets for visualization.-->
 <!-- ========================================================================= -->
 <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY_HERE"></script>
@@ -25,7 +25,7 @@
 <script src="{{ asset('assets/js/plugins/bootstrap-notify.js') }}"></script>
 
 <!-- ========================================================================= -->
-<!-- NOW UI DASHBOARD CONTROL CENTER SCRIPTS                                 -->
+<!-- NOW UI DASHBOARD CONTROL CENTER SCRIPTS     -->
 <!-- Load dashboard core scripts, demo presets, and modern CDN libraries.      -->
 <!-- ========================================================================= -->
 <script src="{{ asset('assets/js/now-ui-dashboard.js?v=1.0.1') }}"></script>
@@ -34,14 +34,14 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <!-- ========================================================================= -->
-<!-- FLATPICKR DATEPICKER CDN (CSS & JS)                                      -->
+<!-- FLATPICKR DATEPICKER CDN (CSS & JS)    -->
 <!-- Added to format date inputs to DD/MM/YYYY while keeping backend Y-m-d.    -->
 <!-- ========================================================================= -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <!-- ========================================================================= -->
-<!-- INITIALIZE FLATPICKR ON DATE INPUTS                                     -->
+<!-- INITIALIZE FLATPICKR ON DATE INPUTS     -->
 <!-- ========================================================================= -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -56,7 +56,7 @@
 </script>
 
 <!-- ========================================================================= -->
-<!-- INITIALIZE DASHBOARD CHARTS                                             -->
+<!-- INITIALIZE DASHBOARD CHARTS     -->
 <!-- Safely trigger default dashboard charts if demo object is available.      -->
 <!-- ========================================================================= -->
 <script>
@@ -71,7 +71,7 @@
 </script>
 
 <!-- ========================================================================= -->
-<!-- LIVE SEARCH FILTER FOR PROJECTS TABLE                                     -->
+<!-- LIVE SEARCH FILTER FOR PROJECTS TABLE     -->
 <!-- ========================================================================= -->
 <script>
     // Wait for the DOM content to be fully loaded before running script logic
@@ -101,7 +101,7 @@
 </script>
 
 <!-- ========================================================================= -->
-<!-- LIVE SEARCH FILTER FOR TASKS TABLE                                        -->
+<!-- LIVE SEARCH FILTER FOR TASKS TABLE     -->
 <!-- ========================================================================= -->
 <script>
     // Wait for the DOM content to be fully loaded
@@ -131,7 +131,7 @@
 </script>
 
 <!-- ========================================================================= -->
-<!-- INITIALIZE AND RENDER TASK STATUS CHART                                 -->
+<!-- INITIALIZE AND RENDER TASK STATUS CHART     -->
 <!-- ========================================================================= -->
 <script>
     // Wait for the document to be ready
@@ -189,7 +189,7 @@
 </script>
 
 <!-- ========================================================================= -->
-<!-- CONFIRM DELETE DIALOG USING SWEETALERT2                                 -->
+<!-- CONFIRM DELETE DIALOG USING SWEETALERT2     -->
 <!-- ========================================================================= -->
 <script>
     // Function triggered to show a confirmation popup before deleting a record
@@ -221,7 +221,7 @@
 </script>
 
 <!-- ========================================================================= -->
-<!-- AUTOMATIC ALERT DISMISSAL SCRIPT                                          -->
+<!-- AUTOMATIC ALERT DISMISSAL SCRIPT    -->
 <!-- ========================================================================= -->
 <script>
     // Wait for the HTML document to fully load
@@ -245,7 +245,7 @@
 </script>
 
 <!-- ========================================================================= -->
-<!-- WELCOME MODAL CONTROL SCRIPT                                              -->
+<!-- WELCOME MODAL CONTROL SCRIPT    -->
 <!-- ========================================================================= -->
 <script>
     // Function to hide the welcome modal smoothly with opacity transition
@@ -288,7 +288,7 @@
 </script>
 
 <!-- ========================================================================= -->
-<!-- EXPORT AND PRINT REPORT ACTIONS HANDLER                                 -->
+<!-- EXPORT AND PRINT REPORT ACTIONS HANDLER     -->
 <!-- ========================================================================= -->
 <script>
     // Function to confirm and manage report exporting actions (PDF, Excel, Print)
@@ -410,71 +410,74 @@
 </script>
 
 <!-- ================================================================= -->
-<!-- START OF SCRIPT: DYNAMIC REMAINING DAYS CALCULATOR                -->
+<!-- START OF SCRIPT: DYNAMIC REMAINING DAYS CALCULATOR    -->
 <!-- ================================================================= -->
 <script>
     // Wait for the DOM content to be fully loaded before calculating remaining days
     document.addEventListener("DOMContentLoaded", function () {
         // Ensure the Laravel task variable exists before injecting values into JS
         @isset($task)
-        // Retrieve start date and due date values safely from the Blade task object
+        // Retrieve start date, due date, and status values safely from the Blade task object
         const startStr = "{{ $task->start_date ?? '' }}";
         const dueStr = "{{ $task->due_date ?? '' }}";
+        const taskStatus = "{{ strtolower($task->status ?? '') }}";
+
         // Locate the HTML container element that displays the remaining days counter
         const counterElement = document.getElementById("live-actual-hours");
 
         // Proceed if the counter element exists on the page
         if (counterElement) {
-            // Check if the due date is missing; display fallback text if true
-            if (!dueStr) {
-                counterElement.innerHTML = "No Deadline";
-                return;
-            }
-
-            // Initialize today's date and reset time components to 00:00:00 for accurate day comparison
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            // Parse and normalize the due date time object
-            const dueTime = new Date(dueStr);
-            dueTime.setHours(0, 0, 0, 0);
-
-            // Parse and normalize the start date time object if it exists
-            const startTime = startStr ? new Date(startStr) : null;
-            if (startTime) {
-                startTime.setHours(0, 0, 0, 0);
-            }
-
-            // Variable to hold the calculated day difference
-            let diffDays;
-
-            // Calculate total duration or remaining days based on whether a start date is provided
-            if (startTime) {
-                // Calculate total duration time span between start date and due date
-                const diffTime = dueTime.getTime() - startTime.getTime();
-                // Convert millisecond difference into total days using Math.ceil
-                diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            } else {
-                // Fallback: calculate countdown remaining days from today's date to the due date
-                const diffTime = dueTime.getTime() - today.getText ? dueTime.getTime() - today.getTime() : dueTime.getTime() - today.getTime();
-                diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            }
-
-            // Build the readable text message based on the calculated day difference value
             let displayText = "";
-            if (diffDays > 1) {
-                displayText = `${diffDays} Days Remaining`;
-            } else if (diffDays === 1) {
-                displayText = `1 Day Remaining`;
-            } else if (diffDays === 0) {
-                displayText = `Due Today`;
-            } else {
-                displayText = `Overdue by ${Math.abs(diffDays)} Days`;
-            }
 
-            // Check if the task has not started yet (today's date is strictly before start date)
-            if (startTime && today.getTime() < startTime.getTime()) {
-                displayText += ` <span class="text-danger" style="font-size: 12px;">(Not Started)</span>`;
+            // التحقق مما إذا كانت المهمة مكتملة لإيقاف العداد
+            if (taskStatus === 'completed' || taskStatus === 'complete') {
+                displayText = "TASK COMPLETED";
+            } else if (!dueStr) {
+                // Check if the due date is missing; display fallback text if true
+                displayText = "No Deadline";
+            } else {
+                // Initialize today's date and reset time components to 00:00:00 for accurate day comparison
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                // Parse and normalize the due date time object
+                const dueTime = new Date(dueStr);
+                dueTime.setHours(0, 0, 0, 0);
+
+                // Parse and normalize the start date time object if it exists
+                const startTime = startStr ? new Date(startStr) : null;
+                if (startTime) {
+                    startTime.setHours(0, 0, 0, 0);
+                }
+
+                // التحقق من الحالات الزمنية للمهمة/المشروع
+                if (startTime && today.getTime() < startTime.getTime()) {
+                    // 1. مرحلة ما قبل البدء: عرض العدد الكلي الثابت بين Start Date و Due Date مع عبارة (Not Started)
+                    const totalDiffTime = dueTime.getTime() - startTime.getTime();
+                    const totalDays = Math.ceil(totalDiffTime / (1000 * 60 * 60 * 24));
+
+                    if (totalDays > 1) {
+                        displayText = `${totalDays} Days Total <span class="text-danger" style="font-size: 12px;">(Not Started)</span>`;
+                    } else if (totalDays === 1) {
+                        displayText = `1 Day Total <span class="text-danger" style="font-size: 12px;">(Not Started)</span>`;
+                    } else {
+                        displayText = `0 Days <span class="text-danger" style="font-size: 12px;">(Not Started)</span>`;
+                    }
+                } else {
+                    // 2. أثناء التنفيذ أو بعده: حساب الأيام المتبقية تنازلياً حتى تاريخ النهاية
+                    const diffTime = dueTime.getTime() - today.getTime();
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                    if (diffDays > 1) {
+                        displayText = `${diffDays} Days Remaining`;
+                    } else if (diffDays === 1) {
+                        displayText = `1 Day Remaining`;
+                    } else if (diffDays === 0) {
+                        displayText = `Due Today`;
+                    } else {
+                        displayText = `Overdue by ${Math.abs(diffDays)} Days`;
+                    }
+                }
             }
 
             // Render the final formatted text string inside the target HTML counter element

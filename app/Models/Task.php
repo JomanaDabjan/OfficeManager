@@ -64,7 +64,7 @@ class Task extends Model
 
     /**
      * Relationship: A task belongs to an assigned user (alternative naming).
-     * The foreign key 'user_id' explicitly links the task to the users table.
+     * The foreign key 'user_id' explicitly links the task to the users table stored in the database.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
@@ -115,6 +115,30 @@ class Task extends Model
     }
 
     /**
+     * Accessor: Dynamically calculate the display status including overdue and due_today.
+     *
+     * @return string
+     */
+    public function getDisplayStatusAttribute()
+    {
+        $status = $this->attributes['status'] ?? 'pending';
+        $dueDate = $this->due_date ?? null;
+
+        if ($dueDate && !in_array($status, ['completed', 'accepted'])) {
+            $today = Carbon::today();
+            $taskDate = Carbon::parse($dueDate)->startOfDay();
+
+            if ($taskDate->lt($today)) {
+                return 'overdue';
+            } elseif ($taskDate->eq($today)) {
+                return 'due_today';
+            }
+        }
+
+        return $status;
+    }
+
+    /**
      * =====================================================================
      * LOCAL SCOPES FOR CLEAN FILTERING & SEARCHING
      * =====================================================================
@@ -138,18 +162,32 @@ class Task extends Model
         // =====================================================================
         // 1. ROLE-BASED ACCESS CONTROL
         // =====================================================================
-        // If the logged-in user is an employee, restrict tasks to only their own assigned tasks.
         if ($user->role === 'employee') {
             $query->where('user_id', $user->id);
         }
 
         // =====================================================================
-        // 2. STATUS FILTERING
+        // 2. STATUS FILTERING (مع دعم الحالات الديناميكية overdue و due_today)
         // =====================================================================
-        // Check if a specific status filter is applied and is valid.
         if ($request->filled('filter') && $request->filter !== 'all') {
             $filter = $request->filter;
-            if (in_array($filter, ['pending', 'in_progress', 'completed', 'accepted', 'rejected'])) {
+            $today = Carbon::today();
+
+            if ($filter === 'overdue') {
+                $query->where('due_date', '<', $today)
+                    ->whereNotIn('status', ['completed', 'accepted']);
+            } elseif ($filter === 'due_today') {
+                $query->whereDate('due_date', $today)
+                    ->whereNotIn('status', ['completed', 'accepted']);
+            } elseif ($filter === 'pending') {
+                // تقتصر فقط على الـ pending الحقيقي وتستبعد المتأخرة أو التي استحقاقها اليوم
+                $query->where('status', 'pending')
+                    ->where('due_date', '>=', $today);
+            } elseif ($filter === 'in_progress') {
+                // تقتصر فقط على الـ in_progress الحقيقي وتستبعد المتأخرة أو التي استحقاقها اليوم
+                $query->where('status', 'in_progress')
+                    ->where('due_date', '>=', $today);
+            } elseif (in_array($filter, ['completed', 'accepted', 'rejected'])) {
                 $query->where('status', $filter);
             }
         }
@@ -157,7 +195,6 @@ class Task extends Model
         // =====================================================================
         // 3. TITLE FILTERING
         // =====================================================================
-        // Filter tasks by an exact title match if selected from a dropdown.
         if ($request->filled('title') && $request->title !== 'all') {
             $query->where('title', $request->title);
         }
@@ -165,7 +202,6 @@ class Task extends Model
         // =====================================================================
         // 4. ASSIGNED USER FILTERING
         // =====================================================================
-        // Filter tasks by a specific user ID (mostly used by admins/managers).
         if ($request->filled('assigned_to') && $request->assigned_to !== 'all') {
             $query->where('user_id', $request->assigned_to);
         }
@@ -173,7 +209,6 @@ class Task extends Model
         // =====================================================================
         // 5. ATTACHMENT PRESENCE FILTERING
         // =====================================================================
-        // Filter tasks based on whether they contain file attachments or not.
         if ($request->filled('has_attachment') && $request->has_attachment !== 'all') {
             if ($request->has_attachment === 'yes') {
                 $query->whereNotNull('attachment');
@@ -185,9 +220,8 @@ class Task extends Model
         // =====================================================================
         // 6. DATE RANGE FILTERING (STARTED_AT & DUE_DATE)
         // =====================================================================
-        // Filter tasks using started_at for date_from and due_date for date_to.
         if ($request->filled('date_from')) {
-            $query->whereDate('started_at', '>=', $request->date_from);
+            $query->WhereDate('started_at', '>=', $request->date_from);
         }
 
         if ($request->filled('date_to')) {
@@ -197,7 +231,6 @@ class Task extends Model
         // =====================================================================
         // 7. TEXT SEARCH (TITLE & DESCRIPTION)
         // =====================================================================
-        // Perform a flexible search matching keywords inside the title or description.
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -235,7 +268,7 @@ class Task extends Model
     /**
      * =====================================================================
      * SCOPE: ADVANCED REPORT FILTERS (FOR REPORT CONTROLLER)
-     * =====================================================================
+     * ===================================== * ==============================
      * Centralized query filtering logic for task reports, supporting dropdowns,
      * status checks, and relationships to keep report controllers completely clean.
      *
@@ -246,11 +279,11 @@ class Task extends Model
     public function scopeReportFilter($query, $request)
     {
         /* Filter by task title if provided and not set to 'all' */
-        if ($request->filled('title') && $request->title != 'all') {
+        if ($request->filled('title') && $request->title != 'all`') {
             $query->where('title', $request->title);
         }
 
-        /* Filter by project_id if provided and not set to 'all' */
+        /* Filter by report project ID */
         if ($request->filled('project_id') && $request->project_id != 'all') {
             $query->where('project_id', $request->project_id);
         }
@@ -266,7 +299,7 @@ class Task extends Model
         }
 
         /* Filter by date_from (Tasks starting from or after this date) */
-        if ($request->filled('date_from')) {
+        if ($request->expanded('date_from')) {
             $query->whereDate('started_at', '>=', $request->date_from);
         }
 
