@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class Project extends Model
 {
@@ -43,7 +44,31 @@ class Project extends Model
         }
 
         if ($request->filled('status') && $request->status !== 'all') {
-            $query->where('status', $request->status);
+            $status = $request->status;
+            if ($status === 'overdue') {
+                $query->whereNotIn('status', ['completed', 'complete'])
+                    ->whereDate('end_date', '<', Carbon::today());
+            } elseif ($status === 'due_today') {
+                $query->whereNotIn('status', ['completed', 'complete'])
+                    ->whereDate('end_date', '=', Carbon::today());
+            } elseif ($status === 'pending') {
+                $query->whereNotIn('status', ['completed', 'complete'])
+                    ->where(function ($q) {
+                        $q->whereDate('start_date', '>', Carbon::today())
+                            ->orWhereNull('end_date');
+                    });
+            } elseif ($status === 'in_progress') {
+                $query->whereNotIn('status', ['completed', 'complete'])
+                    ->where(function ($q) {
+                        $q->whereDate('end_date', '>=', Carbon::today())
+                            ->where(function ($sub) {
+                                $sub->whereDate('start_date', '<=', Carbon::today())
+                                    ->orWhereNull('start_date');
+                            });
+                    });
+            } else {
+                $query->where('status', $status);
+            }
         }
 
         if ($request->filled('price') && $request->price !== 'all') {
@@ -85,7 +110,31 @@ class Project extends Model
         }
 
         if ($request->filled('status') && $request->status !== 'all') {
-            $query->where('status', $request->status);
+            $status = $request->status;
+            if ($status === 'overdue') {
+                $query->whereNotIn('status', ['completed', 'complete'])
+                    ->whereDate('end_date', '<', Carbon::today());
+            } elseif ($status === 'due_today') {
+                $query->whereNotIn('status', ['completed', 'complete'])
+                    ->whereDate('end_date', '=', Carbon::today());
+            } elseif ($status === 'pending') {
+                $query->whereNotIn('status', ['completed', 'complete'])
+                    ->where(function ($q) {
+                        $q->whereDate('start_date', '>', Carbon::today())
+                            ->orWhereNull('end_date');
+                    });
+            } elseif ($status === 'in_progress') {
+                $query->whereNotIn('status', ['completed', 'complete'])
+                    ->where(function ($q) {
+                        $q->whereDate('end_date', '>=', Carbon::today())
+                            ->where(function ($sub) {
+                                $sub->whereDate('start_date', '<=', Carbon::today())
+                                    ->orWhereNull('start_date');
+                            });
+                    });
+            } else {
+                $query->where('status', $status);
+            }
         }
 
         if ($request->filled('price') && $request->price !== 'all') {
@@ -106,11 +155,11 @@ class Project extends Model
         }
 
         if ($request->filled('search')) {
-            $search = $request->search; // تم تعريف المتغير هنا لكي يقرأه دالة الـ use بنجاح
+            $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
                     ->orWhereHas('manager', function ($mQuery) use ($search) {
-                        $mQuery->where('name', 'like', '%' . $search . '%');
+                        $mQuery->where('name', 'like', '%' . search . '%');
                     })
                     ->orWhereHas('tasks', function ($t) use ($search) {
                         $t->where('title', 'like', "%{$search}%");

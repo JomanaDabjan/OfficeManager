@@ -102,13 +102,25 @@
                                 <a class="dropdown-item py-2 px-3 text-sm {{ !request('status') || request('status') == 'all' ? 'active font-weight-bold text-primary' : '' }}"
                                     href="{{ route('admin.project.index', array_merge(request()->except(['status', 'page']), ['status' => 'all'])) }}">All
                                     Statuses</a>
+
                                 <a class="dropdown-item py-2 px-3 text-sm {{ request('status') == 'pending' ? 'active font-weight-bold text-primary' : '' }}"
                                     href="{{ route('admin.project.index', array_merge(request()->except(['status', 'page']), ['status' => 'pending'])) }}">Pending</a>
+
                                 <a class="dropdown-item py-2 px-3 text-sm {{ request('status') == 'in_progress' ? 'active font-weight-bold text-primary' : '' }}"
                                     href="{{ route('admin.project.index', array_merge(request()->except(['status', 'page']), ['status' => 'in_progress'])) }}">In
                                     Progress</a>
+
                                 <a class="dropdown-item py-2 px-3 text-sm {{ request('status') == 'completed' ? 'active font-weight-bold text-primary' : '' }}"
                                     href="{{ route('admin.project.index', array_merge(request()->except(['status', 'page']), ['status' => 'completed'])) }}">Completed</a>
+
+                                <!-- خيار الفلترة حسب المتأخرة -->
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('status') == 'overdue' ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.project.index', array_merge(request()->except(['status', 'page']), ['status' => 'overdue'])) }}">Overdue</a>
+
+                                <!-- خيار الفلترة حسب المستحقة اليوم -->
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('status') == 'due_today' ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.project.index', array_merge(request()->except(['status', 'page']), ['status' => 'due_today'])) }}">Due
+                                    Today</a>
                             </div>
                         </div>
 
@@ -234,9 +246,46 @@
                             <!-- Loop through each project record using Laravel forelse directive -->
                             @forelse($projects as $project)
                             @php
-                            $projectStatus = strtolower($project->status ?? 'in_progress');
+                            $today = \Carbon\Carbon::today();
+                            $endDate = $project->end_date ? \Carbon\Carbon::parse($project->end_date) : null;
+                            $startDate = $project->start_date ? \Carbon\Carbon::parse($project->start_date) : null;
+
+                            $tasks = $project->tasks;
+                            $hasTasks = $tasks->count() > 0;
+
+                            $allTasksCompleted = $hasTasks ? $tasks->every(function($task) {
+                            return strtolower(trim($task->status)) === 'complete' || strtolower(trim($task->status)) ===
+                            'completed';
+                            }) : false;
+
+                            $currentStatus = strtolower(trim($project->status));
+
+                            if ($currentStatus !== 'completed' && $currentStatus !== 'complete') {
+                            if ($endDate) {
+                            if ($today->greaterThan($endDate) && (!$hasTasks || !$allTasksCompleted)) {
+                            $currentStatus = 'overdue';
+                            } elseif ($today->isSameDay($endDate) && (!$hasTasks || !$allTasksCompleted)) {
+                            $currentStatus = 'due_today';
+                            } elseif ($startDate && $today->lessThan($startDate)) {
+                            $currentStatus = 'pending';
+                            } else {
+                            $currentStatus = 'in_progress';
+                            }
+                            }
+                            } else {
+                            $currentStatus = 'completed';
+                            }
+
+                            $statusClass = match($currentStatus) {
+                            'completed', 'complete' => 'badge-success',
+                            'in_progress' => 'badge-warning',
+                            'pending' => 'badge-info',
+                            'overdue', 'rejected' => 'badge-danger',
+                            'due_today' => 'badge-orange',
+                            default => 'badge-secondary',
+                            };
                             @endphp
-                            <tr class="border-bottom project-row" data-status="{{ $projectStatus }}">
+                            <tr class="border-bottom project-row" data-status="{{ $currentStatus }}">
                                 <!-- Project Title Column -->
                                 <td class="font-weight-bold text-dark pl-4 align-middle project-title"
                                     data-col-index="0">
@@ -272,12 +321,8 @@
 
                                 <!-- Project Status Column with Dynamic Color Badges -->
                                 <td class="align-middle project-status" data-col-index="3">
-                                    <span class="badge badge-pill
-                                        @if($projectStatus == 'completed') badge-success
-                                        @elseif($projectStatus == 'in_progress') badge-warning
-                                        @elseif($projectStatus == 'pending') badge-info
-                                        @else badge-secondary @endif px-3 py-2 text-white shadow-sm">
-                                        {{ ucfirst(str_replace('_', ' ', $project->status ?? 'in_progress')) }}
+                                    <span class="badge badge-pill {{ $statusClass }} px-3 py-2 text-white shadow-sm">
+                                        {{ ucfirst(str_replace('_', ' ', $currentStatus)) }}
                                     </span>
                                 </td>
 
@@ -333,23 +378,27 @@
                         </tbody>
                     </table>
                 </div>
-
-                <!-- PAGINATION CONTROLS SECTION -->
-                @if($projects->hasPages())
-                <div class="card-footer bg-white py-4 d-flex justify-content-between align-items-center">
-                    <div class="text-muted text-sm">
-                        Showing <b>{{ $projects->firstItem() }}</b> to <b>{{ $projects->lastItem() }}</b> of <b>{{
-                            $projects->total() }}</b> entries
-                    </div>
-                    <div>
-                        {{ $projects->links('pagination::bootstrap-4') }}
-                    </div>
-                </div>
-                @endif
-
             </div>
         </div>
     </div>
+</div>
+
+<!-- PAGINATION CONTROLS SECTION -->
+@if($projects->hasPages())
+<div class="card-footer bg-white py-4 d-flex justify-content-between align-items-center">
+    <div class="text-muted text-sm">
+        Showing <b>{{ $projects->firstItem() }}</b> to <b>{{ $projects->lastItem() }}</b> of <b>{{
+            $projects->total() }}</b> entries
+    </div>
+    <div>
+        {{ $projects->links('pagination::bootstrap-4') }}
+    </div>
+</div>
+@endif
+
+</div>
+</div>
+</div>
 </div>
 
 <!-- ========================================== -->

@@ -40,17 +40,41 @@
                                     <p class="text-uppercase text-muted font-weight-bold mb-1" style="font-size: 11px;">
                                         Task Status</p>
                                     <div class="mt-2">
-                                        @if($task->status == 'pending')
-                                        <span class="badge badge-warning p-2 px-3">Pending</span>
-                                        @elseif($task->status == 'in_progress')
-                                        <span class="badge badge-info p-2 px-3">In Progress</span>
-                                        @elseif($task->status == 'completed')
-                                        <span class="badge badge-success p-2 px-3">Completed</span>
-                                        @elseif($task->status == 'accepted')
-                                        <span class="badge badge-success p-2 px-3">Accepted</span>
-                                        @elseif($task->status == 'rejected')
-                                        <span class="badge badge-danger p-2 px-3">Rejected</span>
-                                        @endif
+                                        @php
+                                        $today = \Carbon\Carbon::today();
+                                        $dueDate = $task->due_date ? \Carbon\Carbon::parse($task->due_date) : null;
+                                        $currentStatus = strtolower(trim($task->status ?? ''));
+
+                                        // Automatic status adjustment based on due date and completion
+                                        if ($currentStatus !== 'completed' && $currentStatus !== 'complete' && $dueDate)
+                                        {
+                                        if ($today->greaterThan($dueDate)) {
+                                        $currentStatus = 'overdue';
+                                        } elseif ($today->isSameDay($dueDate)) {
+                                        $currentStatus = 'due_today';
+                                        }
+                                        }
+
+                                        $statusClass = match($currentStatus) {
+                                        'completed', 'complete' => 'badge-success',
+                                        'in_progress' => 'badge-warning',
+                                        'pending' => 'badge-info',
+                                        'accepted' => 'badge-success',
+                                        'rejected', 'overdue' => 'badge-danger',
+                                        'due_today' => 'badge-orange',
+                                        default => 'badge-secondary',
+                                        };
+
+                                        $statusLabel = match($currentStatus) {
+                                        'due_today' => 'Due Today',
+                                        'overdue' => 'Overdue',
+                                        default => ucwords(str_replace('_', ' ', $currentStatus)),
+                                        };
+                                        @endphp
+
+                                        <span class="badge {{ $statusClass }} p-2 px-3 text-uppercase font-weight-bold">
+                                            {{ $statusLabel }}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -93,7 +117,7 @@
                         </div>
                     </div>
 
-                    <!-- SECOND ROW: DATES & HOURS -->
+                    <!-- SECOND ROW: DATES & Remaining Days -->
                     <div class="row">
                         <!-- Start Date Card -->
                         <div class="col-md-4 mb-4">
@@ -139,13 +163,16 @@
                                         style="font-size: 14px;">
                                         <span>
                                             @php
-                                            $startDate = isset($task) ? ($task->start_date ?? null) :
-                                            ($project->start_date ?? null);
+                                            $status = isset($task) ? ($task->status ?? null) : null;
+                                            $startDate = isset($task) ? ($task->started_at ?? $task->start_date ?? null)
+                                            : ($project->start_date ?? null);
                                             $targetDate = isset($task) ? ($task->due_date ?? null) : ($project->end_date
                                             ?? null);
                                             @endphp
 
-                                            @if(!$targetDate)
+                                            @if($status === 'completed' || $status === 'Completed')
+                                            TASK COMPLETED
+                                            @elseif(!$targetDate)
                                             No Deadline
                                             @else
                                             @php
@@ -153,14 +180,17 @@
                                             $start = $startDate ? \Carbon\Carbon::parse($startDate) : null;
                                             $due = \Carbon\Carbon::parse($targetDate);
 
-                                            if ($start) {
-                                            $diff = round($start->floatDiffInDays($due, false));
+                                            if ($start && $today->lt($start)) {
+                                            $diff = $start->diffInDays($due);
                                             } else {
                                             $diff = round($today->floatDiffInDays($due, false));
                                             }
                                             @endphp
 
-                                            @if($diff > 1)
+                                            @if($start && $today->lt($start))
+                                            {{ $diff }} DAYS TOTAL <span class="text-danger"
+                                                style="font-size: 12px;">(Not Started)</span>
+                                            @elseif($diff > 1)
                                             {{ $diff }} DAYS REMAINING
                                             @elseif($diff === 1)
                                             1 DAY REMAINING
@@ -168,10 +198,6 @@
                                             DUE TODAY
                                             @else
                                             OVERDUE BY {{ abs($diff) }} DAYS
-                                            @endif
-
-                                            @if($start && $today->lt($start))
-                                            <span class="text-danger" style="font-size: 12px;">(Not Started)</span>
                                             @endif
                                             @endif
                                         </span>

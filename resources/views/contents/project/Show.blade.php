@@ -71,30 +71,38 @@
                             $tasks = $project->tasks;
                             $hasTasks = $tasks->count() > 0;
 
-                            // Check if all tasks are completed
                             $allTasksCompleted = $hasTasks ? $tasks->every(function($task) {
-                            return strtolower(trim($task->status)) === 'complete';
-                            }) : true;
+                            return strtolower(trim($task->status)) === 'complete' || strtolower(trim($task->status)) ===
+                            'completed';
+                            }) : false;
 
-                            $currentStatus = $project->status;
+                            $currentStatus = strtolower(trim($project->status));
 
-                            // Logic to change project status to overdue if time has passed and tasks remain incomplete
-                            if ($endDate && $today->greaterThan($endDate)) {
-                            if (strtolower($currentStatus) !== 'complete' && !$allTasksCompleted) {
+                            if ($currentStatus !== 'completed' && $currentStatus !== 'complete') {
+                            if ($endDate) {
+                            if ($today->greaterThan($endDate) && (!$hasTasks || !$allTasksCompleted)) {
                             $currentStatus = 'overdue';
+                            } elseif ($today->isSameDay($endDate) && (!$hasTasks || !$allTasksCompleted)) {
+                            $currentStatus = 'due_today';
+                            } elseif ($startDate && $today->lessThan($startDate)) {
+                            $currentStatus = 'pending';
+                            } else {
+                            $currentStatus = 'in_progress';
                             }
+                            }
+                            } else {
+                            $currentStatus = 'completed';
                             }
 
-                            // Dynamic status class based on database status values
-                            $statusClass = match(strtolower($currentStatus)) {
+                            $statusClass = match($currentStatus) {
                             'completed', 'complete' => 'badge-success',
-                            'in_progress' => 'badge-info',
-                            'pending' => 'badge-warning',
+                            'in_progress' => 'badge-warning',
+                            'pending' => 'badge-info',
                             'overdue', 'rejected' => 'badge-danger',
+                            'due_today' => 'badge-orange',
                             default => 'badge-secondary',
                             };
                             @endphp
-
                             <div>
                                 <span class="badge {{ $statusClass }} px-3 py-2 text-uppercase font-weight-bold">
                                     {{ str_replace('_', ' ', $currentStatus) }}
@@ -178,14 +186,20 @@
                                     <i class="now-ui-icons ui-2_time-alarm mr-1"></i>
                                     @php
                                     $remainingText = 'N/A';
-                                    if ($endDate) {
+                                    // إذا كانت حالة المشروع مكتملة
+                                    if ($project->status === 'completed') {
+                                    $remainingText = 'Project Completed';
+                                    } elseif ($endDate) {
                                     $todayDate = \Carbon\Carbon::today();
 
-                                    if ($todayDate->greaterThan($endDate)) {
-                                    $remainingText = '0 Days Remaining (Ended)';
+                                    if ($todayDate->isSameDay($endDate)) {
+                                    $remainingText = 'DUE TODAY';
+                                    } elseif ($todayDate->greaterThan($endDate)) {
+                                    $daysOverdue = $endDate->diffInDays($todayDate);
+                                    $remainingText = 'OVERDUE BY ' . $daysOverdue . ' DAYS';
                                     } elseif ($startDate && $todayDate->lessThan($startDate)) {
-                                    $daysRemaining = $todayDate->diffInDays($endDate);
-                                    $remainingText = $daysRemaining . ' Days Remaining (Not Started)';
+                                    $daysRemaining = $startDate->diffInDays($endDate);
+                                    $remainingText = $daysRemaining . ' Days Total (Not Started)';
                                     } else {
                                     $daysRemaining = $todayDate->diffInDays($endDate);
                                     $remainingText = $daysRemaining . ' Days Remaining';
