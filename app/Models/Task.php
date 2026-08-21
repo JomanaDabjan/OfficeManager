@@ -180,13 +180,19 @@ class Task extends Model
                 $query->whereDate('due_date', $today)
                     ->whereNotIn('status', ['completed', 'accepted']);
             } elseif ($filter === 'pending') {
-                // تقتصر فقط على الـ pending الحقيقي وتستبعد المتأخرة أو التي استحقاقها اليوم
+                // التعديل هنا: جلب المهام التي حالتها pending ولم يتجاوز تاريخها اليوم
                 $query->where('status', 'pending')
-                    ->where('due_date', '>=', $today);
+                    ->where(function ($q) use ($today) {
+                        $q->whereNull('due_date')
+                            ->orWhere('due_date', '>=', $today);
+                    });
             } elseif ($filter === 'in_progress') {
-                // تقتصر فقط على الـ in_progress الحقيقي وتستبعد المتأخرة أو التي استحقاقها اليوم
+                // التعديل هنا: جلب المهام التي حالتها in_progress ولم يتجاوز تاريخها اليوم
                 $query->where('status', 'in_progress')
-                    ->where('due_date', '>=', $today);
+                    ->where(function ($q) use ($today) {
+                        $q->whereNull('due_date')
+                            ->orWhere('due_date', '>=', $today);
+                    });
             } elseif (in_array($filter, ['completed', 'accepted', 'rejected'])) {
                 $query->where('status', $filter);
             }
@@ -268,7 +274,7 @@ class Task extends Model
     /**
      * =====================================================================
      * SCOPE: ADVANCED REPORT FILTERS (FOR REPORT CONTROLLER)
-     * ===================================== * ==============================
+     * =====================================================================
      * Centralized query filtering logic for task reports, supporting dropdowns,
      * status checks, and relationships to keep report controllers completely clean.
      *
@@ -279,7 +285,7 @@ class Task extends Model
     public function scopeReportFilter($query, $request)
     {
         /* Filter by task title if provided and not set to 'all' */
-        if ($request->filled('title') && $request->title != 'all`') {
+        if ($request->filled('title') && $request->title != 'all') {
             $query->where('title', $request->title);
         }
 
@@ -295,11 +301,36 @@ class Task extends Model
 
         /* Filter by task status if provided and not set to 'all' */
         if ($request->filled('status') && $request->status != 'all') {
-            $query->where('status', $request->status);
+            $status = $request->status;
+            $today = Carbon::today();
+
+            if ($status === 'overdue') {
+                $query->where('due_date', '<', $today)
+                    ->whereNotIn('status', ['completed', 'accepted']);
+            } elseif ($status === 'due_today') {
+                $query->whereDate('due_date', $today)
+                    ->whereNotIn('status', ['completed', 'accepted']);
+            } elseif ($status === 'pending') {
+                // التعديل هنا أيضاً ليشمل التقارير
+                $query->where('status', 'pending')
+                    ->where(function ($q) use ($today) {
+                        $q->whereNull('due_date')
+                            ->orWhere('due_date', '>=', $today);
+                    });
+            } elseif ($status === 'in_progress') {
+                // التعديل هنا أيضاً ليشمل التقارير
+                $query->where('status', 'in_progress')
+                    ->where(function ($q) use ($today) {
+                        $q->whereNull('due_date')
+                            ->orWhere('due_date', '>=', $today);
+                    });
+            } else {
+                $query->where('status', $status);
+            }
         }
 
         /* Filter by date_from (Tasks starting from or after this date) */
-        if ($request->expanded('date_from')) {
+        if ($request->filled('date_from')) {
             $query->whereDate('started_at', '>=', $request->date_from);
         }
 

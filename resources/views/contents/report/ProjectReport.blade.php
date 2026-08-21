@@ -62,7 +62,7 @@
 </div>
 
 <!-- ========================================== -->
-<!-- FIVE KEY METRICS CARDS SECTION            -->
+<!-- SEVEN KEY METRICS CARDS SECTION          -->
 <!-- ========================================== -->
 <div class="row">
 
@@ -75,9 +75,9 @@
                     <div>
                         <p class="card-category text-uppercase text-muted font-weight-bold mb-1"
                             style="font-size: 10px; letter-spacing: 1px;">Total Projects</p>
-                        <h3 class="card-title font-weight-bolder text-dark mb-0">{{ isset($totalProjects) ?
-                            $totalProjects : (method_exists($projects, 'total') ? $projects->total() :
-                            $projects->count()) }}</h3>
+                        <h3 class="card-title font-weight-bolder text-dark mb-0">
+                            {{ isset($totalProjects) ? $totalProjects : \App\Models\Project::count() }}
+                        </h3>
                     </div>
                     <div class="icon-shape text-white rounded-circle shadow d-flex align-items-center justify-content-center flex-shrink-0"
                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #f96332 0%, #ff8c42 100%);">
@@ -102,8 +102,8 @@
                         <p class="card-category text-uppercase text-muted font-weight-bold mb-1"
                             style="font-size: 10px; letter-spacing: 1px;">Completed</p>
                         <h3 class="card-title font-weight-bolder text-dark mb-0">
-                            {{ isset($completedProjectsCount) ? $completedProjectsCount : $projects->where('status',
-                            'completed')->count() }}
+                            {{ isset($completedProjectsCount) ? $completedProjectsCount :
+                            \App\Models\Project::whereIn('status', ['completed', 'complete'])->count() }}
                         </h3>
                     </div>
                     <div class="icon-shape text-white rounded-circle shadow d-flex align-items-center justify-content-center flex-shrink-0"
@@ -128,8 +128,10 @@
                         <p class="card-category text-uppercase text-muted font-weight-bold mb-1"
                             style="font-size: 10px; letter-spacing: 1px;">In Progress</p>
                         <h3 class="card-title font-weight-bolder text-dark mb-0">
-                            {{ isset($inProgressProjectsCount) ? $inProgressProjectsCount : $projects->where('status',
-                            'in_progress')->count() }}
+                            {{ isset($inProgressProjectsCount) ? $inProgressProjectsCount :
+                            \App\Models\Project::where('status', 'in_progress')->where(function($q) {
+                            $q->whereNull('end_date')->orWhereDate('end_date', '>', \Carbon\Carbon::today());
+                            })->count() }}
                         </h3>
                     </div>
                     <div class="icon-shape text-white rounded-circle shadow d-flex align-items-center justify-content-center flex-shrink-0"
@@ -154,8 +156,10 @@
                         <p class="card-category text-uppercase text-muted font-weight-bold mb-1"
                             style="font-size: 10px; letter-spacing: 1px;">Pending</p>
                         <h3 class="card-title font-weight-bolder text-dark mb-0">
-                            {{ isset($pendingProjectsCount) ? $pendingProjectsCount : $projects->where('status',
-                            'pending')->count() }}
+                            {{ isset($pendingProjectsCount) ? $pendingProjectsCount :
+                            \App\Models\Project::where('status', 'pending')->where(function($q) {
+                            $q->whereNull('end_date')->orWhereDate('end_date', '>', \Carbon\Carbon::today());
+                            })->count() }}
                         </h3>
                     </div>
                     <div class="icon-shape text-white rounded-circle shadow d-flex align-items-center justify-content-center flex-shrink-0"
@@ -170,6 +174,60 @@
         </div>
     </div>
 
+    <!-- Overdue Projects Card -->
+    <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 mb-4">
+        <div class="card card-stats border-0 shadow-lg position-relative overflow-hidden"
+            style="border-radius: 18px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); transition: transform 0.2s ease;">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <p class="card-category text-uppercase text-muted font-weight-bold mb-1"
+                            style="font-size: 10px; letter-spacing: 1px;">Overdue</p>
+                        <h3 class="card-title font-weight-bolder text-dark mb-0">
+                            {{ isset($overdueProjectsCount) ? $overdueProjectsCount :
+                            \App\Models\Project::whereNotIn('status', ['completed', 'complete'])->whereDate('end_date',
+                            '<', \Carbon\Carbon::today())->count() }}
+                        </h3>
+                    </div>
+                    <div class="icon-shape text-white rounded-circle shadow d-flex align-items-center justify-content-center flex-shrink-0"
+                        style="width: 48px; height: 48px; background: linear-gradient(135deg, #f5365c 0%, #f56036 100%);">
+                        <i class="now-ui-icons ui-1_simple-remove" style="font-size: 20px;"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="position-absolute w-100"
+                style="height: 4px; bottom: 0; left: 0; background: linear-gradient(135deg, #f5365c 0%, #f56036 100%);">
+            </div>
+        </div>
+    </div>
+
+    <!-- Due Today Projects Card -->
+    <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 mb-4">
+        <div class="card card-stats border-0 shadow-lg position-relative overflow-hidden"
+            style="border-radius: 18px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); transition: transform 0.2s ease;">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <p class="card-category text-uppercase text-muted font-weight-bold mb-1"
+                            style="font-size: 10px; letter-spacing: 1px;">Due Today</p>
+                        <h3 class="card-title font-weight-bolder text-dark mb-0">
+                            {{ isset($dueTodayProjectsCount) ? $dueTodayProjectsCount :
+                            \App\Models\Project::whereNotIn('status', ['completed', 'complete'])->whereDate('end_date',
+                            '=', \Carbon\Carbon::today())->count() }}
+                        </h3>
+                    </div>
+                    <div class="icon-shape text-white rounded-circle shadow d-flex align-items-center justify-content-center flex-shrink-0"
+                        style="width: 48px; height: 48px; background: linear-gradient(135deg, #172b4d 0%, #2d3748 100%);">
+                        <i class="now-ui-icons ui-2_time-alarm" style="font-size: 20px;"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="position-absolute w-100"
+                style="height: 4px; bottom: 0; left: 0; background: linear-gradient(135deg, #172b4d 0%, #2d3748 100%);">
+            </div>
+        </div>
+    </div>
+
     <!-- Total Tasks Card -->
     <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 mb-4">
         <div class="card card-stats border-0 shadow-lg position-relative overflow-hidden"
@@ -180,8 +238,7 @@
                         <p class="card-category text-uppercase text-muted font-weight-bold mb-1"
                             style="font-size: 10px; letter-spacing: 1px;">Total Tasks</p>
                         <h3 class="card-title font-weight-bolder text-dark mb-0">
-                            {{ isset($totalTasksCount) ? $totalTasksCount : $projects->sum(function($proj) { return
-                            $proj->tasks_count ?? ($proj->tasks ? $proj->tasks->count() : 0); }) }}
+                            {{ isset($totalTasksCount) ? $totalTasksCount : \App\Models\Task::count() }}
                         </h3>
                     </div>
                     <div class="icon-shape text-white rounded-circle shadow d-flex align-items-center justify-content-center flex-shrink-0"
@@ -283,6 +340,11 @@
                                 <a class="dropdown-item py-2 px-3 text-sm {{ request('status') == 'in_progress' ? 'active font-weight-bold text-primary' : '' }}"
                                     href="{{ route('admin.report.project-report', array_merge(request()->except(['status', 'page']), ['status' => 'in_progress'])) }}">In
                                     Progress</a>
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('status') == 'overdue' ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.report.project-report', array_merge(request()->except(['status', 'page']), ['status' => 'overdue'])) }}">Overdue</a>
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('status') == 'due_today' ? 'active font-weight-bold text-print text-primary' : '' }}"
+                                    href="{{ route('admin.report.project-report', array_merge(request()->except(['status', 'page']), ['status' => 'due_today'])) }}">Due
+                                    Today</a>
                                 <a class="dropdown-item py-2 px-3 text-sm {{ request('status') == 'completed' ? 'active font-weight-bold text-primary' : '' }}"
                                     href="{{ route('admin.report.project-report', array_merge(request()->except(['status', 'page']), ['status' => 'completed'])) }}">Completed</a>
                             </div>
@@ -378,21 +440,30 @@
                                 <th class="py-3 font-weight-bold text-white">Budget</th>
                                 <th class="py-3 font-weight-bold text-white text-center">Total Tasks</th>
                                 <th class="py-3 font-weight-bold text-white">Project Tasks & Assigned Employees</th>
-                                <th class="py-3 font-weight-bold text-white text-right pr-4">Status & Progress</th>
+                                <th class="py-3 font-weight-bold text-white text-right pr-4">Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($projects as $project)
                             @php
-                            $projectStatus = strtolower($project->status ?? 'in_progress');
+                            $rawStatus = strtolower($project->status ?? 'in_progress');
 
-                            $progressPercent = $project->progress ?? match($projectStatus) {
-                            'completed' => 100,
-                            'in_progress' => 50,
-                            'pending' => 10,
-                            default => 0
-                            };
+                            if ($rawStatus !== 'completed' && $project->end_date) {
+                            $endDate = \Carbon\Carbon::parse($project->end_date)->startOfDay();
+                            $today = \Carbon\Carbon::today();
+
+                            if ($endDate->isToday()) {
+                            $projectStatus = 'due_today';
+                            } elseif ($endDate->isPast()) {
+                            $projectStatus = 'overdue';
+                            } else {
+                            $projectStatus = $rawStatus;
+                            }
+                            } else {
+                            $projectStatus = $rawStatus;
+                            }
                             @endphp
+                            <!-- تم ربط السطر هنا بالمتغير الصحيح لكي تعمل فلترة الـ overdue و due_today بشكل سليم -->
                             <tr class="border-bottom project-row" data-status="{{ $projectStatus }}">
                                 <!-- Project Title -->
                                 <td class="font-weight-bold text-dark pl-4 align-middle">
@@ -411,7 +482,6 @@
                                     </span>
 
                                     @if($isLong)
-                                    <!-- This Button Will Open The Modal To Show The Full Description -->
                                     <button type="button"
                                         class="btn btn-link btn-icon btn-sm text-primary p-0 ml-1 d-print-none font-weight-bold"
                                         data-toggle="modal" data-target="#descModal{{ $project->id }}"
@@ -419,7 +489,6 @@
                                         More
                                     </button>
 
-                                    <!-- This Modal Will Show The Full Description -->
                                     <div class="modal fade d-print-none" id="descModal{{ $project->id }}" tabindex="-1"
                                         role="dialog" aria-labelledby="descModalLabel{{ $project->id }}"
                                         aria-hidden="true">
@@ -455,7 +524,6 @@
                                     </div>
                                     @endif
 
-                                    <!-- This text will be visible only on print -->
                                     <div class="d-none d-print-block text-dark" style="white-space: normal;">
                                         {{ $fullDescription }}
                                     </div>
@@ -509,7 +577,7 @@
                                     $hasManyTasks = $project->tasks->count() > 2;
                                     @endphp
 
-                                    <div class="{{ $hasManyTasks ? '' : '' }}">
+                                    <div>
                                         <ul class="list-unstyled mb-1" style="font-size: 12px;">
                                             @foreach($project->tasks->take(2) as $task)
                                             <li class="mb-1 pb-1 border-bottom border-light">
@@ -526,7 +594,6 @@
                                         </ul>
 
                                         @if($hasManyTasks)
-                                        <!-- Button to open Tasks Modal -->
                                         <button type="button"
                                             class="btn btn-link btn-icon btn-sm text-primary p-0 d-print-none font-weight-bold"
                                             data-toggle="modal" data-target="#tasksModal{{ $project->id }}"
@@ -534,7 +601,6 @@
                                             More ({{ $project->tasks->count() }} Tasks)
                                         </button>
 
-                                        <!-- Modal for All Tasks -->
                                         <div class="modal fade d-print-none" id="tasksModal{{ $project->id }}"
                                             tabindex="-1" role="dialog"
                                             aria-labelledby="tasksModalLabel{{ $project->id }}" aria-hidden="true">
@@ -591,44 +657,17 @@
                                     @endif
                                 </td>
 
-                                <!-- Project Status Badge & Battery Style Progress Bar -->
-                                <td class="text-right pr-4 align-middle" style="min-width: 180px;">
-                                    <!-- Project Status Badge Display -->
-                                    <span class="badge badge-pill mb-2
+                                <!-- Project Status Badge (Without Progress Bar) -->
+                                <td class="text-right pr-4 align-middle" style="min-width: 150px;">
+                                    <span class="badge badge-pill
                                         @if($projectStatus == 'completed') badge-success
                                         @elseif($projectStatus == 'in_progress') badge-warning
                                         @elseif($projectStatus == 'pending') badge-info
-                                        @else badge-secondary @endif px-3 py-1 text-white shadow-sm">
+                                        @elseif($projectStatus == 'overdue') badge-danger
+                                        @elseif($projectStatus == 'due_today') badge-primary
+                                        @else badge-secondary @endif px-3 py-2 text-white shadow-sm">
                                         {{ ucfirst(str_replace('_', ' ', $projectStatus)) }}
                                     </span>
-
-                                    <!-- Battery Style Progress Bar with Percentage -->
-                                    <div class="d-flex flex-column align-items-end" style="gap: 4px;">
-
-                                        <!-- Percentage Text Label -->
-                                        <span class="text-muted font-weight-bold" style="font-size: 11px;">
-                                            {{ $progressPercent }}%
-                                        </span>
-
-                                        <div class="d-flex align-items-center justify-content-end w-100">
-                                            <!-- Battery Body Container -->
-                                            <div class="progress shadow-inner"
-                                                style="height: 14px; border-radius: 6px; width: 125px; background-color: #f1f3f5; border: 2px solid #dcdcdc; overflow: hidden; padding: 2px;">
-
-                                                <!-- Dynamic Progress Fill Bar with Gradients -->
-                                                <div class="progress-bar" role="progressbar"
-                                                    style="width: {{ $progressPercent }}%; border-radius: 3px; background: @if($projectStatus == 'completed') linear-gradient(135deg, #2dce89 0%, #2ddfc4 100%) @elseif($projectStatus == 'in_progress') linear-gradient(135deg, #fbb140 0%, #f39c12 100%) @else linear-gradient(135deg, #11cdef 0%, #1171ef 100%) @endif;"
-                                                    aria-valuenow="{{ $progressPercent }}" aria-valuemin="0"
-                                                    aria-valuemax="100">
-                                                </div>
-                                            </div>
-
-                                            <!-- Battery Tip Element -->
-                                            <div
-                                                style="width: 4px; height: 7px; background-color: #dcdcdc; border-top-right-radius: 2px; border-bottom-right-radius: 2px; margin-left: 1px;">
-                                            </div>
-                                        </div>
-                                    </div>
                                 </td>
                             </tr>
                             @empty

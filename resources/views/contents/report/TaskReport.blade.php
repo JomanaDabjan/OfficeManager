@@ -62,7 +62,7 @@
 <div class="row">
 
     <!-- Total Tasks Card -->
-    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12 mb-4">
+    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-4">
         <div class="card card-stats border-0 shadow-lg position-relative overflow-hidden"
             style="border-radius: 18px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); transition: transform 0.2s ease;">
             <div class="card-body p-4">
@@ -88,7 +88,7 @@
     </div>
 
     <!-- Completed Tasks Card -->
-    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12 mb-4">
+    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-4">
         <div class="card card-stats border-0 shadow-lg position-relative overflow-hidden"
             style="border-radius: 18px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); transition: transform 0.2s ease;">
             <div class="card-body p-4">
@@ -97,7 +97,7 @@
                         <p class="card-category text-uppercase text-muted font-weight-bold mb-1"
                             style="font-size: 10px; letter-spacing: 1px;">Completed</p>
                         <h3 class="card-title font-weight-bolder text-dark mb-0">
-                            {{ isset($completedTasksCount) ? $completedTasksCount : $tasks->where('status',
+                            {{ isset($completedTasksCount) ? $completedTasksCount : \App\Models\Task::where('status',
                             'completed')->count() }}
                         </h3>
                     </div>
@@ -114,7 +114,7 @@
     </div>
 
     <!-- In Progress Tasks Card -->
-    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12 mb-4">
+    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-4">
         <div class="card card-stats border-0 shadow-lg position-relative overflow-hidden"
             style="border-radius: 18px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); transition: transform 0.2s ease;">
             <div class="card-body p-4">
@@ -123,8 +123,8 @@
                         <p class="card-category text-uppercase text-muted font-weight-bold mb-1"
                             style="font-size: 10px; letter-spacing: 1px;">In Progress</p>
                         <h3 class="card-title font-weight-bolder text-dark mb-0">
-                            {{ isset($inProgressTasksCount) ? $inProgressTasksCount : $tasks->where('status',
-                            'in_progress')->count() }}
+                            {{ \App\Models\Task::where('status', 'in_progress')->where('due_date', '>=',
+                            now()->toDateString())->count() }}
                         </h3>
                     </div>
                     <div class="icon-shape text-white rounded-circle shadow d-flex align-items-center justify-content-center flex-shrink-0"
@@ -140,7 +140,7 @@
     </div>
 
     <!-- Pending Tasks Card -->
-    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12 mb-4">
+    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-4">
         <div class="card card-stats border-0 shadow-lg position-relative overflow-hidden"
             style="border-radius: 18px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); transition: transform 0.2s ease;">
             <div class="card-body p-4">
@@ -149,8 +149,8 @@
                         <p class="card-category text-uppercase text-muted font-weight-bold mb-1"
                             style="font-size: 10px; letter-spacing: 1px;">Pending</p>
                         <h3 class="card-title font-weight-bolder text-dark mb-0">
-                            {{ isset($pendingTasksCount) ? $pendingTasksCount : $tasks->where('status',
-                            'pending')->count() }}
+                            {{ \App\Models\Task::where('status', 'pending')->where('due_date', '>=',
+                            now()->toDateString())->count() }}
                         </h3>
                     </div>
                     <div class="icon-shape text-white rounded-circle shadow d-flex align-items-center justify-content-center flex-shrink-0"
@@ -161,6 +161,58 @@
             </div>
             <div class="position-absolute w-100"
                 style="height: 4px; bottom: 0; left: 0; background: linear-gradient(135deg, #11cdef 0%, #1171ef 100%);">
+            </div>
+        </div>
+    </div>
+
+    <!-- Overdue Tasks Card -->
+    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-4">
+        <div class="card card-stats border-0 shadow-lg position-relative overflow-hidden"
+            style="border-radius: 18px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); transition: transform 0.2s ease;">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <p class="card-category text-uppercase text-muted font-weight-bold mb-1"
+                            style="font-size: 10px; letter-spacing: 1px;">Overdue</p>
+                        <h3 class="card-title font-weight-bolder text-dark mb-0">
+                            {{ isset($overdueTasksCount) ? $overdueTasksCount : \App\Models\Task::where('status', '!=',
+                            'completed')->where('due_date', '<', now()->toDateString())->count() }}
+                        </h3>
+                    </div>
+                    <div class="icon-shape text-white rounded-circle shadow d-flex align-items-center justify-content-center flex-shrink-0"
+                        style="width: 48px; height: 48px; background: linear-gradient(135deg, #f5365c 0%, #f56036 100%);">
+                        <i class="now-ui-icons ui-1_simple-remove" style="font-size: 20px;"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="position-absolute w-100"
+                style="height: 4px; bottom: 0; left: 0; background: linear-gradient(135deg, #f5365c 0%, #f56036 100%);">
+            </div>
+        </div>
+    </div>
+
+    <!-- Due Today Tasks Card -->
+    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-4">
+        <div class="card card-stats border-0 shadow-lg position-relative overflow-hidden"
+            style="border-radius: 18px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); transition: transform 0.2s ease;">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <p class="card-category text-uppercase text-muted font-weight-bold mb-1"
+                            style="font-size: 10px; letter-spacing: 1px;">Due Today</p>
+                        <h3 class="card-title font-weight-bolder text-dark mb-0">
+                            {{ isset($dueTodayTasksCount) ? $dueTodayTasksCount : \App\Models\Task::where('status',
+                            '!=', 'completed')->whereDate('due_date', now()->toDateString())->count() }}
+                        </h3>
+                    </div>
+                    <div class="icon-shape text-white rounded-circle shadow d-flex align-items-center justify-content-center flex-shrink-0"
+                        style="width: 48px; height: 48px; background: linear-gradient(135deg, #172b4d 0%, #2d3748 100%);">
+                        <i class="now-ui-icons ui-2_time-alarm" style="font-size: 20px;"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="position-absolute w-100"
+                style="height: 4px; bottom: 0; left: 0; background: linear-gradient(135deg, #23b7e5 0%, #5190ef 100%);">
             </div>
         </div>
     </div>
@@ -255,6 +307,11 @@
                                 <a class="dropdown-item py-2 px-3 text-sm {{ request('status') == 'in_progress' ? 'active font-weight-bold text-primary' : '' }}"
                                     href="{{ route('admin.report.task-report', array_merge(request()->except(['status', 'page']), ['status' => 'in_progress'])) }}">In
                                     Progress</a>
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('status') == 'overdue' ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.report.task-report', array_merge(request()->except(['status', 'page']), ['status' => 'overdue'])) }}">Overdue</a>
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('status') == 'due_today' ? 'active font-weight-bold text-primary' : '' }}"
+                                    href="{{ route('admin.report.task-report', array_merge(request()->except(['status', 'page']), ['status' => 'due_today'])) }}">Due
+                                    Today</a>
                                 <a class="dropdown-item py-2 px-3 text-sm {{ request('status') == 'completed' ? 'active font-weight-bold text-primary' : '' }}"
                                     href="{{ route('admin.report.task-report', array_merge(request()->except(['status', 'page']), ['status' => 'completed'])) }}">Completed</a>
                                 <a class="dropdown-item py-2 px-3 text-sm {{ request('status') == 'accepted' ? 'active font-weight-bold text-primary' : '' }}"
@@ -330,13 +387,20 @@
                         <tbody>
                             @forelse($tasks as $task)
                             @php
-                            $taskStatus = strtolower($task->status ?? 'pending');
-                            $priorityPercent = match(strtolower($task->priority ?? 'medium')) {
-                            'urgent', 'high' => 100,
-                            'medium' => 50,
-                            'low' => 20,
-                            default => 50
-                            };
+                            // تحديد الحالة الديناميكية (overdue أو due_today أو الحالة الأصلية)
+                            $status = $task->status ?? 'pending';
+                            $dueDate = $task->due_date ?? null;
+                            $today = \Carbon\Carbon::today();
+
+                            $taskStatus = $status;
+                            if ($dueDate && !in_array($status, ['completed', 'accepted'])) {
+                            $taskDate = \Carbon\Carbon::parse($dueDate)->startOfDay();
+                            if ($taskDate->lt($today)) {
+                            $taskStatus = 'overdue';
+                            } elseif ($taskDate->eq($today)) {
+                            $taskStatus = 'due_today';
+                            }
+                            }
                             @endphp
                             <tr class="border-bottom task-row" data-status="{{ $taskStatus }}">
                                 <!-- Task Title -->
@@ -456,7 +520,7 @@
 
                                 <!-- Last Update (Timestamp) -->
                                 <td class="align-middle">
-                                    <div class="text-muted" style="font-size: 12px;">
+                                    <div class="text-muted" style="font-size: filter; font-size: 12px;">
                                         @if($task->updated_at)
                                         <div class="font-weight-bold text-dark">{{ $task->updated_at->format('Y-m-d') }}
                                         </div>
@@ -469,44 +533,17 @@
                                     </div>
                                 </td>
 
-                                <!-- Status Badge & Progress Indicator -->
-                                <td class="text-center align-middle" style="min-width: 180px;">
-                                    @php
-                                    $taskStatus = $task->status ?? 'pending';
-
-                                    $priorityPercent = match($taskStatus) {
-                                    'completed' => 100,
-                                    'in_progress' => 50,
-                                    'pending' => 10,
-                                    default => 25,
-                                    };
-                                    @endphp
-
-                                    <!-- Status Badge -->
+                                <!-- Status Badge Only -->
+                                <td class="text-center align-middle" style="min-width: 150px;">
                                     <span class="badge badge-pill mb-2 px-3 py-1 text-white shadow-sm
                                         @if($taskStatus == 'completed') badge-success
                                         @elseif($taskStatus == 'in_progress') badge-warning
                                         @elseif($taskStatus == 'pending') badge-info
+                                        @elseif($taskStatus == 'overdue') badge-danger
+                                        @elseif($taskStatus == 'due_today') badge-primary
                                         @else badge-secondary @endif">
                                         {{ ucfirst(str_replace('_', ' ', $taskStatus)) }}
                                     </span>
-
-                                    <!-- Progress Bar -->
-                                    <div class="d-flex flex-column align-items-center w-100" style="gap: 2px;">
-                                        <div class="progress shadow-inner w-100"
-                                            style="height: 8px; border-radius: 4px; background-color: #e9ecef; overflow: hidden; max-width: 130px;">
-                                            <div class="progress-bar
-                                                @if($priorityPercent == 100) bg-success
-                                                @elseif($priorityPercent >= 50) bg-warning
-                                                @else bg-info @endif" style="width: {{ $priorityPercent }}%;">
-                                            </div>
-                                        </div>
-
-                                        <!-- Percentage Text Label -->
-                                        <span class="text-muted font-weight-bold" style="font-size: 11px;">
-                                            {{ $priorityPercent }}%
-                                        </span>
-                                    </div>
                                 </td>
                             </tr>
                             @empty

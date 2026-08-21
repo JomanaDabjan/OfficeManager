@@ -76,19 +76,20 @@
                             'completed';
                             }) : false;
 
-                            $currentStatus = strtolower(trim($project->status));
+                            $rawStatus = strtolower(trim($project->status));
+                            $currentStatus = $rawStatus;
 
-                            if ($currentStatus !== 'completed' && $currentStatus !== 'complete') {
+                            if ($rawStatus !== 'completed' && $rawStatus !== 'complete') {
                             if ($endDate) {
                             if ($today->greaterThan($endDate) && (!$hasTasks || !$allTasksCompleted)) {
                             $currentStatus = 'overdue';
                             } elseif ($today->isSameDay($endDate) && (!$hasTasks || !$allTasksCompleted)) {
                             $currentStatus = 'due_today';
-                            } elseif ($startDate && $today->lessThan($startDate)) {
-                            $currentStatus = 'pending';
                             } else {
-                            $currentStatus = 'in_progress';
+                            $currentStatus = $rawStatus;
                             }
+                            } else {
+                            $currentStatus = $rawStatus;
                             }
                             } else {
                             $currentStatus = 'completed';

@@ -17,6 +17,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
+use Carbon\Carbon;
 
 class TaskExport implements FromQuery, WithHeadings, WithMapping, WithStyles, WithColumnWidths
 {
@@ -37,9 +38,28 @@ class TaskExport implements FromQuery, WithHeadings, WithMapping, WithStyles, Wi
         $user = Auth::user();
         $request = $this->request ?? request();
 
-        // استخدام نفس الـ Scope تماماً المستخدم في الكونترولر لتطبيق الفلاتر وصلاحيات الموظف
-        return Task::with(['project', 'assignedUser', 'user'])
-            ->filterAndSearch($user, $request);
+        $query = Task::with(['project', 'assignedUser', 'user']);
+
+        // فلترة دقيقة تعتمد على التاريخ الحالي للسيرفر لضمان جلب المهام المتأخرة أو المستحقة اليوم بمعزل عن الحالات الأخرى
+        if ($request->filled('status') && $request->status !== 'all') {
+            $status = $request->status;
+
+            if ($status === 'overdue') {
+                $query->whereNotIn('status', ['completed', 'complete'])
+                    ->whereDate('due_date', '<', Carbon::today());
+            } elseif ($status === 'due_today') {
+                $query->whereNotIn('status', ['completed', 'complete'])
+                    ->whereDate('due_date', '=', Carbon::today());
+            } else {
+                $query->where('status', $status)
+                    ->where(function ($q) {
+                        $q->whereNull('due_date')
+                            ->orWhereDate('due_date', '>', Carbon::today());
+                    });
+            }
+        }
+
+        return $query->filterAndSearch($user, $request);
     }
 
     public function headings(): array
@@ -52,21 +72,25 @@ class TaskExport implements FromQuery, WithHeadings, WithMapping, WithStyles, Wi
             'Start Date',
             'End Date',
             'Last Update',
-            'Status',
-            'Progress'
+            'Status'
         ];
     }
 
     public function map($task): array
     {
-        $taskStatus = strtolower($task->status ?? 'in_progress');
+        $today = now()->toDateString();
+        $dueDate = $task->due_date ? \Carbon\Carbon::parse($task->due_date)->toDateString() : null;
+        $rawStatus = strtolower($task->status ?? 'in_progress');
 
-        $progressPercent = $task->progress ?? match ($taskStatus) {
-            'completed'   => 100,
-            'in_progress' => 50,
-            'pending'     => 10,
-            default       => 0
-        };
+        if ($rawStatus === 'completed') {
+            $statusLabel = 'Completed';
+        } elseif ($dueDate && $dueDate < $today) {
+            $statusLabel = 'Overdue';
+        } elseif ($dueDate && $dueDate === $today) {
+            $statusLabel = 'Due Today';
+        } else {
+            $statusLabel = ucfirst(str_replace('_', ' ', $rawStatus));
+        }
 
         return [
             $task->title ?? $task->name,
@@ -76,8 +100,7 @@ class TaskExport implements FromQuery, WithHeadings, WithMapping, WithStyles, Wi
             $task->started_at ? \Carbon\Carbon::parse($task->started_at)->format('Y-m-d') : 'N/A',
             $task->due_date ? \Carbon\Carbon::parse($task->due_date)->format('Y-m-d') : 'N/A',
             $task->updated_at ? $task->updated_at->format('Y-m-d H:i:s') : 'N/A',
-            ucfirst(str_replace('_', ' ', $task->status ?? 'in_progress')),
-            $progressPercent . '%'
+            $statusLabel
         ];
     }
 
@@ -92,7 +115,6 @@ class TaskExport implements FromQuery, WithHeadings, WithMapping, WithStyles, Wi
             'F' => 16,
             'G' => 20,
             'H' => 18,
-            'I' => 15,
         ];
     }
 
@@ -105,7 +127,7 @@ class TaskExport implements FromQuery, WithHeadings, WithMapping, WithStyles, Wi
         return [
             1 => [
                 'font' => [
-                    'bold' => true,
+                    'bold' => `true`,
                     'color' => ['argb' => 'FFFFFF'],
                     'size' => 11,
                 ],

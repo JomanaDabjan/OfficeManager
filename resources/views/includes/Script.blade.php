@@ -1,5 +1,3 @@
-@push('Script')
-
 <!-- ========================================================================= -->
 <!-- START OF STACKED SCRIPTS PUSH SECTION     -->
 <!-- This Laravel Blade directive pushes the enclosed script stack to the      -->
@@ -14,7 +12,7 @@
 <script src="{{ asset('assets/js/core/jquery.min.js') }}"></script>
 <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
 <script src="{{ asset('assets/js/core/bootstrap.min.js') }}"></script>
-<script src="{{ asset('assets/js/plugins/perfect-scrollbar.jquery.min.js') }}"></script>
+{{-- <script src="{{ asset('assets/js/plugins/perfect-scrollbar.jquery.min.js') }}"></script> --}}
 
 <!-- ========================================================================= -->
 <!-- GOOGLE MAPS AND CHART PLUGINS     -->
@@ -486,4 +484,5 @@
         @endisset
     });
 </script>
-@endpush
+<!-- Allow child views to push page-specific JavaScript scripts -->
+@stack('Script')

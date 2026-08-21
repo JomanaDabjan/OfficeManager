@@ -13,6 +13,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use Carbon\Carbon;
 
 class ProjectsExport implements FromQuery, WithHeadings, WithMapping, WithColumnWidths, WithStyles
 {
@@ -51,7 +52,21 @@ class ProjectsExport implements FromQuery, WithHeadings, WithMapping, WithColumn
 
         /* Filter by project status if provided and not set to 'all' */
         if ($this->request->filled('status') && $this->request->status != 'all') {
-            $query->where('status', $this->request->status);
+            $status = $this->request->status;
+
+            if ($status === 'overdue') {
+                $query->whereNotIn('status', ['completed', 'complete'])
+                    ->whereDate('end_date', '<', Carbon::today());
+            } elseif ($status === 'due_today') {
+                $query->whereNotIn('status', ['completed', 'complete'])
+                    ->whereDate('end_date', '=', Carbon::today());
+            } else {
+                $query->where('status', $status)
+                    ->where(function ($q) {
+                        $q->whereNull('end_date')
+                            ->orWhereDate('end_date', '>', Carbon::today());
+                    });
+            }
         }
 
         /* Global search filter if provided */
@@ -88,7 +103,7 @@ class ProjectsExport implements FromQuery, WithHeadings, WithMapping, WithColumn
             'Budget',
             'Total Tasks',
             'Project Tasks & Assigned Employees',
-            'Status & Progress'
+            'Status'
         ];
     }
 
@@ -137,16 +152,25 @@ class ProjectsExport implements FromQuery, WithHeadings, WithMapping, WithColumn
             $tasksList = "No tasks assigned";
         }
 
-        $projectStatus = strtolower($project->status ?? 'in_progress');
-        $progressPercent = $project->progress ?? match ($projectStatus) {
-            'completed' => 100,
-            'in_progress' => 50,
-            'pending' => 10,
-            default => 0
-        };
+        $rawStatus = strtolower($project->status ?? 'in_progress');
 
-        $statusText = ucfirst(str_replace('_', ' ', $project->status ?? 'in_progress'));
-        $statusAndProgress = $statusText . " (" . $progressPercent . "%)";
+        // حساب الحالة الديناميكية أثناء التصدير لتعكس overdue أو due_today بدقة
+        if ($rawStatus !== 'completed' && $rawStatus !== 'complete' && $project->end_date) {
+            $endDate = \Carbon\Carbon::parse($project->end_date)->startOfDay();
+            $today = \Carbon\Carbon::today();
+
+            if ($endDate->isToday()) {
+                $projectStatus = 'due_today';
+            } elseif ($endDate->isPast()) {
+                $projectStatus = 'overdue';
+            } else {
+                $projectStatus = $rawStatus;
+            }
+        } else {
+            $projectStatus = $rawStatus;
+        }
+
+        $statusText = ucfirst(str_replace('_', ' ', $projectStatus));
 
         $startDate = $project->start_date ? \Carbon\Carbon::parse($project->start_date)->format('Y-m-d') : 'N/A';
         $endDate = $project->end_date ? \Carbon\Carbon::parse($project->end_date)->format('Y-m-d') : 'N/A';
@@ -161,7 +185,7 @@ class ProjectsExport implements FromQuery, WithHeadings, WithMapping, WithColumn
             $budget,
             $tasksCount . ' Tasks',
             $tasksList,
-            $statusAndProgress
+            $statusText
         ];
     }
 
