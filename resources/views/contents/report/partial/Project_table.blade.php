@@ -139,20 +139,29 @@
                                     <th style="width: 9%;">Budget</th>
                                     <th style="width: 7%;">Total Tasks</th>
                                     <th style="width: 13%;">Tasks & Employees</th>
-                                    <th style="width: 12%;">Status & Progress</th>
+                                    <th style="width: 12%;">Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($chunkedProjects as $project)
                                 @php
-                                $projectStatus = strtolower($project->status ?? 'in_progress');
+                                $rawStatus = strtolower($project->status ?? 'in_progress');
 
-                                $progressPercent = $project->progress ?? match($projectStatus) {
-                                'completed' => 100,
-                                'in_progress' => 50,
-                                'pending' => 10,
-                                default => 0
-                                };
+                                // حساب الحالة الديناميكية لكي تظهر overdue أو due_today عند الطباعة و PDF
+                                if ($rawStatus !== 'completed' && $rawStatus !== 'complete' && $project->end_date) {
+                                $endDate = \Carbon\Carbon::parse($project->end_date)->startOfDay();
+                                $today = \Carbon\Carbon::today();
+
+                                if ($endDate->isToday()) {
+                                $projectStatus = 'due_today';
+                                } elseif ($endDate->isPast()) {
+                                $projectStatus = 'overdue';
+                                } else {
+                                $projectStatus = $rawStatus;
+                                }
+                                } else {
+                                $projectStatus = $rawStatus;
+                                }
                                 @endphp
                                 <tr>
                                     <!-- Project Title Column -->
@@ -209,43 +218,13 @@
                                         @endif
                                     </td>
 
-                                    <!-- Status Badge & Centered Progress Battery Column -->
+                                    <!-- Status Badge Column (Progress Removed) -->
                                     <td>
-                                        <!-- Status Pill Badge -->
-                                        <div style="margin-bottom: 4px;">
+                                        <div style="text-align: center;">
                                             <span
-                                                style="display: inline-block; padding: 2px 6px; border-radius: 10px; font-weight: bold; font-size: 7.5px; color: #fff; background-color: @if($projectStatus == 'completed') #2dce89 @elseif($projectStatus == 'in_progress') #fbb140 @else #11cdef @endif;">
-                                                {{ ucfirst(str_replace('_', ' ', $project->status ?? 'in_progress')) }}
+                                                style="display: inline-block; padding: 3px 8px; border-radius: 10px; font-weight: bold; font-size: 8px; color: #fff; background-color: @if($projectStatus == 'completed' || $projectStatus == 'complete') #2dce89 @elseif($projectStatus == 'in_progress') #fbb140 @elseif($projectStatus == 'pending') #11cdef @elseif($projectStatus == 'overdue') #f5365c @elseif($projectStatus == 'due_today') #5e72e4 @else #8898aa @endif;">
+                                                {{ ucfirst(str_replace('_', ' ', $projectStatus)) }}
                                             </span>
-                                        </div>
-
-                                        <!-- Centered Battery Style Progress Bar -->
-                                        <div style="text-align: center; width: 100%;">
-                                            <div
-                                                style="font-size: 7px; font-weight: bold; color: #666; margin-bottom: 2px; text-align: center;">
-                                                {{ $progressPercent }}%
-                                            </div>
-
-                                            <table
-                                                style="width: auto !important; margin: 0 auto !important; border: none !important; background: transparent !important;">
-                                                <tr>
-                                                    <td
-                                                        style="padding: 0 !important; border: none !important; background: transparent !important; vertical-align: middle !important;">
-                                                        <div
-                                                            style="height: 5px; width: 38px; background-color: #f1f3f5; border: 1px solid #dcdcdc; border-radius: 2px; overflow: hidden; padding: 0.5px;">
-                                                            <div
-                                                                style="height: 100%; width: {{ $progressPercent }}%; border-radius: 1px; background: @if($projectStatus == 'completed') #2dce89 @elseif($projectStatus == 'in_progress') #fbb140 @else #11cdef @endif;">
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td
-                                                        style="padding: 0 !important; border: none !important; background: transparent !important; vertical-align: middle !important;">
-                                                        <div
-                                                            style="width: 1px; height: 2.5px; background-color: #dcdcdc; border-top-right-radius: 1px; border-bottom-right-radius: 1px; margin-left: 1px;">
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            </table>
                                         </div>
                                     </td>
                                 </tr>

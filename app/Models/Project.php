@@ -51,23 +51,13 @@ class Project extends Model
             } elseif ($status === 'due_today') {
                 $query->whereNotIn('status', ['completed', 'complete'])
                     ->whereDate('end_date', '=', Carbon::today());
-            } elseif ($status === 'pending') {
-                $query->whereNotIn('status', ['completed', 'complete'])
-                    ->where(function ($q) {
-                        $q->whereDate('start_date', '>', Carbon::today())
-                            ->orWhereNull('end_date');
-                    });
-            } elseif ($status === 'in_progress') {
-                $query->whereNotIn('status', ['completed', 'complete'])
-                    ->where(function ($q) {
-                        $q->whereDate('end_date', '>=', Carbon::today())
-                            ->where(function ($sub) {
-                                $sub->whereDate('start_date', '<=', Carbon::today())
-                                    ->orWhereNull('start_date');
-                            });
-                    });
             } else {
-                $query->where('status', $status);
+                // منع ظهور المشاريع المنتهية (overdue أو due_today) ضمن فلتر الحالات الأخرى مثل pending أو in_progress
+                $query->where('status', $status)
+                    ->where(function ($q) {
+                        $q->whereNull('end_date')
+                            ->orWhereDate('end_date', '>', Carbon::today());
+                    });
             }
         }
 
@@ -117,34 +107,23 @@ class Project extends Model
             } elseif ($status === 'due_today') {
                 $query->whereNotIn('status', ['completed', 'complete'])
                     ->whereDate('end_date', '=', Carbon::today());
-            } elseif ($status === 'pending') {
-                $query->whereNotIn('status', ['completed', 'complete'])
-                    ->where(function ($q) {
-                        $q->whereDate('start_date', '>', Carbon::today())
-                            ->orWhereNull('end_date');
-                    });
-            } elseif ($status === 'in_progress') {
-                $query->whereNotIn('status', ['completed', 'complete'])
-                    ->where(function ($q) {
-                        $q->whereDate('end_date', '>=', Carbon::today())
-                            ->where(function ($sub) {
-                                $sub->whereDate('start_date', '<=', Carbon::today())
-                                    ->orWhereNull('start_date');
-                            });
-                    });
             } else {
-                $query->where('status', $status);
+                // التعديل هنا: عند الفلترة حسب حالة عادية مثل 'pending' أو 'in_progress'،
+                // نضمن عدم جلب المشاريع التي انتهى وقتها وأصبحت overdue فعلياً لتجنب التداخل.
+                $query->where('status', $status)
+                    ->where(function ($q) {
+                        $q->whereNull('end_date')
+                            ->orWhereDate('end_date', '>', Carbon::today());
+                    });
             }
         }
 
-        if ($request->filled('price') && $request->price !== 'all') {
-            if ($request->price === 'low') {
-                $query->where('budget', '<', 1000);
-            } elseif ($request->price === 'medium') {
-                $query->whereBetween('budget', [1000, 5000]);
-            } elseif ($request->price === 'high') {
-                $query->where('budget', '>', 5000);
-            }
+        if ($request->price === 'low') {
+            $query->where('budget', '<', 1000);
+        } elseif ($request->price === 'medium') {
+            $query->whereBetween('budget', [1000, 5000]);
+        } elseif ($request->price === 'high') {
+            $query->where('budget', '>', 5000);
         }
 
         if ($request->filled('date_from')) {
@@ -159,7 +138,7 @@ class Project extends Model
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
                     ->orWhereHas('manager', function ($mQuery) use ($search) {
-                        $mQuery->where('name', 'like', '%' . search . '%');
+                        $mQuery->where('name', 'like', '%' . $search . '%');
                     })
                     ->orWhereHas('tasks', function ($t) use ($search) {
                         $t->where('title', 'like', "%{$search}%");

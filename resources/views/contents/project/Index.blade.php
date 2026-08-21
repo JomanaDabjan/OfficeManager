@@ -194,20 +194,6 @@
 </div>
 
 <!-- ========================================== -->
-<!-- LIVE SEARCH & STATUS FILTER SECTION        -->
-<!-- ========================================== -->
-<div class="row mb-3 align-items-center">
-    <!-- Search Input -->
-    <div class="col-md-5 mb-2 mb-md-0">
-        <div class="search-container">
-            <i class="now-ui-icons ui-1_zoom-bold search-icon"></i>
-            <input type="text" id="projectSearchInput" class="form-control border rounded-pill shadow-sm"
-                placeholder="Search projects..." value="{{ request('search') }}" style="background-color: #f9fbfd;">
-        </div>
-    </div>
-</div>
-
-<!-- ========================================== -->
 <!-- MAIN PROJECTS TABLE CARD SECTION          -->
 <!-- ========================================== -->
 <div class="row">
@@ -258,19 +244,20 @@
                             'completed';
                             }) : false;
 
-                            $currentStatus = strtolower(trim($project->status));
+                            $rawStatus = strtolower(trim($project->status));
+                            $currentStatus = $rawStatus;
 
-                            if ($currentStatus !== 'completed' && $currentStatus !== 'complete') {
+                            if ($rawStatus !== 'completed' && $rawStatus !== 'complete') {
                             if ($endDate) {
                             if ($today->greaterThan($endDate) && (!$hasTasks || !$allTasksCompleted)) {
                             $currentStatus = 'overdue';
                             } elseif ($today->isSameDay($endDate) && (!$hasTasks || !$allTasksCompleted)) {
                             $currentStatus = 'due_today';
-                            } elseif ($startDate && $today->lessThan($startDate)) {
-                            $currentStatus = 'pending';
                             } else {
-                            $currentStatus = 'in_progress';
+                            $currentStatus = $rawStatus;
                             }
+                            } else {
+                            $currentStatus = $rawStatus;
                             }
                             } else {
                             $currentStatus = 'completed';

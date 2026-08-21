@@ -53,22 +53,14 @@
                 </a>
                 <div class="collapse {{ request()->routeIs('admin.users*') ? 'show' : '' }}" id="userDropdown">
                     <ul class="nav">
-                        <li class="{{ request()->routeIs('admin.users.manager') ? 'active' : '' }}">
+                        <!--<li class="{{ request()->routeIs('admin.users.manager') ? 'active' : '' }}">
                             <a href="#">Project Manager Profile</a>
-                        </li>
+                        </li>-->
                         <li class="{{ request()->routeIs('admin.users.employee') ? 'active' : '' }}">
                             <a href="{{ route('admin.user.index', ['role' => 'employee']) }}">Employee Profile</a>
                         </li>
                     </ul>
                 </div>
-            </li>
-
-            <!-- ProjectStatus -->
-            <li class="{{ request()->routeIs('admin.project-status*') ? 'active' : '' }}">
-                <a href="#">
-                    <i class="now-ui-icons loader_refresh"></i>
-                    <p>Project Status</p>
-                </a>
             </li>
 
             <!-- Report (Direct Link without Submenu) -->

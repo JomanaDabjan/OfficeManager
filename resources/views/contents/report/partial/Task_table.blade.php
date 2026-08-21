@@ -117,21 +117,28 @@
                                     <th>Start Date</th>
                                     <th>End Date</th>
                                     <th>Last Update</th>
-                                    <th>Status & Progress</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($chunkedTasks as $task)
                                 @php
-                                $taskStatus = strtolower($task->status ?? 'in_progress');
-                                $progressPercent = $task->progress ?? match($taskStatus) {
-                                'completed' => 100,
-                                'in_progress' => 50,
-                                'pending' => 10,
-                                default => 0
-                                };
-                                @endphp
-                                <tr>
+                                $today = now()->toDateString();
+                                $dueDate = $task->due_date ? \Carbon\Carbon::parse($task->due_date)->toDateString() :
+                                null;
+                                $rawStatus = strtolower($task->status ?? 'in_progress');
+
+                                // تحديد الحالة الحقيقية بناءً على التواريخ
+                                if ($rawStatus === 'completed') {
+                                $displayStatus = 'completed';
+                                $statusLabel = 'Completed';
+                                $statusColor = '#2dce89';
+                                } elseif ($dueDate && $dueDate < $today) { $displayStatus='overdue' ;
+                                    $statusLabel='Overdue' ; $statusColor='#f5365c' ; } elseif ($dueDate &&
+                                    $dueDate===$today) { $displayStatus='due_today' ; $statusLabel='Due Today' ;
+                                    $statusColor='#23b7e5' ; } else { $displayStatus=$rawStatus;
+                                    $statusLabel=ucfirst(str_replace('_', ' ' , $rawStatus));
+                                    $statusColor=$rawStatus==='in_progress' ? '#fbb140' : '#11cdef' ; } @endphp <tr>
                                     <!-- Task Title Column -->
                                     <td style="font-weight: bold;">
                                         {{ $task->title ?? $task->name }}
@@ -174,38 +181,25 @@
 
                                     <!-- Last Update Column -->
                                     <td>
-                                        @if($task->updated_at)
-                                        <div style="font-weight: bold;">{{ $task->updated_at->format('Y-m-d') }}</div>
-                                        <div style="font-size: 8.5px;">{{ $task->updated_at->format('h:i A') }}</div>
+                                        @if($updatedAt = $task->updated_at)
+                                        <div style="font-weight: bold;">{{
+                                            \Carbon\Carbon::parse($updatedAt)->format('Y-m-d') }}</div>
+                                        <div style="font-size: 8.5px;">{{ \Carbon\Carbon::parse($updatedAt)->format('h:i
+                                            A') }}</div>
                                         @else
                                         <span>N/A</span>
                                         @endif
                                     </td>
 
-                                    <!-- Status & Progress Column -->
+                                    <!-- Status Column (Progress Bar Removed) -->
                                     <td>
-                                        <div style="margin-bottom: 4px;">
-                                            <span
-                                                style="display: inline-block; padding: 2px 8px; border-radius: 10px; font-weight: bold; font-size: 8px; color: #fff; background-color: @if($taskStatus == 'completed') #2dce89 @elseif($taskStatus == 'in_progress') #fbb140 @else #11cdef @endif;">
-                                                {{ ucfirst(str_replace('_', ' ', $task->status ?? 'in_progress')) }}
-                                            </span>
-                                        </div>
-
-                                        <div style="text-align: center; width: 100%;">
-                                            <div
-                                                style="font-size: 7.5px; font-weight: bold; color: #666; margin-bottom: 2px; text-align: center;">
-                                                {{ $progressPercent }}%
-                                            </div>
-                                            <div
-                                                style="height: 6px; width: 45px; background-color: #f1f3f5; border: 1px solid #dcdcdc; border-radius: 2px; overflow: hidden; margin: 0 auto;">
-                                                <div
-                                                    style="height: 100%; width: {{ $progressPercent }}%; background: @if($taskStatus == 'completed') #2dce89 @elseif($taskStatus == 'in_progress') #fbb140 @else #11cdef @endif;">
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <span
+                                            style="display: inline-block; padding: 3px 10px; border-radius: 10px; font-weight: bold; font-size: 9px; color: #fff; background-color: {{ $statusColor }};">
+                                            {{ $statusLabel }}
+                                        </span>
                                     </td>
-                                </tr>
-                                @endforeach
+                                    </tr>
+                                    @endforeach
                             </tbody>
                         </table>
                     </div>
