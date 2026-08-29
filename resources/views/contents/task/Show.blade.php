@@ -1,4 +1,4 @@
-@extends('layouts.app') {{-- Extends the main admin dashboard layout --}}
+@extends('layouts.app')
 
 @section('Main_Content')
 <div class="content mt-3">
@@ -61,7 +61,7 @@
                                         'pending' => 'badge-info',
                                         'accepted' => 'badge-success',
                                         'rejected', 'overdue' => 'badge-danger',
-                                        'due_today' => 'badge-orange',
+                                        'due_today' => 'badge-purple',
                                         default => 'badge-secondary',
                                         };
 
@@ -72,7 +72,9 @@
                                         };
                                         @endphp
 
-                                        <span class="badge {{ $statusClass }} p-2 px-3 text-uppercase font-weight-bold">
+                                        <span class="badge {{ $statusClass }} p-2 px-3 text-uppercase font-weight-bold"
+                                            @if($currentStatus==='due_today' )
+                                            style="background-color: #6f42c1; color: #fff;" @endif>
                                             {{ $statusLabel }}
                                         </span>
                                     </div>
@@ -194,8 +196,9 @@
                                             {{ $diff }} DAYS REMAINING
                                             @elseif($diff === 1)
                                             1 DAY REMAINING
-                                            @elseif($diff === 0)
-                                            DUE TODAY
+                                            @elseif($diff === 0 ||
+                                            $today->eq(\Carbon\Carbon::parse($targetDate)->startOfDay()))
+                                            THIS IS THE LAST DAY
                                             @else
                                             OVERDUE BY {{ abs($diff) }} DAYS
                                             @endif

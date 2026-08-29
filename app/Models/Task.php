@@ -174,24 +174,22 @@ class Task extends Model
             $today = Carbon::today();
 
             if ($filter === 'overdue') {
-                $query->where('due_date', '<', $today)
+                $query->whereDate('due_date', '<', $today)
                     ->whereNotIn('status', ['completed', 'accepted']);
             } elseif ($filter === 'due_today') {
                 $query->whereDate('due_date', $today)
                     ->whereNotIn('status', ['completed', 'accepted']);
             } elseif ($filter === 'pending') {
-                // التعديل هنا: جلب المهام التي حالتها pending ولم يتجاوز تاريخها اليوم
                 $query->where('status', 'pending')
                     ->where(function ($q) use ($today) {
                         $q->whereNull('due_date')
-                            ->orWhere('due_date', '>=', $today);
+                            ->orWhereDate('due_date', '>', $today);
                     });
             } elseif ($filter === 'in_progress') {
-                // التعديل هنا: جلب المهام التي حالتها in_progress ولم يتجاوز تاريخها اليوم
                 $query->where('status', 'in_progress')
                     ->where(function ($q) use ($today) {
                         $q->whereNull('due_date')
-                            ->orWhere('due_date', '>=', $today);
+                            ->orWhereDate('due_date', '>', $today);
                     });
             } elseif (in_array($filter, ['completed', 'accepted', 'rejected'])) {
                 $query->where('status', $filter);
@@ -227,7 +225,7 @@ class Task extends Model
         // 6. DATE RANGE FILTERING (STARTED_AT & DUE_DATE)
         // =====================================================================
         if ($request->filled('date_from')) {
-            $query->WhereDate('started_at', '>=', $request->date_from);
+            $query->whereDate('started_at', '>=', $request->date_from);
         }
 
         if ($request->filled('date_to')) {
@@ -295,8 +293,10 @@ class Task extends Model
         }
 
         /* Filter by user ID if provided and not set to 'all' */
-        if ($request->filled('user_id') && $request->user_id != 'all') {
-            $query->where('user_id', $request->user_id);
+        if ($request->filled('year') || ($request->filled('user_id') && $request->user_id != 'all')) {
+            if ($request->filled('user_id') && $request->user_id != 'all') {
+                $query->where('user_id', $request->user_id);
+            }
         }
 
         /* Filter by task status if provided and not set to 'all' */
@@ -305,36 +305,34 @@ class Task extends Model
             $today = Carbon::today();
 
             if ($status === 'overdue') {
-                $query->where('due_date', '<', $today)
+                $query->whereDate('due_date', '<', $today)
                     ->whereNotIn('status', ['completed', 'accepted']);
             } elseif ($status === 'due_today') {
                 $query->whereDate('due_date', $today)
                     ->whereNotIn('status', ['completed', 'accepted']);
             } elseif ($status === 'pending') {
-                // التعديل هنا أيضاً ليشمل التقارير
                 $query->where('status', 'pending')
                     ->where(function ($q) use ($today) {
                         $q->whereNull('due_date')
-                            ->orWhere('due_date', '>=', $today);
+                            ->orWhereDate('due_date', '>', $today);
                     });
             } elseif ($status === 'in_progress') {
-                // التعديل هنا أيضاً ليشمل التقارير
                 $query->where('status', 'in_progress')
                     ->where(function ($q) use ($today) {
                         $q->whereNull('due_date')
-                            ->orWhere('due_date', '>=', $today);
+                            ->orWhereDate('due_date', '>', $today);
                     });
             } else {
                 $query->where('status', $status);
             }
         }
 
-        /* Filter by date_from (Tasks starting from or after this date) */
+        /* Filter by date_from (Tasks starting from or after this date) using started_at */
         if ($request->filled('date_from')) {
             $query->whereDate('started_at', '>=', $request->date_from);
         }
 
-        /* Filter by date_to (Tasks due on or before this date) */
+        /* Filter by date_to (Tasks due on or before this date) using due_date */
         if ($request->filled('date_to')) {
             $query->whereDate('due_date', '<=', $request->date_to);
         }

@@ -5,7 +5,7 @@
 <!-- ========================================================================= -->
 
 <!-- ========================================================================= -->
-<!-- CORE JS FILES AND PLUGINS     -->
+<!-- CORE JS FILES AND PLUGINS    -->
 <!-- Import foundational JavaScript libraries including jQuery, Popper,        -->
 <!-- Bootstrap, and custom UI scrollbar extensions.    -->
 <!-- ========================================================================= -->
@@ -15,7 +15,7 @@
 {{-- <script src="{{ asset('assets/js/plugins/perfect-scrollbar.jquery.min.js') }}"></script> --}}
 
 <!-- ========================================================================= -->
-<!-- GOOGLE MAPS AND CHART PLUGINS     -->
+<!-- GOOGLE MAPS AND CHART PLUGINS    -->
 <!-- Load external mapping services and chart-related assets for visualization.-->
 <!-- ========================================================================= -->
 <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_KEY_HERE"></script>
@@ -23,7 +23,7 @@
 <script src="{{ asset('assets/js/plugins/bootstrap-notify.js') }}"></script>
 
 <!-- ========================================================================= -->
-<!-- NOW UI DASHBOARD CONTROL CENTER SCRIPTS     -->
+<!-- NOW UI DASHBOARD CONTROL CENTER SCRIPTS    -->
 <!-- Load dashboard core scripts, demo presets, and modern CDN libraries.      -->
 <!-- ========================================================================= -->
 <script src="{{ asset('assets/js/now-ui-dashboard.js?v=1.0.1') }}"></script>
@@ -35,62 +35,49 @@
 <!-- FLATPICKR DATEPICKER CDN (CSS & JS)    -->
 <!-- Added to format date inputs to DD/MM/YYYY while keeping backend Y-m-d.    -->
 <!-- ========================================================================= -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<!-- Select2 JS CDN -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <!-- ========================================================================= -->
 <!-- INITIALIZE FLATPICKR ON DATE INPUTS     -->
 <!-- ========================================================================= -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        // Apply flatpickr to all date inputs or specific classes/IDs
         flatpickr("input[type='date'], .datepicker", {
-            dateFormat: "Y-m-d",      // التنسيق الذي يتم إرساله للسيرفر وقاعدة البيانات
-            altInput: true,           // تفعيل حقل عرض بديل للمستخدم
-            altFormat: "d/m/Y",       // الشكل الذي يظهر للمستخدم (اليوم/الشهر/السنة)
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d/m/Y",
             allowInput: true
         });
     });
 </script>
 
 <!-- ========================================================================= -->
-<!-- INITIALIZE DASHBOARD CHARTS     -->
-<!-- Safely trigger default dashboard charts if demo object is available.      -->
+<!-- INITIALIZE DASHBOARD CHARTS    -->
 <!-- ========================================================================= -->
 <script>
-    // Wait until the HTML document is fully loaded and parsed
     $(document).ready(function () {
-        // Check if the demo object and its chart initialization function both exist
         if (typeof demo !== 'undefined' && typeof demo.initDashboardPageCharts === 'function') {
-            // Execute the dashboard page chart initialization function
             demo.initDashboardPageCharts();
         }
     });
 </script>
 
 <!-- ========================================================================= -->
-<!-- LIVE SEARCH FILTER FOR PROJECTS TABLE     -->
+<!-- LIVE SEARCH FILTER FOR PROJECTS TABLE    -->
 <!-- ========================================================================= -->
 <script>
-    // Wait for the DOM content to be fully loaded before running script logic
     document.addEventListener("DOMContentLoaded", function () {
-        // Get the search input element for projects by its ID
         const projectSearchInput = document.getElementById("projectSearchInput");
-        // Select all table rows inside the projects table that have the class 'project-row'
         const projectRows = document.querySelectorAll("#projectsTable tbody tr.project-row");
 
-        // Check if the search input element actually exists on the current view
         if (projectSearchInput) {
-            // Listen for keyup events (when a user types something in the search field)
             projectSearchInput.addEventListener("keyup", function () {
-                // Convert input value to lowercase and remove surrounding whitespace
                 const query = this.value.toLowerCase().trim();
-
-                // Loop through each individual project table row
                 projectRows.forEach(row => {
-                    // Extract all text content from the row and convert to lowercase
                     const textContent = row.textContent.toLowerCase();
-                    // Show the row (empty string) if it includes the query string, otherwise hide it ('none')
                     row.style.display = textContent.includes(query) ? "" : "none";
                 });
             });
@@ -99,28 +86,18 @@
 </script>
 
 <!-- ========================================================================= -->
-<!-- LIVE SEARCH FILTER FOR TASKS TABLE     -->
+<!-- LIVE SEARCH FILTER FOR TASKS TABLE    -->
 <!-- ========================================================================= -->
 <script>
-    // Wait for the DOM content to be fully loaded
     document.addEventListener("DOMContentLoaded", function () {
-        // Get the search input element for tasks by its ID
         const taskSearchInput = document.getElementById("taskSearchInput");
-        // Select all table rows or elements matching the task row selectors
-        const taskRows = document.querySelectorAll("#tasksTable tbody tr, .task-row");
+        const taskRows = document.querySelectorAll("#tasksTable tbody tr, .task-row, #projectsTable tbody tr, .project-row, #teamsTable tbody tr, .team-row");
 
-        // Verify if the task search input exists
         if (taskSearchInput) {
-            // Trigger filtering logic whenever a key is released inside the input field
             taskSearchInput.addEventListener("keyup", function () {
-                // Normalize search query string (lowercase and trimmed)
                 const query = this.value.toLowerCase().trim();
-
-                // Iterate through each task row
                 taskRows.forEach(row => {
-                    // Convert row inner text to lowercase for case-insensitive matching
                     const textContent = row.textContent.toLowerCase();
-                    // Display row if query is empty or matches the row content; hide otherwise
                     row.style.display = (query === "" || textContent.includes(query)) ? "" : "none";
                 });
             });
@@ -129,28 +106,18 @@
 </script>
 
 <!-- ========================================================================= -->
-<!-- INITIALIZE AND RENDER TASK STATUS CHART     -->
+<!-- INITIALIZE AND RENDER TASK STATUS CHART    -->
 <!-- ========================================================================= -->
 <script>
-    // Wait for the document to be ready
     document.addEventListener("DOMContentLoaded", function () {
-        // Find the canvas element meant for the task status chart
         const canvasElement = document.getElementById('tasksChart');
-
-        // Proceed only if the canvas element is present on the page
         if (canvasElement) {
-            // Get the 2D drawing context for the chart canvas
             const ctx = canvasElement.getContext('2d');
-
-            // Create a new Chart.js doughnut chart instance
             new Chart(ctx, {
-                // Specify chart type as a doughnut graph
                 type: 'doughnut',
                 data: {
-                    // Define categories/labels for the chart segments
                     labels: ['Pending', 'In Progress', 'Completed', 'Accepted', 'Rejected'],
                     datasets: [{
-                        // Inject dynamic data values from Laravel backend variables safely
                         data: [
                             {{ $pendingTasks ?? 0 }},
                             {{ $inProgressTasks ?? 0 }},
@@ -158,27 +125,17 @@
                             {{ $acceptedTasks ?? 0 }},
                             {{ $rejectedTasks ?? 0 }}
                         ],
-                        // Define matching background colors for each chart segment
                         backgroundColor: [
-                            '#fbc658', // Yellow for Pending
-                            '#51cbce', // Blue for In Progress
-                            '#6bd098', // Green for Completed
-                            '#9b59b6', // Purple for Accepted
-                            '#ef8157'  // Orange/Red for Rejected
+                            '#fbc658', '#51cbce', '#6bd098', '#9b59b6', '#ef8157'
                         ],
                         borderWidth: 1
                     }]
                 },
                 options: {
-                    // Make the chart responsive to screen size changes
                     responsive: true,
-                    // Prevent the chart from maintaining an unwanted rigid aspect ratio
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            // Position the chart legend at the bottom of the canvas
-                            position: 'bottom',
-                        }
+                        legend: { position: 'bottom' }
                     }
                 }
             });
@@ -187,12 +144,10 @@
 </script>
 
 <!-- ========================================================================= -->
-<!-- CONFIRM DELETE DIALOG USING SWEETALERT2     -->
+<!-- CONFIRM DELETE DIALOG USING SWEETALERT2    -->
 <!-- ========================================================================= -->
 <script>
-    // Function triggered to show a confirmation popup before deleting a record
     function confirmDelete(type, id) {
-        // Invoke SweetAlert2 configuration modal window
         Swal.fire({
             title: 'Are you sure?',
             text: "You won't be able to revert this!",
@@ -202,16 +157,13 @@
             cancelButtonColor: '#888888',
             confirmButtonText: 'Yes, delete it!',
             cancelButtonText: 'Cancel',
-            // Apply custom Bootstrap/Theme classes to modal buttons
             customClass: {
                 confirmButton: 'btn btn-primary btn-round px-4',
                 cancelButton: 'btn btn-secondary btn-round px-4'
             },
             buttonsStyling: true
         }).then((result) => {
-            // Check if the user clicked the confirmation button
             if (result.isConfirmed) {
-                // Find and programmatically submit the corresponding hidden delete form
                 document.getElementById('delete-form-' + type + '-' + id).submit();
             }
         });
@@ -222,21 +174,12 @@
 <!-- AUTOMATIC ALERT DISMISSAL SCRIPT    -->
 <!-- ========================================================================= -->
 <script>
-    // Wait for the HTML document to fully load
     document.addEventListener("DOMContentLoaded", function () {
-        // Set a timer to execute code after a 4-second delay (4000 milliseconds)
         setTimeout(function () {
-            // Select all alert elements that have the auto-dismiss class
             let alerts = document.querySelectorAll('.custom-auto-dismiss-alert');
-
-            // Loop through each found alert box
             alerts.forEach(function (alert) {
-                // Find the close button inside the alert element
                 let dismissBtn = alert.querySelector('.close');
-                // If close button exists, trigger a click event to dismiss it automatically
-                if (dismissBtn) {
-                    dismissBtn.click();
-                }
+                if (dismissBtn) dismissBtn.click();
             });
         }, 4000);
     });
@@ -246,39 +189,28 @@
 <!-- WELCOME MODAL CONTROL SCRIPT    -->
 <!-- ========================================================================= -->
 <script>
-    // Function to hide the welcome modal smoothly with opacity transition
     function dismissWelcomeModal() {
         const modal = document.getElementById('custom-welcome-modal');
         if (modal) {
-            // Apply a smooth CSS transition effect to opacity
             modal.style.transition = 'opacity 0.3s ease';
             modal.style.opacity = '0';
-            // Hide the modal element completely after the fade-out transition finishes
-            setTimeout(() => {
-                modal.style.display = 'none';
-            }, 300);
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
         }
     }
 
-    // Run code after the DOM content is fully loaded
     document.addEventListener("DOMContentLoaded", function () {
         const progressBar = document.getElementById('welcome-progress-bar');
-        const timeoutDuration = 5000; // Duration set to 5 seconds
+        const timeoutDuration = 5000;
 
-        // Check if the progress bar element exists
         if (progressBar) {
-            // Reset transition and set initial width to 0%
             progressBar.style.transition = 'none';
             progressBar.style.width = '0%';
-
-            // Animate progress bar filling up smoothly over the specified timeout duration
             setTimeout(() => {
                 progressBar.style.transition = `width ${timeoutDuration}ms linear`;
                 progressBar.style.width = '100%';
             }, 500);
         }
 
-        // Automatically dismiss the welcome modal after the timeout finishes
         setTimeout(function () {
             dismissWelcomeModal();
         }, timeoutDuration);
@@ -286,20 +218,17 @@
 </script>
 
 <!-- ========================================================================= -->
-<!-- EXPORT AND PRINT REPORT ACTIONS HANDLER     -->
+<!-- EXPORT AND PRINT REPORT ACTIONS HANDLER    -->
 <!-- ========================================================================= -->
 <script>
-    // Function to confirm and manage report exporting actions (PDF, Excel, Print)
     function confirmAndExport(type) {
         let titleText = "";
         let confirmButtonText = "";
 
-        // Determine dialog message configuration based on export type
         if (type === 'pdf') {
             titleText = "Are you sure you want to download the PDF report?";
             confirmButtonText = "Yes, download";
         } else if (type === 'excel') {
-            // Directly trigger excel export without confirmation popup if needed
             executeExportAction('excel');
             return;
         } else {
@@ -307,7 +236,6 @@
             confirmButtonText = "Yes, print now";
         }
 
-        // Check if SweetAlert2 is available to show a fancy confirmation dialog
         if (typeof Swal !== 'undefined') {
             Swal.fire({
                 title: titleText,
@@ -318,67 +246,35 @@
                 confirmButtonText: confirmButtonText,
                 cancelButtonText: 'Cancel'
             }).then((result) => {
-                // Execute export action if user confirms the prompt
-                if (result.isConfirmed) {
-                    executeExportAction(type);
-                }
+                if (result.isConfirmed) executeExportAction(type);
             });
         } else {
-            // Fallback to native browser confirmation box if SweetAlert is missing
-            if (confirm(titleText)) {
-                executeExportAction(type);
-            }
+            if (confirm(titleText)) executeExportAction(type);
         }
     }
 
-    // Function to build URLs and execute the chosen report export/print action
     function executeExportAction(type) {
-        // Capture existing URL search parameters to preserve active filters
         let urlParams = new URLSearchParams(window.location.search);
-        urlParams.delete('search'); // Remove search parameter if necessary
+        urlParams.delete('search');
 
-        // Handle PDF export route generation
         if (type === 'pdf') {
             let basePdfUrl = "{{ route('admin.report.task-report.pdf') }}";
-            let finalUrl = basePdfUrl;
-            // Append parameters string if filters exist
-            if (urlParams.toString() !== "") {
-                finalUrl += "?" + urlParams.toString();
-            }
+            let finalUrl = basePdfUrl + (urlParams.toString() !== "" ? "?" + urlParams.toString() : "");
             window.location.href = finalUrl;
-        }
-        // Handle Excel export route generation
-        else if (type === 'excel') {
+        } else if (type === 'excel') {
             let baseExcelUrl = "{{ route('admin.report.project-report.excel') }}";
-            let finalUrl = baseExcelUrl;
-            if (urlParams.toString() !== "") {
-                finalUrl += "?" + urlParams.toString();
-            }
+            let finalUrl = baseExcelUrl + (urlParams.toString() !== "" ? "?" + urlParams.toString() : "");
             window.location.href = finalUrl;
-        }
-        // Handle Print report view generation using a hidden iframe
-        else {
-            // تحديد مسار الطباعة بناءً على الصفحة الحالية (مهام أو مشاريع)
-            // تم إضافة التحقق لمعرفة ما إذا كنا في صفحة تقارير المهام أو المشاريع لتحديد مسار الطباعة المناسب
-            let basePrintUrl = "";
-            if (window.location.href.includes('task')) {
-                basePrintUrl = "{{ route('admin.report.task-report.print') }}";
-            } else {
-                basePrintUrl = "{{ route('admin.report.project-report.print') }}";
-            }
+        } else {
+            let basePrintUrl = window.location.href.includes('task') ?
+                "{{ route('admin.report.task-report.print') }}" :
+                "{{ route('admin.report.project-report.print') }}";
 
-            let finalPrintUrl = basePrintUrl;
-            if (urlParams.toString() !== "") {
-                finalPrintUrl += "?" + urlParams.toString();
-            }
+            let finalPrintUrl = basePrintUrl + (urlParams.toString() !== "" ? "?" + urlParams.toString() : "");
 
-            // Remove any leftover temporary print iframes from the document body
             const existingIframe = document.getElementById('print-iframe');
-            if (existingIframe) {
-                existingIframe.remove();
-            }
+            if (existingIframe) existingIframe.remove();
 
-            // Create a hidden iframe dynamically to fetch and print the report view
             const iframe = document.createElement('iframe');
             iframe.id = 'print-iframe';
             iframe.style.position = 'fixed';
@@ -389,19 +285,16 @@
             iframe.style.border = '0';
             iframe.src = finalPrintUrl;
 
-            // Trigger print command once the hidden iframe content loads successfully
             iframe.onload = function() {
                 try {
                     iframe.contentWindow.focus();
                     iframe.contentWindow.print();
                 } catch (error) {
                     console.error('Print execution error: ', error);
-                    // Fallback to opening the report in a new browser tab if iframe printing fails
                     window.open(finalPrintUrl, '_blank');
                 }
             };
 
-            // Append the iframe element to the body to trigger loading
             document.body.appendChild(iframe);
         }
     }
@@ -411,78 +304,188 @@
 <!-- START OF SCRIPT: DYNAMIC REMAINING DAYS CALCULATOR    -->
 <!-- ================================================================= -->
 <script>
-    // Wait for the DOM content to be fully loaded before calculating remaining days
     document.addEventListener("DOMContentLoaded", function () {
-        // Ensure the Laravel task variable exists before injecting values into JS
         @isset($task)
-        // Retrieve start date, due date, and status values safely from the Blade task object
         const startStr = "{{ $task->start_date ?? '' }}";
         const dueStr = "{{ $task->due_date ?? '' }}";
         const taskStatus = "{{ strtolower($task->status ?? '') }}";
-
-        // Locate the HTML container element that displays the remaining days counter
         const counterElement = document.getElementById("live-actual-hours");
 
-        // Proceed if the counter element exists on the page
         if (counterElement) {
             let displayText = "";
-
-            // التحقق مما إذا كانت المهمة مكتملة لإيقاف العداد
             if (taskStatus === 'completed' || taskStatus === 'complete') {
                 displayText = "TASK COMPLETED";
             } else if (!dueStr) {
-                // Check if the due date is missing; display fallback text if true
                 displayText = "No Deadline";
             } else {
-                // Initialize today's date and reset time components to 00:00:00 for accurate day comparison
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
-
-                // Parse and normalize the due date time object
                 const dueTime = new Date(dueStr);
                 dueTime.setHours(0, 0, 0, 0);
 
-                // Parse and normalize the start date time object if it exists
                 const startTime = startStr ? new Date(startStr) : null;
-                if (startTime) {
-                    startTime.setHours(0, 0, 0, 0);
-                }
+                if (startTime) startTime.setHours(0, 0, 0, 0);
 
-                // التحقق من الحالات الزمنية للمهمة/المشروع
                 if (startTime && today.getTime() < startTime.getTime()) {
-                    // 1. مرحلة ما قبل البدء: عرض العدد الكلي الثابت بين Start Date و Due Date مع عبارة (Not Started)
-                    const totalDiffTime = dueTime.getTime() - startTime.getTime();
-                    const totalDays = Math.ceil(totalDiffTime / (1000 * 60 * 60 * 24));
-
-                    if (totalDays > 1) {
-                        displayText = `${totalDays} Days Total <span class="text-danger" style="font-size: 12px;">(Not Started)</span>`;
-                    } else if (totalDays === 1) {
-                        displayText = `1 Day Total <span class="text-danger" style="font-size: 12px;">(Not Started)</span>`;
-                    } else {
-                        displayText = `0 Days <span class="text-danger" style="font-size: 12px;">(Not Started)</span>`;
-                    }
+                    const totalDays = Math.ceil((dueTime.getTime() - startTime.getTime()) / (1000 * 60 * 60 * 24));
+                    displayText = `${totalDays} Days Total <span class="text-danger" style="font-size: 12px;">(Not Started)</span>`;
                 } else {
-                    // 2. أثناء التنفيذ أو بعده: حساب الأيام المتبقية تنازلياً حتى تاريخ النهاية
-                    const diffTime = dueTime.getTime() - today.getTime();
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                    if (diffDays > 1) {
-                        displayText = `${diffDays} Days Remaining`;
-                    } else if (diffDays === 1) {
-                        displayText = `1 Day Remaining`;
-                    } else if (diffDays === 0) {
-                        displayText = `Due Today`;
-                    } else {
-                        displayText = `Overdue by ${Math.abs(diffDays)} Days`;
-                    }
+                    const diffDays = Math.ceil((dueTime.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                    if (diffDays > 1) displayText = `${diffDays} Days Remaining`;
+                    else if (diffDays === 1) displayText = `1 Day Remaining`;
+                    else if (diffDays === 0) displayText = `Due Today`;
+                    else displayText = `Overdue by ${Math.abs(diffDays)} Days`;
                 }
             }
-
-            // Render the final formatted text string inside the target HTML counter element
             counterElement.innerHTML = displayText;
         }
         @endisset
     });
 </script>
-<!-- Allow child views to push page-specific JavaScript scripts -->
-@stack('Script')
+
+<!-- ========================================================================= -->
+<!-- START OF SCRIPT: SELECT2 INITIALIZATION FOR AJAX PROJECT SEARCH           -->
+<!-- ========================================================================= -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 !== 'undefined') {
+            $('.select2-ajax').select2({
+                placeholder: 'Search and select a project...',
+                allowClear: true,
+                width: '100%',
+                ajax: {
+                    url: '{{ route("admin.projects.search") }}',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) { return { q: params.term }; },
+                    processResults: function (data) {
+                        return {
+                            results: $.map(data, function (item) {
+                                return { id: item.id, text: item.title };
+                            })
+                        };
+                    },
+                    cache: true
+                }
+            });
+        }
+    });
+</script>
+
+<!-- ========================================================================= -->
+<!-- START OF SCRIPT: ROBUST COLUMN REORDERING AND DRAG-AND-DROP HANDLER     -->
+<!-- ========================================================================= -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        ["projectsTable", "teamsTable", "tasksTable"].forEach(tableId => {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+
+            const storageKey = tableId + "_column_order_map";
+            const headerRow = table.querySelector("thead tr");
+            if (!headerRow) return;
+
+            // Give each th a permanent unique attribute index if not already present
+            const originalThs = Array.from(headerRow.children);
+            originalThs.forEach((th, idx) => {
+                if (!th.hasAttribute('data-col-index')) {
+                    th.setAttribute('data-col-index', idx);
+                }
+            });
+
+            // Function to apply an array of column indices to the table
+            function applyColumnOrder(indexArray) {
+                if (!indexArray || !Array.isArray(indexArray) || indexArray.length !== originalThs.length) return;
+
+                // 1. Reorder THs in the header
+                const currentThs = Array.from(headerRow.children);
+                indexArray.forEach(originalIdx => {
+                    const thToMove = currentThs.find(th => parseInt(th.getAttribute('data-col-index')) === originalIdx);
+                    if (thToMove) {
+                        headerRow.appendChild(thToMove);
+                    }
+                });
+
+                // 2. Reorder TDs in every row of tbody
+                const rows = table.querySelectorAll("tbody tr");
+                rows.forEach(row => {
+                    const currentTds = Array.from(row.children);
+                    if (currentTds.length === indexArray.length) {
+                        indexArray.forEach(originalIdx => {
+                            const tdToMove = currentTds.find((_, idx) => parseInt(originalThs[idx].getAttribute('data-col-index')) === originalIdx);
+                            if (tdToMove) {
+                                row.appendChild(tdToMove);
+                            }
+                        });
+                    }
+                });
+            }
+
+            // Restore saved order from localStorage
+            const savedOrder = JSON.parse(localStorage.getItem(storageKey));
+            if (savedOrder) {
+                applyColumnOrder(savedOrder);
+            }
+
+            let draggedTh = null;
+            const headers = table.querySelectorAll(".draggable-header, .draggable-th");
+
+            headers.forEach(th => {
+                th.setAttribute('draggable', true);
+
+                th.addEventListener("dragstart", function (e) {
+                    draggedTh = this;
+                    e.dataTransfer.effectAllowed = "move";
+                    this.style.opacity = "0.4";
+                });
+
+                th.addEventListener("dragend", function () {
+                    this.style.opacity = "1";
+                    headers.forEach(h => h.style.backgroundColor = "");
+                });
+
+                th.addEventListener("dragover", function (e) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "move";
+                });
+
+                th.addEventListener("drop", function (e) {
+                    e.preventDefault();
+                    if (draggedTh && draggedTh !== this) {
+                        // Re-query current headers order
+                        const currentThs = Array.from(headerRow.children);
+                        const fromIdx = currentThs.indexOf(draggedTh);
+                        const toIdx = currentThs.indexOf(this);
+
+                        if (fromIdx !== -1 && toIdx !== -1) {
+                            // Move DOM element in header
+                            if (fromIdx < toIdx) {
+                                headerRow.insertBefore(draggedTh, this.nextSibling);
+                            } else {
+                                headerRow.insertBefore(draggedTh, this);
+                            }
+
+                            // Re-apply and re-map for all rows in tbody
+                            const newThsOrder = Array.from(headerRow.children);
+                            const newIndexMap = newThsOrder.map(th => parseInt(th.getAttribute('data-col-index')));
+
+                            const rows = table.querySelectorAll("tbody tr");
+                            rows.forEach(row => {
+                                const rowTds = Array.from(row.children);
+                                newIndexMap.forEach(origIdx => {
+                                    const matchingTd = rowTds.find((_, idx) => parseInt(originalThs[idx].getAttribute('data-col-index')) === origIdx);
+                                    if (matchingTd) {
+                                        row.appendChild(matchingTd);
+                                    }
+                                });
+                            });
+
+                            // Save current layout map to localStorage
+                            localStorage.setItem(storageKey, JSON.stringify(newIndexMap));
+                        }
+                    }
+                });
+            });
+        });
+    });
+</script>

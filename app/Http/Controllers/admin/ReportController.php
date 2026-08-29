@@ -65,7 +65,20 @@ class ReportController extends Controller
         $totalTasksCount = Task::count();
         $completedTasksCount = Task::where('status', 'completed')->count();
         $inProgressTasksCount = Task::where('status', 'in_progress')->count();
-        $pendingTasksCount = Task::where('status', 'pending')->count();
+
+        // الـ Pending الحقيقي (الذي لـيس اليوم وليس متأخراً)
+        $pendingTasksCount = Task::where('status', 'pending')
+            ->whereDate('due_date', '>', today())
+            ->count();
+
+        // إضافة عدادات Overdue و Due Today لتوحيدها
+        $overdueTasksCount = Task::where('status', '!=', 'completed')
+            ->whereDate('due_date', '<', today())
+            ->count();
+
+        $dueTodayTasksCount = Task::where('status', '!=', 'completed')
+            ->whereDate('due_date', today())
+            ->count();
 
         return view('contents.report.TaskReport', compact(
             'tasks',
@@ -75,7 +88,9 @@ class ReportController extends Controller
             'totalTasksCount',
             'completedTasksCount',
             'inProgressTasksCount',
-            'pendingTasksCount'
+            'pendingTasksCount',
+            'overdueTasksCount',
+            'dueTodayTasksCount'
         ));
     }
 

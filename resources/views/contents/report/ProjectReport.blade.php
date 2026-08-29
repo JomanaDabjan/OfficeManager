@@ -660,12 +660,14 @@
                                 <!-- Project Status Badge (Without Progress Bar) -->
                                 <td class="text-right pr-4 align-middle" style="min-width: 150px;">
                                     <span class="badge badge-pill
-                                        @if($projectStatus == 'completed') badge-success
-                                        @elseif($projectStatus == 'in_progress') badge-warning
-                                        @elseif($projectStatus == 'pending') badge-info
-                                        @elseif($projectStatus == 'overdue') badge-danger
-                                        @elseif($projectStatus == 'due_today') badge-primary
-                                        @else badge-secondary @endif px-3 py-2 text-white shadow-sm">
+                                    @if($projectStatus == 'completed') badge-success
+                                    @elseif($projectStatus == 'in_progress') badge-warning
+                                    @elseif($projectStatus == 'pending') badge-info
+                                    @elseif($projectStatus == 'overdue') badge-danger
+                                    @elseif($projectStatus == 'due_today') badge-primary
+                                    @else badge-secondary @endif px-3 py-2 text-white shadow-sm"
+                                        @if($projectStatus=='due_today' ) style="background-color: #8f00ff !important;"
+                                        @endif>
                                         {{ ucfirst(str_replace('_', ' ', $projectStatus)) }}
                                     </span>
                                 </td>

@@ -194,6 +194,19 @@
 </div>
 
 <!-- ========================================== -->
+<!-- LIVE SEARCH SECTION                        -->
+<!-- ========================================== -->
+<div class="row mb-3 align-items-center">
+    <div class="col-md-5 mb-2 mb-md-0">
+        <div class="search-container">
+            <i class="now-ui-icons ui-1_zoom-bold search-icon"></i>
+            <input type="text" id="taskSearchInput" class="form-control border rounded-pill shadow-sm"
+                placeholder="Search projects..." value="{{ request('search') }}" style="background-color: #f9fbfd;">
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
 <!-- MAIN PROJECTS TABLE CARD SECTION          -->
 <!-- ========================================== -->
 <div class="row">
@@ -248,28 +261,28 @@
                             $currentStatus = $rawStatus;
 
                             if ($rawStatus !== 'completed' && $rawStatus !== 'complete') {
-                            if ($endDate) {
-                            if ($today->greaterThan($endDate) && (!$hasTasks || !$allTasksCompleted)) {
-                            $currentStatus = 'overdue';
-                            } elseif ($today->isSameDay($endDate) && (!$hasTasks || !$allTasksCompleted)) {
-                            $currentStatus = 'due_today';
+                                if ($endDate) {
+                                    if ($today->greaterThan($endDate) && (!$hasTasks || !$allTasksCompleted)) {
+                                        $currentStatus = 'overdue';
+                                    } elseif ($today->isSameDay($endDate) && (!$hasTasks || !$allTasksCompleted)) {
+                                        $currentStatus = 'due_today';
+                                    } else {
+                                        $currentStatus = $rawStatus;
+                                    }
+                                } else {
+                                    $currentStatus = $rawStatus;
+                                }
                             } else {
-                            $currentStatus = $rawStatus;
-                            }
-                            } else {
-                            $currentStatus = $rawStatus;
-                            }
-                            } else {
-                            $currentStatus = 'completed';
+                                $currentStatus = 'completed';
                             }
 
                             $statusClass = match($currentStatus) {
-                            'completed', 'complete' => 'badge-success',
-                            'in_progress' => 'badge-warning',
-                            'pending' => 'badge-info',
-                            'overdue', 'rejected' => 'badge-danger',
-                            'due_today' => 'badge-orange',
-                            default => 'badge-secondary',
+                                'completed', 'complete' => 'badge-success',
+                                'in_progress' => 'badge-warning',
+                                'pending' => 'badge-info',
+                                'overdue', 'rejected' => 'badge-danger',
+                                'due_today' => 'badge-purple',
+                                default => 'badge-secondary',
                             };
                             @endphp
                             <tr class="border-bottom project-row" data-status="{{ $currentStatus }}">
@@ -308,7 +321,7 @@
 
                                 <!-- Project Status Column with Dynamic Color Badges -->
                                 <td class="align-middle project-status" data-col-index="3">
-                                    <span class="badge badge-pill {{ $statusClass }} px-3 py-2 text-white shadow-sm">
+                                    <span class="badge badge-pill {{ $statusClass }} px-3 py-2 text-white shadow-sm" @if($currentStatus === 'due_today') style="background-color: #6f42c1;" @endif>
                                         {{ ucfirst(str_replace('_', ' ', $currentStatus)) }}
                                     </span>
                                 </td>

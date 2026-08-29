@@ -144,7 +144,7 @@
                                     href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'rejected'])) }}">Rejected</a>
                                 <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'overdue' ? 'active font-weight-bold text-primary' : '' }}"
                                     href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'overdue'])) }}">Overdue</a>
-                                <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'due_today' ? 'active font-weight-bold text-primary' : '' }}"
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'due_today' ? 'status-filter-link active font-weight-bold text-primary' : '' }}"
                                     href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'due_today'])) }}">Due
                                     Today</a>
                             </div>
@@ -238,7 +238,6 @@
                             <!-- Loop through each task record using Laravel forelse directive -->
                             @forelse($tasks as $task)
                             @php
-                            // تحديد الحالة الديناميكية بناءً على تاريخ الاستحقاق (end_date أو due_date)
                             $displayStatus = $task->status;
                             $dueDate = $task->end_date ?? $task->due_date ?? null;
 
@@ -253,7 +252,7 @@
                             }
                             }
                             @endphp
-                            <tr class="border-bottom task-row">
+                            <tr class="border-bottom task-row" data-status="{{ $displayStatus }}">
                                 <!-- Task Title Column -->
                                 <td class="font-weight-bold text-dark pl-4 align-middle task-title" data-column="title">
                                     {{ $task->title }}
@@ -326,8 +325,10 @@
                                         @elseif($displayStatus == 'pending') badge-info
                                         @elseif($displayStatus == 'rejected') badge-danger
                                         @elseif($displayStatus == 'overdue') badge-danger
-                                        @elseif($displayStatus == 'due_today') badge-warning
-                                        @else badge-secondary @endif px-3 py-2 text-white shadow-sm">
+                                        @elseif($displayStatus == 'due_today') badge-purple
+                                        @else badge-secondary @endif px-3 py-2 text-white shadow-sm"
+                                        @if($displayStatus=='due_today' ) style="background-color: #6f42c1 !important;"
+                                        @endif>
                                         {{ ucfirst(str_replace('_', ' ', $displayStatus ?? 'pending')) }}
                                     </span>
 

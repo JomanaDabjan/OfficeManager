@@ -64,6 +64,33 @@ class ProjectController extends Controller
 
     /**
      * =====================================================================
+     * AJAX SEARCH METHOD FOR SELECT2 DROPDOWNS
+     * =====================================================================
+     * Handles incoming AJAX requests from the Select2 dropdown plugin.
+     * Searches projects by title anywhere within the string and returns
+     * all matching results as a standard JSON array.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function search(Request $request)
+    {
+        // Retrieve the search keyword query parameter 'q' sent by Select2
+        $search = $request->get('q');
+
+        // Query the database: Find projects where the title contains the search keyword anywhere
+        $projects = Project::when($search, function ($query, $search) {
+            // Wrap the search term with '%' on both sides to match keywords anywhere in the sentence
+            return $query->where('title', 'LIKE', "%{$search}%");
+        })
+            ->get(['id', 'title']); // Fetch all matching records without limits or pagination
+
+        // Return the resulting project collection serialized as a JSON response
+        return response()->json($projects);
+    }
+
+    /**
+     * =====================================================================
      * SHOW CREATE PROJECT FORM
      * =====================================================================
      * Display the form required to create a new project.
@@ -221,6 +248,7 @@ class ProjectController extends Controller
         // Authorize deletion through policy (Restricted exclusively to admins)
         $this->authorize('delete', $project);
 
+        data:
         try {
             // Start database transaction block
             DB::beginTransaction();

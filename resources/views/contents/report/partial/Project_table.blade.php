@@ -222,7 +222,7 @@
                                     <td>
                                         <div style="text-align: center;">
                                             <span
-                                                style="display: inline-block; padding: 3px 8px; border-radius: 10px; font-weight: bold; font-size: 8px; color: #fff; background-color: @if($projectStatus == 'completed' || $projectStatus == 'complete') #2dce89 @elseif($projectStatus == 'in_progress') #fbb140 @elseif($projectStatus == 'pending') #11cdef @elseif($projectStatus == 'overdue') #f5365c @elseif($projectStatus == 'due_today') #5e72e4 @else #8898aa @endif;">
+                                                style="display: inline-block; padding: 3px 8px; border-radius: 10px; font-weight: bold; font-size: 8px; color: #fff; background-color: @if($projectStatus == 'completed' || $projectStatus == 'complete') #2dce89 @elseif($projectStatus == 'in_progress') #fbb140 @elseif($projectStatus == 'pending') #11cdef @elseif($projectStatus == 'overdue') #f5365c @elseif($projectStatus == 'due_today') #8f00ff @else #8898aa @endif;">
                                                 {{ ucfirst(str_replace('_', ' ', $projectStatus)) }}
                                             </span>
                                         </div>
