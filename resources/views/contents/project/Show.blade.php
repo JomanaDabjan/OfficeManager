@@ -100,12 +100,14 @@
                             'in_progress' => 'badge-warning',
                             'pending' => 'badge-info',
                             'overdue', 'rejected' => 'badge-danger',
-                            'due_today' => 'badge-orange',
+                            'due_today' => 'badge-purple text-white',
                             default => 'badge-secondary',
                             };
                             @endphp
                             <div>
-                                <span class="badge {{ $statusClass }} px-3 py-2 text-uppercase font-weight-bold">
+                                <span class="badge {{ $statusClass }} px-3 py-2 text-uppercase font-weight-bold"
+                                    @if($currentStatus==='due_today' ) style="background-color: #6f42c1; color: #fff;"
+                                    @endif>
                                     {{ str_replace('_', ' ', $currentStatus) }}
                                 </span>
                             </div>
@@ -182,8 +184,8 @@
 
                                 <!-- Remaining Time Badge -->
                                 <span
-                                    class="badge badge-neutral text-primary border px-2 py-2 shadow-sm text-wrap text-left"
-                                    style="font-size: 80%; line-height: 1.4;">
+                                    class="badge badge-neutral text-primary border px-2 py-2 shadow-sm text-wrap text-left @if(isset($todayDate) && $todayDate->isSameDay($endDate)) text-white @endif"
+                                    style="font-size: 80%; line-height: 1.4; @if(isset($todayDate) && $todayDate->isSameDay($endDate)) background-color: #6f42c1; border-color: #6f42c1 !important; @endif">
                                     <i class="now-ui-icons ui-2_time-alarm mr-1"></i>
                                     @php
                                     $remainingText = 'N/A';
@@ -194,7 +196,7 @@
                                     $todayDate = \Carbon\Carbon::today();
 
                                     if ($todayDate->isSameDay($endDate)) {
-                                    $remainingText = 'DUE TODAY';
+                                    $remainingText = 'Today is the last day';
                                     } elseif ($todayDate->greaterThan($endDate)) {
                                     $daysOverdue = $endDate->diffInDays($todayDate);
                                     $remainingText = 'OVERDUE BY ' . $daysOverdue . ' DAYS';

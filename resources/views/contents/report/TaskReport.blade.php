@@ -149,8 +149,7 @@
                         <p class="card-category text-uppercase text-muted font-weight-bold mb-1"
                             style="font-size: 10px; letter-spacing: 1px;">Pending</p>
                         <h3 class="card-title font-weight-bolder text-dark mb-0">
-                            {{ \App\Models\Task::where('status', 'pending')->where('due_date', '>=',
-                            now()->toDateString())->count() }}
+                            {{ $pendingTasksCount ?? 0 }}
                         </h3>
                     </div>
                     <div class="icon-shape text-white rounded-circle shadow d-flex align-items-center justify-content-center flex-shrink-0"
@@ -536,12 +535,13 @@
                                 <!-- Status Badge Only -->
                                 <td class="text-center align-middle" style="min-width: 150px;">
                                     <span class="badge badge-pill mb-2 px-3 py-1 text-white shadow-sm
-                                        @if($taskStatus == 'completed') badge-success
-                                        @elseif($taskStatus == 'in_progress') badge-warning
-                                        @elseif($taskStatus == 'pending') badge-info
-                                        @elseif($taskStatus == 'overdue') badge-danger
-                                        @elseif($taskStatus == 'due_today') badge-primary
-                                        @else badge-secondary @endif">
+                                    @if($taskStatus == 'completed') badge-success
+                                    @elseif($taskStatus == 'in_progress') badge-warning
+                                    @elseif($taskStatus == 'pending') badge-info
+                                    @elseif($taskStatus == 'overdue') badge-danger
+                                    @elseif($taskStatus == 'due_today') style=" background-color: #8965e0;" @else
+                                        badge-secondary @endif" @if($taskStatus=='due_today' )
+                                        style="background-color: #8965e0;" @endif>
                                         {{ ucfirst(str_replace('_', ' ', $taskStatus)) }}
                                     </span>
                                 </td>

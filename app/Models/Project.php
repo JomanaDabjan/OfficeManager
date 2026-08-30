@@ -22,6 +22,11 @@ class Project extends Model
         return $this->belongsToMany(User::class, 'project_user')->withPivot('role');
     }
 
+    public function teams()
+    {
+        return $this->hasMany(Team::class);
+    }
+
     public function manager()
     {
         return $this->belongsTo(User::class, 'manager_id');
@@ -47,12 +52,23 @@ class Project extends Model
             $status = $request->status;
             if ($status === 'overdue') {
                 $query->whereNotIn('status', ['completed', 'complete'])
-                    ->whereDate('end_date', '<', Carbon::today());
+                    ->whereDate('end_date', '<', Carbon::today())
+                    ->where(function ($q) {
+                        $q->whereDoesntHave('tasks')
+                            ->orWhereHas('tasks', function ($tQuery) {
+                                $tQuery->whereNotIn('status', ['complete', 'completed']);
+                            });
+                    });
             } elseif ($status === 'due_today') {
                 $query->whereNotIn('status', ['completed', 'complete'])
-                    ->whereDate('end_date', '=', Carbon::today());
+                    ->whereDate('end_date', '=', Carbon::today())
+                    ->where(function ($q) {
+                        $q->whereDoesntHave('tasks')
+                            ->orWhereHas('tasks', function ($tQuery) {
+                                $tQuery->whereNotIn('status', ['complete', 'completed']);
+                            });
+                    });
             } else {
-                // منع ظهور المشاريع المنتهية (overdue أو due_today) ضمن فلتر الحالات الأخرى مثل pending أو in_progress
                 $query->where('status', $status)
                     ->where(function ($q) {
                         $q->whereNull('end_date')
@@ -103,13 +119,23 @@ class Project extends Model
             $status = $request->status;
             if ($status === 'overdue') {
                 $query->whereNotIn('status', ['completed', 'complete'])
-                    ->whereDate('end_date', '<', Carbon::today());
+                    ->whereDate('end_date', '<', Carbon::today())
+                    ->where(function ($q) {
+                        $q->whereDoesntHave('tasks')
+                            ->orWhereHas('tasks', function ($tQuery) {
+                                $tQuery->whereNotIn('status', ['complete', 'completed']);
+                            });
+                    });
             } elseif ($status === 'due_today') {
                 $query->whereNotIn('status', ['completed', 'complete'])
-                    ->whereDate('end_date', '=', Carbon::today());
+                    ->whereDate('end_date', '=', Carbon::today())
+                    ->where(function ($q) {
+                        $q->whereDoesntHave('tasks')
+                            ->orWhereHas('tasks', function ($tQuery) {
+                                $tQuery->whereNotIn('status', ['complete', 'completed']);
+                            });
+                    });
             } else {
-                // التعديل هنا: عند الفلترة حسب حالة عادية مثل 'pending' أو 'in_progress'،
-                // نضمن عدم جلب المشاريع التي انتهى وقتها وأصبحت overdue فعلياً لتجنب التداخل.
                 $query->where('status', $status)
                     ->where(function ($q) {
                         $q->whereNull('end_date')

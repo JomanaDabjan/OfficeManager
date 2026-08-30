@@ -136,7 +136,7 @@
                                 } elseif ($dueDate && $dueDate < $today) { $displayStatus='overdue' ;
                                     $statusLabel='Overdue' ; $statusColor='#f5365c' ; } elseif ($dueDate &&
                                     $dueDate===$today) { $displayStatus='due_today' ; $statusLabel='Due Today' ;
-                                    $statusColor='#23b7e5' ; } else { $displayStatus=$rawStatus;
+                                    $statusColor='#8965e0' ; } else { $displayStatus=$rawStatus;
                                     $statusLabel=ucfirst(str_replace('_', ' ' , $rawStatus));
                                     $statusColor=$rawStatus==='in_progress' ? '#fbb140' : '#11cdef' ; } @endphp <tr>
                                     <!-- Task Title Column -->

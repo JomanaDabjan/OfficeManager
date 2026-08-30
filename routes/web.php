@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\DashController;
 use App\Http\Controllers\Admin\ReportController; // Import the Report Controller
+use App\Http\Controllers\Admin\TeamController; // Import the Team Controller
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -30,15 +31,25 @@ Route::get('/', function () {
 |--------------------------------------------------------------------------
 | These routes are protected by the 'auth' middleware and prefixed with
 | 'admin'. They manage resources such as dashboard, projects, tasks,
-| users, and analytical reports.
+| users, teams, and analytical reports.
 */
 Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 
     // Resource route for administrative dashboard control
     Route::resource('dash', DashController::class);
 
+    // AJAX Search route for projects (Added to fix the Select2 dropdown error)
+    Route::get('projects/search', [ProjectController::class, 'search'])->name('projects.search');
+
     // Resource route for managing company or user projects
     Route::resource('project', ProjectController::class);
+
+    // Custom route for adding members to a specific team
+    Route::get('team/{team}/members/create', [TeamController::class, 'createMembers'])->name('team.members.create');
+    Route::post('team/{team}/members', [TeamController::class, 'storeMembers'])->name('team.members.store');
+
+    // Resource route for managing sub-teams within projects
+    Route::resource('team', TeamController::class);
 
     // Custom administrative route to accept specific task requests
     Route::patch('task/{task}/accept', [TaskController::class, 'accept'])->name('task.accept');
@@ -74,7 +85,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::get('report/project-report/pdf', [ReportController::class, 'exportProjectsPdf'])->name('report.project-report.pdf');
     Route::get('report/project-report/excel', [ReportController::class, 'exportProjectsExcel'])->name('report.project-report.excel');
     Route::get('report/project-report/print', [ReportController::class, 'printProjectsReport'])->name('report.project-report.print');
-    
+
     // ==========================================
     // 3. GENERAL SYSTEM REPORTS & HUB
     // ==========================================

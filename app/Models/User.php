@@ -70,4 +70,22 @@ class User extends Authenticatable
     {
         return $this->hasMany(Project::class, 'manager_id');
     }
+
+    /**
+     * العلاقة الأولى: الفرق التي يقودها هذا المستخدم (في حال كان Manager أو Admin وقائداً لفريق).
+     * تعتمد على المفتاح الأجنبي team_leader_id في جدول teams.
+     */
+    public function ledTeams()
+    {
+        return $this->hasMany(Team::class, 'team_leader_id');
+    }
+
+    /**
+     * العلاقة الثانية: الفرق التي ينتمي إليها المستخدم كعضو عادي (إذا كان جدول الفرق يربط الأعضاء عبر جدول وسيط أو مفتاح أجنبي).
+     * تفترض وجود علاقة Many-to-Many عبر جدول team_user أو عمود team_id.
+     */
+    public function teams()
+    {
+        return $this->belongsToMany(Team::class, 'team_user');
+    }
 }

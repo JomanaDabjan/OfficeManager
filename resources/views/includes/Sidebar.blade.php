@@ -20,30 +20,6 @@
                 </a>
             </li>
 
-            <!-- Project (Direct Link without Submenu) -->
-            <li class="{{ request()->routeIs('admin.project*') ? 'active' : '' }}">
-                <a href="{{ route('admin.project.index') }}">
-                    <i class="now-ui-icons business_briefcase-24"></i>
-                    <p>Project</p>
-                </a>
-            </li>
-
-            <!-- Task (Direct Link without Submenu) -->
-            <li class="{{ request()->routeIs('admin.task*') ? 'active' : '' }}">
-                <a href="{{ route('admin.task.index') }}">
-                    <i class="now-ui-icons design_bullet-list-67"></i>
-                    <p>Task</p>
-                </a>
-            </li>
-
-            <!-- Team (Direct Link without Submenu) -->
-            <li class="{{ request()->routeIs('admin.teams*') ? 'active' : '' }}">
-                <a href="#">
-                    <i class="now-ui-icons users_circle-08"></i>
-                    <p>Team</p>
-                </a>
-            </li>
-
             <!-- User Dropdown (Kept as requested) -->
             <li class="{{ request()->routeIs('admin.users*') ? 'active' : '' }}">
                 <a data-toggle="collapse" href="#userDropdown"
@@ -61,6 +37,32 @@
                         </li>
                     </ul>
                 </div>
+            </li>
+
+
+            <!-- Team (Direct Link without Submenu) -->
+            <li class="{{ request()->routeIs('admin.team*') ? 'active' : '' }}">
+                <a href="{{ route('admin.team.index') }}">
+                    <i class="now-ui-icons users_circle-08"></i>
+                    <p>Team</p>
+                </a>
+            </li>
+
+
+            <!-- Project (Direct Link without Submenu) -->
+            <li class="{{ request()->routeIs('admin.project*') ? 'active' : '' }}">
+                <a href="{{ route('admin.project.index') }}">
+                    <i class="now-ui-icons business_briefcase-24"></i>
+                    <p>Project</p>
+                </a>
+            </li>
+
+            <!-- Task (Direct Link without Submenu) -->
+            <li class="{{ request()->routeIs('admin.task*') ? 'active' : '' }}">
+                <a href="{{ route('admin.task.index') }}">
+                    <i class="now-ui-icons design_bullet-list-67"></i>
+                    <p>Task</p>
+                </a>
             </li>
 
             <!-- Report (Direct Link without Submenu) -->
