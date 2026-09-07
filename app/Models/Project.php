@@ -174,4 +174,44 @@ class Project extends Model
 
         return $query;
     }
+
+    /**
+     * Local Scope to filter projects dynamically by status based on real-time dates.
+     * 
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string|null $status
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeStatusFilter($query, ?string $status)
+    {
+        if (!$status || $status === 'all') {
+            return $query;
+        }
+
+        return match ($status) {
+            'completed' => $query->whereIn('status', ['completed', 'complete']),
+
+            'overdue' => $query->whereNotIn('status', ['completed', 'complete'])
+                ->whereNotNull('end_date')
+                ->whereDate('end_date', '<', today()),
+
+            'due_today' => $query->whereNotIn('status', ['completed', 'complete'])
+                ->whereNotNull('end_date')
+                ->whereDate('end_date', today()),
+
+            'in_progress' => $query->where('status', 'in_progress')
+                ->where(function ($q) {
+                    $q->whereNull('end_date')
+                        ->orWhereDate('end_date', '>=', today());
+                }),
+
+            'pending' => $query->where('status', 'pending')
+                ->where(function ($q) {
+                    $q->whereNull('end_date')
+                        ->orWhereDate('end_date', '>', today());
+                }),
+
+            default => $query,
+        };
+    }
 }

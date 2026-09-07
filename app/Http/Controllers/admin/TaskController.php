@@ -81,7 +81,13 @@ class TaskController extends Controller
         // -----------------------------------------------------------------
         // Fetch tasks with related models, apply filters/search, order by latest,
         // and paginate results keeping query parameters intact.
-        $tasks = Task::with('user', 'project')
+        $tasks = Task::with('assignedUser', 'project')
+            ->when($request->filled('user_id'), function ($q) use ($request) {
+                $q->where('user_id', $request->user_id);
+            })
+            ->when($request->filled('status'), function ($q) use ($request) {
+                $q->where('status', $request->status);
+            })
             ->filterAndSearch($user, $request)
             ->latest()
             ->paginate(10)
@@ -91,26 +97,27 @@ class TaskController extends Controller
         // 2. STATUS COUNTERS FOR DASHBOARD BADGES
         // -----------------------------------------------------------------
         // Retrieve count summaries grouped by status, respecting role restrictions.
-        $statusCounts = Task::getStatusCounts($isEmployee ? $user->id : null);
+        $statusCounts = Task::getStatusCounts($isEmployee ? $user->id : ($request->filled('user_id') ? $request->user_id : null));
 
         // -----------------------------------------------------------------
         // 3. PREPARING DATA ARRAY FOR THE BLADE VIEW
         // -----------------------------------------------------------------
         $data = [
-            'tasks'           => $tasks,
-            'pendingTasks'   => $statusCounts['pending'] ?? 0,
+            'tasks'             => $tasks,
+            'pendingTasks'     => $statusCounts['pending'] ?? 0,
             'inProgressTasks' => $statusCounts['in_progress'] ?? 0,
             'completedTasks'  => $statusCounts['completed'] ?? 0,
-            'acceptedTasks'   => $statusCounts['accepted'] ?? 0,
-            'rejectedTasks'   => $statusCounts['rejected'] ?? 0,
+            'acceptedTasks'    => $statusCounts['accepted'] ?? 0,
+            'rejectedTasks'    => $statusCounts['rejected'] ?? 0,
 
-            // Fetch unique task titles for dropdown filters based on role
-            'allTitles'       => Task::when($isEmployee, fn($q) => $q->where('user_id', $user->id))
+            // Fetch unique task titles for dropdown filters based on role or requested user
+            'allTitles'         => Task::when($isEmployee, fn($q) => $q->where('user_id', $user->id))
+                ->when($request->filled('user_id'), fn($q) => $q->where('user_id', $request->user_id))
                 ->distinct()
                 ->pluck('title'),
 
             // Fetch all users who have employee role and have assigned tasks
-            'allUsers'        => User::where('role', 'employee')->get(),
+            'allUsers'          => User::where('role', 'employee')->get(),
         ];
 
         // Return the view with packed data variables
@@ -174,7 +181,7 @@ class TaskController extends Controller
         $this->authorize('view', $task);
 
         // Load necessary relationships to prevent N+1 query issues in the view
-        $task->load(['project', 'assignedUser', 'user']);
+        $task->load(['project', 'assignedUser']);
 
         // Then fetch the project associated with the task
         $project = $task->project;
@@ -291,14 +298,37 @@ class TaskController extends Controller
 
             $data = $request->validated();
 
-            // Check if a new attachment file is uploaded in the request
-            if ($request->hasFile('attachment')) {
-                // Step 1: Remove the old file from storage folder
-                $this->attachmentService->deleteAttachments($task->attachment);
-
-                // Step 2: Upload the new file and assign its path to data array
-                $data['attachment'] = $this->attachmentService->uploadAttachments($request);
+            // 1. معالجة حذف ملفات محددة إذا قام المستخدم بتحديد مربعات الحذف الخاصة بها
+            $currentAttachments = json_decode($task->attachment, true) ?? [];
+            if ($request->has('remove_attachments')) {
+                $filesToRemove = $request->input('remove_attachments', []);
+                foreach ($filesToRemove as $oldFile) {
+                    $this->attachmentService->deleteAttachments($oldFile);
+                    $currentAttachments = array_values(array_diff($currentAttachments, [$oldFile]));
+                }
             }
+
+            // 2. التحقق من رفع ملفات جديدة كلياً
+            if ($request->hasFile('attachments')) {
+                // تفعيل حذف الملفات القديمة كلياً من السيرفر وقاعدة البيانات عند رفع ملف جديد
+                foreach ($currentAttachments as $oldFile) {
+                    $this->attachmentService->deleteAttachments($oldFile);
+                }
+                $currentAttachments = []; // تفريغ المصفوفة القديمة بالكامل
+
+                // رفع الملفات الجديدة
+                $newAttachmentsJson = $this->attachmentService->uploadAttachments($request);
+                $newAttachments = json_decode($newAttachmentsJson, true) ?? [];
+
+                // تعيين الملفات الجديدة كملفات حالية وحيدة
+                $currentAttachments = $newAttachments;
+            }
+
+            // تحديث قيمة المرفقات في مصفوفة البيانات للحفظ (مطابق لاسم العمود في قاعدة البيانات attachment)
+            $data['attachment'] = !empty($currentAttachments) ? json_encode($currentAttachments) : null;
+
+            // إزالة مفتاح attachments من مصفوفة $data لتجنب خطأ Column not found إذا لم يكن موجوداً بالجمع
+            unset($data['attachments']);
 
             // Update database record
             $task->update($data);
@@ -316,38 +346,6 @@ class TaskController extends Controller
         }
     }
 
-    /**
-     * =====================================================================
-     * ACCEPT TASK STATUS
-     * =====================================================================
-     * Allows an assigned employee to accept their designated task.
-     *
-     * @param \App\Models\Task $task
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function accept(Task $task)
-    // ... (rest of the methods remain unchanged)
-    {
-        $this->authorize('modifyStatus', $task);
-
-        try {
-            DB::beginTransaction();
-
-            $task->update([
-                'status' => 'accepted',
-                'rejection_reason' => null
-            ]);
-
-            DB::commit();
-
-            return redirect()->back()->with('success', 'Task accepted successfully.');
-        } catch (Exception $e) {
-            DB::rollBack();
-            Log::error('Task Acceptance Error: ' . $e->getMessage());
-
-            return redirect()->back()->with('error', 'Something went wrong. Please try again later.');
-        }
-    }
 
     public function reject(EmpTaskUpdateRequest $request, Task $task)
     {
@@ -385,6 +383,11 @@ class TaskController extends Controller
             $task->delete();
 
             DB::commit();
+
+            // التحقق مما إذا كان الطلب قادماً من صفحة تفاصيل المشروع للبقاء فيها
+            if (str_contains(url()->previous(), '/admin/project/')) {
+                return redirect()->back()->with('success', 'Task deleted successfully.');
+            }
 
             return redirect()->route('admin.task.index')->with('success', 'Task deleted successfully.');
         } catch (Exception $e) {

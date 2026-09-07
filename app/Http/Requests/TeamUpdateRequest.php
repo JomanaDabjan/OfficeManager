@@ -50,6 +50,9 @@ class TeamUpdateRequest extends FormRequest
             /* The project ID is sometimes required, but if provided, must exist in the projects table */
             'project_id'  => ['sometimes', 'required', 'exists:projects,id'],
 
+            /* The team leader ID is sometimes required, but if provided, must exist in the users table */
+            'team_leader_id' => ['sometimes', 'required', 'exists:users,id'],
+
             /* Members can be updated as an array of user IDs, validating that each user exists */
             'members'     => ['nullable', 'array'],
             'members.*'   => ['exists:users,id'],

@@ -5,20 +5,20 @@
 <nav class="navbar navbar-expand-lg navbar-transparent navbar-absolute bg-primary fixed-top">
     <div class="container-fluid">
 
-        <!-- ================================================================= -->
-        <!-- LEFT SECTION: BRAND TITLE & MOBILE TOGGLE                         -->
-        <!-- ================================================================= -->
-        <div class="navbar-wrapper">
-            <!-- Mobile sidebar toggle menu button -->
-            <div class="navbar-toggle">
-                <button type="button" class="navbar-toggler">
-                    <span class="navbar-toggler-bar bar1"></span>
-                    <span class="navbar-toggler-bar bar2"></span>
-                    <span class="navbar-toggler-bar bar3"></span>
-                </button>
+        <!-- LEFT SECTION: DISPLAY LOGGED-IN USER NAME -->
+        <div class="navbar-wrapper d-flex align-items-center">
+            @auth
+            <div class="user-greeting-pill d-flex align-items-center px-3 py-1"
+                style="background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 50px; backdrop-filter: blur(5px);">
+                <div
+                    style="width: 32px; height: 32px; background: #f96332; color: #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; margin-right: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                </div>
+                <span style="color: #ffffff; font-weight: 600; font-size: 14px; letter-spacing: 0.5px;">
+                    {{ Auth::user()->name }}
+                </span>
             </div>
-            <!-- Brand page title displayed on the header -->
-            <a class="navbar-brand" href="#pablo">Dashboard</a>
+            @endauth
         </div>
 
         <!-- Toggle button for responsive mobile view collapse -->
@@ -37,16 +37,6 @@
             <!-- Note: Search bar has been completely removed as requested -->
 
             <ul class="navbar-nav align-items-center">
-
-                <!-- System Stats Icon Link -->
-                <li class="nav-item">
-                    <a class="nav-link" href="#pablo" title="System Stats">
-                        <i class="now-ui-icons media-2_sound-wave"></i>
-                        <p>
-                            <span class="d-lg-none d-md-block">Stats</span>
-                        </p>
-                    </a>
-                </li>
                 @guest
                 <!-- ===================================================== -->
                 <!-- LOGIN BUTTON (Styled with CoreTask Orange Accent)     -->
@@ -62,6 +52,7 @@
                 <!-- ===================================================== -->
                 <!-- LOGOUT BUTTON (Secure POST Form with Hover Effect)     -->
                 <!-- ===================================================== -->
+                @can('viewDashboard')
                 <li class="nav-item ml-2">
                     <form method="POST" action="{{ route('logout') }}" class="m-0">
                         @csrf
@@ -72,6 +63,7 @@
                         </button>
                     </form>
                 </li>
+                @endcan
                 @endguest
 
             </ul>
@@ -79,4 +71,3 @@
     </div>
 </nav>
 <!-- End Navbar -->
-

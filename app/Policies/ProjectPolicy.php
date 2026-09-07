@@ -11,7 +11,7 @@ use Illuminate\Auth\Access\Response;
  * PROJECT POLICY CLASS (ROLE-BASED AUTHORIZATION & SECURITY)
  * =========================================================================
  * This policy class handles all security rules for project resources.
- * It determines if a logged-in user (Admin, Manager, or Employee) is allowed
+ * It determines if a logged-in user (Admin, Manager, Team Leader, or Employee) is allowed
  * to view, create, update, or delete a specific project.
  */
 class ProjectPolicy
@@ -57,6 +57,16 @@ class ProjectPolicy
             return $project->manager_id === $user->id
                 ? Response::allow()
                 : Response::deny('You are not authorized to view this project because it is assigned to another manager.');
+        }
+
+        // =====================================================================
+        // TIER 2.5: Team Leader Ownership Check
+        // =====================================================================
+        // Team Leaders can only view projects assigned directly to them.
+        if ($user->role === 'team_leader') {
+            return $project->team_leader_id === $user->id
+                ? Response::allow()
+                : Response::deny('You are not authorized to view this project because it is assigned to another team leader.');
         }
 
         // =====================================================================
@@ -113,6 +123,16 @@ class ProjectPolicy
         }
 
         // =====================================================================
+        // TIER 2.5: Team Leader Update Check
+        // =====================================================================
+        // Team Leaders can modify projects where they are assigned as the team leader.
+        if ($user->role === 'team_leader') {
+            return $project->team_leader_id === $user->id
+                ? Response::allow()
+                : Response::deny('You cannot edit this project because you are not the assigned team leader.');
+        }
+
+        // =====================================================================
         // TIER 3: Employee Denial
         // =====================================================================
         // Employees are blocked from editing any project details.
@@ -120,7 +140,7 @@ class ProjectPolicy
     }
 
     /**
-     * Determine whether the user can delete a project.
+     * Determine whether project records can be deleted.
      *
      * @param \App\Models\User $user
      * @param \App\Models\Project $project

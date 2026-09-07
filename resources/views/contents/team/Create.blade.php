@@ -9,12 +9,13 @@
 <!-- MAIN FORM CONTAINER SECTION                                               -->
 <!-- ========================================================================= -->
 
+@can('create', \App\Models\Team::class)
+
 <!-- Main Form Card Container Centered -->
 <div class="row justify-content-center mt-4 mb-4">
     <div class="col-lg-9 col-md-10">
 
-        <!-- Include Session Alert Message Component -->
-        <x-alert-message />
+
 
         <div class="card shadow-sm border-0 project-form-card">
 
@@ -45,6 +46,8 @@
                     <div class="row">
                         <!-- Project Selection Field -->
                         <div class="col-md-12">
+                            <!-- Include Session Alert Message Component -->
+                            <x-alert-message />
                             <div class="form-group">
                                 <label class="form-control-label font-weight-bold text-dark">Project</label>
                                 <!-- Added select2-ajax class for dynamic search and pagination handling -->
@@ -137,5 +140,7 @@
         </div>
     </div>
 </div>
+
+@endcan
 
 @endsection

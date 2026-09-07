@@ -23,8 +23,16 @@ class Team extends Model
     | filled safely using mass-assignment methods like Team::create()
     | or $team->update().
     */
+
     use HasFactory;
-    protected $fillable = ['name', 'description', 'project_id', 'team_leader_id'];
+
+    protected $fillable = [
+        'name',
+        'description',
+        'project_id',
+        'team_leader_id'
+    ];
+
 
     /*
     |--------------------------------------------------------------------------
@@ -34,10 +42,12 @@ class Team extends Model
     | Each team belongs to one specific project (linked via project_id).
     | This project contains the project manager (manager_id).
     */
+
     public function project()
     {
         return $this->belongsTo(Project::class);
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -47,23 +57,25 @@ class Team extends Model
     | named 'team_user'. It allows a team to have multiple users (members),
     | and a user to belong to multiple teams.
     */
+
     public function members()
     {
         return $this->belongsToMany(User::class, 'team_user');
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | Relationship: Team has many Tasks (One-to-Many)
     |--------------------------------------------------------------------------
-    | This method defines a One-to-Many relationship.
+    | This method defines a One-to-Many relationship. 
     | A single team can be assigned multiple tasks (linked via team_id in tasks table).
     */
+
     public function tasks()
     {
         return $this->hasMany(Task::class);
     }
-
 
 
     /*
@@ -73,49 +85,93 @@ class Team extends Model
     | This method defines an Inverse One-to-Many relationship with the User model.
     | It links the team's team_leader_id to the user who acts as the team leader.
     */
+
     public function leader()
     {
         return $this->belongsTo(User::class, 'team_leader_id');
     }
+
 
     /*
     |--------------------------------------------------------------------------
     | Local Scope: Filter Teams based on request parameters
     |--------------------------------------------------------------------------
     | This scope allows us to cleanly chain filtering logic in our controller.
-    | It checks if specific filters (team_name, project_id, leader_id) are
-    | present in the request and applies SQL WHERE clauses dynamically.
+    | It checks if specific filters (team_name, project_id, leader_id)
+    | are present in the request and applies SQL WHERE clauses dynamically.
     */
+
     public function scopeFilter($query, array $filters)
     {
         /*
+        |--------------------------------------------------------------------------
         | Filter by Team Name
-        | Checks if a team name filter is provided and is not 'all'.
+        |--------------------------------------------------------------------------
         */
+
         $query->when($filters['team_name'] ?? false, function ($query, $teamName) {
+
             if ($teamName !== 'all') {
+
                 $query->where('name', $teamName);
             }
         });
 
+
         /*
+        |--------------------------------------------------------------------------
         | Filter by Project ID
-        | Checks if a project filter is provided, not 'all', and not empty.
+        |--------------------------------------------------------------------------
         */
+
         $query->when($filters['project_id'] ?? false, function ($query, $projectId) {
+
             if ($projectId !== 'all' && !empty($projectId)) {
+
                 $query->where('project_id', (int) $projectId);
             }
         });
 
+
         /*
+        |--------------------------------------------------------------------------
         | Filter by Team Leader ID
-        | Checks if a leader filter is provided and is not 'all'.
+        |--------------------------------------------------------------------------
+        | Checks if a team leader filter is provided, not 'all', and not empty.
         */
-        $query->when($filters['leader_id'] ?? false, function ($query, $leaderId) {
-            if ($leaderId !== 'all') {
-                $query->where('team_leader_id', (int) $leaderId);
+
+        $query->when($filters['team_leader_id'] ?? false, function ($query, $teamLeaderId) {
+
+            if ($teamLeaderId !== 'all' && !empty($teamLeaderId)) {
+
+                $query->where('team_leader_id', (int) $teamLeaderId);
             }
         });
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Local Scope: Report / Export Data
+    |--------------------------------------------------------------------------
+    | This scope prepares Team data for:
+    | - PDF export
+    | - Excel export
+    | - Print report
+    | - DataTables
+    |
+    | It loads the required relationships in advance and calculates
+    | the members count using SQL instead of executing a separate
+    | count query for every Team row.
+    */
+
+    public function scopeReportData($query)
+    {
+        return $query
+            ->with([
+                'project',
+                'leader'
+            ])
+            ->withCount('members');
     }
 }

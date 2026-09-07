@@ -9,6 +9,8 @@
 <!-- MAIN EDIT FORM CONTAINER SECTION                                          -->
 <!-- ========================================================================= -->
 
+@can('update', $task)
+
 <!-- Main Form Card Container Centered -->
 <div class="row justify-content-center mt-4 mb-4">
     <div class="col-lg-9 col-md-10">
@@ -63,16 +65,142 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label class="form-control-label font-weight-bold text-dark">Related Project</label>
-                                <!-- Dropdown list populated dynamically with current selection matching -->
-                                <select name="project_id" class="form-control" required>
-                                    <option value="" disabled>Select project...</option>
-                                    @foreach($projects as $project)
-                                    <option value="{{ $project->id }}" {{ old('project_id', $task->project_id) ==
-                                        $project->id ? 'selected' : '' }}>
-                                        {{ $project->title }}
-                                    </option>
-                                    @endforeach
-                                </select>
+
+                                <!-- Project Dropdown With Live Search -->
+                                <div class="dropdown w-100">
+
+                                    <!-- Selected Project Button -->
+                                    <button type="button"
+                                        class="form-control text-left d-flex align-items-center justify-content-between"
+                                        id="projectDropdownButton" data-toggle="dropdown" aria-haspopup="true"
+                                        aria-expanded="false" style="   
+                                            background-color: #f9fbfd !important;   
+                                            border: 1.5px solid #ced4da !important;   
+                                            border-radius: 8px !important;   
+                                            padding: 10px 15px !important;   
+                                            font-size: 14px !important;   
+                                            color: #495057 !important;   
+                                            height: auto !important;   
+                                            min-height: 40px;   
+                                            box-shadow: none !important;   
+                                        ">
+
+                                        <span id="selectedProjectText">
+
+                                            @php
+                                            $selectedProjectId = old('project_id', $task->project_id);
+                                            $selectedProject = $projects->firstWhere('id', $selectedProjectId);
+                                            @endphp
+
+                                            {{ $selectedProject ? $selectedProject->title : 'Select project...' }}
+
+                                        </span>
+
+                                        <i class="now-ui-icons arrows-1_minimal-down"
+                                            style="font-size: 11px; color: #8898aa;"></i>
+
+                                    </button>
+
+                                    <!-- Hidden Project ID Input -->
+                                    <input type="hidden" name="project_id" id="project_id"
+                                        value="{{ $selectedProjectId }}" required>
+
+                                    <!-- ================================================= -->
+                                    <!-- PROJECT DROPDOWN MENU                          -->
+                                    <!-- ================================================= -->
+
+                                    <div class="dropdown-menu shadow-lg border-0 p-2"
+                                        aria-labelledby="projectDropdownButton" style="   
+                                            width: 100%;   
+                                            max-height: 300px;   
+                                            overflow-y: auto;   
+                                            border-radius: 8px;   
+                                            margin-top: 4px;   
+                                            background-color: #ffffff;   
+                                        " onclick="event.stopPropagation();">
+
+                                        <!-- ========================================= -->
+                                        <!-- LIVE SEARCH                               -->
+                                        <!-- ========================================= -->
+
+                                        <div class="px-1 pb-2" style="   
+                                                position: sticky;   
+                                                top: 0;   
+                                                background: #ffffff;   
+                                                z-index: 10;   
+                                            ">
+
+                                            <div class="position-relative">
+
+                                                <i class="now-ui-icons ui-1_zoom-bold" style="   
+                                                        position: absolute;   
+                                                        left: 13px;   
+                                                        top: 50%;   
+                                                        transform: translateY(-50%);   
+                                                        color: #8898aa;   
+                                                        font-size: 13px;   
+                                                        z-index: 2;   
+                                                    "></i>
+
+                                                <input type="text" id="projectLiveSearch" class="form-control"
+                                                    placeholder="Search project..." autocomplete="off" style="   
+                                                        padding-left: 38px !important;   
+                                                        border-radius: 20px !important;   
+                                                        height: 36px !important;   
+                                                        font-size: 13px !important;   
+                                                        border: 1px solid #ced4da !important;   
+                                                        background-color: #f9fbfd !important;   
+                                                        box-shadow: none !important;   
+                                                        transition: border-color 0.2s ease, box-shadow 0.2s ease;   
+                                                    ">
+
+                                            </div>
+
+                                        </div>
+
+                                        <!-- ========================================= -->
+                                        <!-- PROJECTS LIST                             -->
+                                        <!-- ========================================= -->
+
+                                        <div id="projectList">
+
+                                            @foreach($projects as $project)
+
+                                            <button type="button" class="dropdown-item project-option py-2 px-3"
+                                                data-id="{{ $project->id }}"
+                                                data-title="{{ strtolower($project->title) }}" style="   
+                                                    border-radius: 6px;   
+                                                    font-size: 13px;   
+                                                    color: #495057;   
+                                                    white-space: normal;   
+                                                    text-align: left;   
+                                                    width: 100%;   
+                                                    border: none;   
+                                                    background: transparent;   
+                                                ">
+
+                                                {{ $project->title }}
+
+                                            </button>
+
+                                            @endforeach
+
+                                            <!-- No Results Message -->
+                                            <div id="noProjectResults" class="text-muted text-center py-3" style="   
+                                                    display: none;   
+                                                    font-size: 13px;   
+                                                ">
+
+                                                No projects found.
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
                                 <!-- Display validation error message for project_id if any -->
                                 @error('project_id')
                                 <span class="text-danger text-sm mt-1 d-block">{{ $message }}</span>
@@ -186,23 +314,28 @@
                                     (Optional)</label>
 
                                 <!-- Display Existing Attachments if available -->
-                                @if(isset($task->attachments) && count($task->attachments) > 0)
+                                @php
+                                $existingAttachments = json_decode($task->attachments, true);
+                                @endphp
+
+                                @if(is_array($existingAttachments) && count($existingAttachments) > 0)
                                 <div class="mb-3 p-3 bg-light rounded border">
                                     <span class="font-weight-bold text-sm text-secondary d-mb-2">Current
                                         Attachments:</span>
                                     <ul class="list-unstyled mb-0 mt-1">
-                                        @foreach($task->attachments as $attachment)
-                                        <li class="d-flex align-items-center justify-content-between py-1">
-                                            <a href="{{ asset('storage/' . $attachment->file_path) }}" target="_blank"
-                                                class="text-primary text-sm">
-                                                <i class="now-ui-icons files_paper mr-1"></i> {{
-                                                basename($attachment->file_path) }}
+                                        @foreach($existingAttachments as $filePath)
+                                        <li
+                                            class="d-flex align-items-center justify-content-between py-1 border-bottom">
+                                            <a href="{{ asset('storage/' . $filePath) }}" target="_blank"
+                                                class="text-primary text-sm text-truncate" style="max-width: 70%;">
+                                                <i class="now-ui-icons files_paper mr-1"></i> {{ basename($filePath) }}
                                             </a>
-                                            <!-- Optional delete individual attachment checkbox or button -->
+
+                                            <!-- Checkbox to delete specific attachment -->
                                             <div class="form-check mt-0">
                                                 <label class="form-check-label text-danger text-xs">
                                                     <input class="form-check-input" type="checkbox"
-                                                        name="remove_attachments[]" value="{{ $attachment->id }}">
+                                                        name="remove_attachments[]" value="{{ $filePath }}">
                                                     <span class="form-check-sign"></span> Delete
                                                 </label>
                                             </div>
@@ -222,7 +355,7 @@
                                     <!-- Initial upload instruction prompt -->
                                     <div id="uploadPrompt">
                                         <i class="now-ui-icons arrows-1_cloud-upload-94 text-primary"
-                                            style="font-size: 32px; color: #2ca8ff !important;"></i>
+                                            style="font-size: 32px; color: #f96332 !important;"></i>
                                         <p class="mb-1 font-weight-bold text-secondary mt-2">Click to browse or drag new
                                             files here</p>
                                         <small class="text-muted">Supported formats: PDF, Images (JPG, PNG), DOCX, ZIP
@@ -241,11 +374,25 @@
                                                 <small id="fileSizeDisplay" class="text-muted"></small>
                                             </div>
                                         </div>
-                                        <!-- Button to clear selected files -->
+                                        <!-- Button to clear or remove selected files -->
                                         <button type="button" class="btn btn-sm btn-danger btn-round p-2 mb-0"
-                                            id="removeFileBtn" title="Remove files" style="line-key: 1;">
+                                            id="removeFileBtn" title="Remove files" style="line-height: 1;"
+                                            onclick="event.stopPropagation(); clearFiles();">
                                             <i class="now-ui-icons ui-1_simple-remove text-white"></i>
                                         </button>
+                                    </div>
+
+                                    <!-- Multiple Files Names Display -->
+                                    <div id="selectedFilesList" class="mt-3 text-left d-none">
+                                        <div class="d-flex align-items-center justify-content-between mb-2 px-2">
+                                            <div class="font-weight-bold text-dark text-sm">
+                                                <i class="now-ui-icons ui-1_check text-success mr-1"></i>
+                                                <span id="selectedFilesCount">0</span> files selected
+                                            </div>
+                                        </div>
+                                        <div id="filesNamesContainer"
+                                            style="max-height: 180px; overflow-y: auto; background: #ffffff; border: 1px solid #e9ecef; border-radius: 8px; padding: 6px;">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -263,7 +410,6 @@
                             </div>
                         </div>
                     </div>
-
                     <!-- ========================================================= -->
                     <!-- FORM SUBMISSION BUTTONS SECTION                           -->
                     <!-- ========================================================= -->
@@ -286,5 +432,8 @@
         </div>
     </div>
 </div>
+
+@endcan
+
 
 @endsection

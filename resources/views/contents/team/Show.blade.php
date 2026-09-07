@@ -8,11 +8,10 @@
 <!-- MAIN TEAM SHOW WRAPPER SECTION                                            -->
 <!-- ========================================================================= -->
 
+@can('view', $team)
+
 <div class="row justify-content-center">
     <div class="col-lg-12 col-md-12">
-
-        <!-- Include Session Alert Message Component for Feedback -->
-        <x-alert-message />
 
         <!-- ===================================================== -->
         <!-- MAIN TEAM OVERVIEW CARD CONTAINER                     -->
@@ -43,12 +42,12 @@
                         <i class="now-ui-icons arrows-1_minimal-left"></i> Back
                     </a>
 
-                    @if(Auth::user()->role !== 'employee')
+                    @can('update', $team)
                     <a href="{{ route('admin.team.edit', $team->id) }}"
                         class="btn btn-primary btn-round btn-sm px-3 shadow-sm mb-1">
                         <i class="now-ui-icons ui-2_settings-90"></i> Edit Team
                     </a>
-                    @endif
+                    @endcan
                 </div>
             </div>
 
@@ -58,7 +57,7 @@
                 <div class="row flex-wrap">
 
                     <!-- Team Leader Information Box -->
-                    <div class="col-xl-3 col-md-6 col-12 mb-4 d-flex align-items-stretch">
+                    <div class="col-xl-4 col-md-6 col-12 mb-4 d-flex align-items-stretch">
                         <div
                             class="p-3 bg-light border-0 rounded-lg shadow-sm w-100 d-flex flex-column justify-content-between">
                             <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-2">Team
@@ -72,7 +71,7 @@
                     </div>
 
                     <!-- Associated Project Information Box (Project Name styled as a Button) -->
-                    <div class="col-xl-3 col-md-6 col-12 mb-4 d-flex align-items-stretch">
+                    <div class="col-xl-4 col-md-6 col-12 mb-4 d-flex align-items-stretch">
                         <div
                             class="p-3 bg-light border-0 rounded-lg shadow-sm w-100 d-flex flex-column justify-content-between">
                             <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-2">Associated
@@ -95,21 +94,8 @@
                         </div>
                     </div>
 
-                    <!-- Total Members Information Box -->
-                    <div class="col-xl-3 col-md-6 col-12 mb-4 d-flex align-items-stretch">
-                        <div
-                            class="p-3 bg-light border-0 rounded-lg shadow-sm w-100 d-flex flex-column justify-content-between">
-                            <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-2">Members
-                                Count</span>
-                            <span class="text-dark font-weight-bold text-md">
-                                <i class="now-ui-icons users_multiple-08 mr-1 text-primary"></i>
-                                {{ $team->members_count ?? $team->users_count ?? 0 }} Members
-                            </span>
-                        </div>
-                    </div>
-
                     <!-- Creation Date Information Box -->
-                    <div class="col-xl-3 col-md-6 col-12 mb-4 d-flex align-items-stretch">
+                    <div class="col-xl-4 col-md-6 col-12 mb-4 d-flex align-items-stretch">
                         <div
                             class="p-3 bg-light border-0 rounded-lg shadow-sm w-100 d-flex flex-column justify-content-between">
                             <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-2">Created
@@ -135,80 +121,187 @@
                     </div>
                 </div>
 
-                <!-- ASSOCIATED TEAM MEMBERS SECTION -->
+                <!-- ========================================== -->
+                <!-- MAIN TEAMS MEMBERS TABLE CARD SECTION  -->
+                <!-- ========================================== -->
                 <div class="card shadow-sm border-0 project-tasks-card mb-0">
                     <div
                         class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center flex-wrap">
                         <h5 class="font-weight-bold text-dark mb-0">
                             <i class="now-ui-icons users_single-02 text-primary mr-2"></i> Team Members &
-                            Specializations
+                            Positions
                         </h5>
-                        @if(Auth::user()->role !== 'employee')
+                        @can('update', $team)
                         <a href="{{ route('admin.team.members.create', $team->id) }}"
                             class="btn btn-sm btn-primary btn-round px-3 shadow-sm mb-0">
                             <i class="now-ui-icons ui-1_simple-add"></i> Add New Members
                         </a>
-                        @endif
+                        @endcan
                     </div>
 
-                    <div class="card-body px-4 py-3">
-                        @if(isset($team->users) && $team->users->count() > 0)
-                        <div class="table-responsive">
-                            <table class="table align-items-center table-bordered table-flush mb-0">
-                                <thead class="thead-light">
-                                    <tr>
-                                        <th scope="col" class="border">Member Name</th>
-                                        <th scope="col" class="border">Specialization / Role</th>
-                                        <th scope="col" class="border">Email</th>
-                                        <th scope="col" class="border">Joined Date & Time</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($team->users as $member)
-                                    <tr>
-                                        <td class="font-weight-bold text-dark border">
-                                            <div class="d-flex align-items-center">
-                                                <span
-                                                    class="avatar-sm rounded-circle bg-light text-primary font-weight-bold d-flex align-items-center justify-content-center shadow-sm mr-2"
-                                                    style="width: 34px; height: 34px; min-width: 34px; font-size: 13px;">
-                                                    {{ strtoupper(substr($member->name, 0, 2)) }}
-                                                </span>
-                                                {{ $member->name }}
-                                            </div>
-                                        </td>
-                                        <td class="align-middle border">
-                                            <span
-                                                class="badge badge-pill badge-neutral text-primary border border-primary px-3 py-1 font-weight-bold">
-                                                {{ $member->position ?? $member->role ?? 'Front-end' }}
-                                            </span>
-                                        </td>
-                                        <td class="text-muted border">
-                                            {{ $member->email ?? 'N/A' }}
-                                        </td>
-                                        <td class="border">
-                                            <span class="text-muted">
-                                                <i class="now-ui-icons ui-1_calendar-60 mr-1 text-primary"></i>
-                                                {{ $member->pivot && $member->pivot->created_at ?
-                                                $member->pivot->created_at->format('Y-m-d h:i A') : 'N/A' }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                    <div class="row mx-0">
+                        <div class="col-md-12 px-4">
+                            <x-alert-message />
+                            <div class="card shadow-sm border" style="border: 1px solid #dee2e6 !important;">
+                                <div class="card-body px-0 pb-0">
+                                    <div class="table-responsive" style="overflow-x: auto; width: 100%;">
+                                        <!-- Corrected ID from teamsTable to match JS selector or updated JS -->
+                                        <table class="table align-items-center table-flush mb-0 border" id="teamsTable"
+                                            style="border: 1px solid #dee2e6; table-layout: auto;">
+                                            <!-- Table Headings with Gradient Style Matching Projects -->
+                                            <thead
+                                                style="background: linear-gradient(135deg, #f96332 0%, #ff8c42 100%); color: white;">
+                                                <tr id="tableHeaders">
+                                                    <th class="py-3 font-weight-bold text-white pl-4 draggable-header draggable-th text-center align-middle"
+                                                        draggable="true" data-column="0"
+                                                        style="cursor: grab; font-size: 13px; border: 1px solid rgba(255,255,255,0.2) !important; white-space: nowrap;">
+                                                        Member Name <i
+                                                            class="now-ui-icons arrows-1_move-horizontal ml-1"
+                                                            style="font-size: 10px; opacity: 0.7;"></i>
+                                                    </th>
+                                                    <th class="py-3 font-weight-bold text-white pl-4 draggable-header draggable-th text-center align-middle"
+                                                        draggable="true" data-column="1"
+                                                        style="cursor: grab; font-size: 13px; border: 1px solid rgba(255,255,255,0.2) !important; white-space: nowrap;">
+                                                        Position <i class="now-ui-icons arrows-1_move-horizontal ml-1"
+                                                            style="font-size: 10px; opacity: 0.7;"></i>
+                                                    </th>
+                                                    <th class="py-3 font-weight-bold text-white pl-4 draggable-header draggable-th text-center align-middle"
+                                                        draggable="true" data-column="2"
+                                                        style="cursor: grab; font-size: 13px; border: 1px solid rgba(255,255,255,0.2) !important; white-space: nowrap;">
+                                                        Email <i class="now-ui-icons arrows-1_move-horizontal ml-1"
+                                                            style="font-size: 10px; opacity: 0.7;"></i>
+                                                    </th>
+                                                    <th class="py-3 font-weight-bold text-white pl-4 draggable-header draggable-th text-center align-middle"
+                                                        draggable="true" data-column="3"
+                                                        style="cursor: grab; font-size: 13px; border: 1px solid rgba(255,255,255,0.2) !important; white-space: nowrap;">
+                                                        Joined Date & Time <i
+                                                            class="now-ui-icons arrows-1_move-horizontal ml-1"
+                                                            style="font-size: 10px; opacity: 0.7;"></i>
+                                                    </th>
+                                                    <th class="py-3 font-weight-bold text-white pl-4 draggable-header draggable-th text-center align-middle"
+                                                        draggable="true" data-column="4"
+                                                        style="cursor: grab; font-size: 13px; border: 1px solid rgba(255,255,255,0.2) !important; white-space: nowrap;">
+                                                        Profile <i class="now-ui-icons arrows-1_move-horizontal ml-1"
+                                                            style="font-size: 10px; opacity: 0.7;"></i>
+                                                    </th>
+                                                    <th class="py-3 font-weight-bold text-white pl-4 draggable-header draggable-th text-center align-middle"
+                                                        draggable="true" data-column="5"
+                                                        style="cursor: grab; font-size: 13px; border: 1px solid rgba(255,255,255,0.2) !important; white-space: nowrap;">
+                                                        Actions <i class="now-ui-icons arrows-1_move-horizontal ml-1"
+                                                            style="font-size: 10px; opacity: 0.7;"></i>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tableBody">
+                                                <!-- Loop through each team member record using Laravel forelse directive -->
+                                                @forelse($team->members ?? $team->users ?? [] as $member)
+                                                <tr class="border-bottom team-row">
+                                                    <!-- Member Name Column -->
+                                                    <td class="font-weight-bold text-dark pl-4 align-middle team-name border-right text-center"
+                                                        data-column="0"
+                                                        style="border: 1px solid #dee2e6 !important; word-break: break-word; white-space: normal; max-width: 180px;">
+                                                        <div class="d-flex align-items-center justify-content-center">
+                                                            <span
+                                                                class="avatar-sm rounded-circle bg-light text-primary font-weight-bold d-flex align-items-center justify-content-center shadow-sm mr-2"
+                                                                style="width: 32px; height: 32px; font-size: 12px; flex-shrink: 0;">
+                                                                {{ strtoupper(substr($member->name, 0, 2)) }}
+                                                            </span>
+                                                            <span>{{ $member->name }}</span>
+                                                        </div>
+                                                    </td>
+
+                                                    <!-- Position Column -->
+                                                    <td class="text-muted align-middle team-desc border-right text-center"
+                                                        data-column="1"
+                                                        style="border: 1px solid #dee2e6 !important; max-width: 200px;">
+                                                        <span
+                                                            class="badge badge-pill badge-outline-primary px-3 py-1 font-weight-bold"
+                                                            style="border: 1px solid #f96332; color: #f96332;">
+                                                            {{ $member->position ?? 'Member' }}
+                                                        </span>
+                                                    </td>
+
+                                                    <!-- Email Column -->
+                                                    <td class="align-middle team-project border-right text-center"
+                                                        data-column="2"
+                                                        style="border: 1px solid #dee2e6 !important; max-width: 200px; word-break: break-word; white-space: normal;">
+                                                        <span class="text-dark font-weight-normal">
+                                                            {{ $member->email ?? 'N/A' }}
+                                                        </span>
+                                                    </td>
+
+                                                    <!-- Joined Date & Time Column -->
+                                                    <td class="align-middle team-manager border-right text-center"
+                                                        data-column="3"
+                                                        style="border: 1px solid #dee2e6 !important; white-space: nowrap;">
+                                                        <span class="text-muted">
+                                                            <i class="now-ui-icons ui-1_calendar-60 mr-1"></i>
+                                                            {{ $member->pivot->created_at ??
+                                                            $member->created_at?->format('Y-m-d H:i') ?? 'N/A' }}
+                                                        </span>
+                                                    </td>
+
+                                                    <!-- Profile Column -->
+                                                    <td class="align-middle team-members-count border-right text-center"
+                                                        data-column="4"
+                                                        style="border: 1px solid #dee2e6 !important; white-space: nowrap;">
+                                                        <a href="{{ route('admin.user.show', $member->id) }}"
+                                                            class="btn btn-info btn-sm btn-icon shadow-sm rounded"
+                                                            title="View Profile"
+                                                            style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
+                                                            <i class="now-ui-icons users_single-02"
+                                                                style="font-size: 13px;"></i>
+                                                        </a>
+                                                    </td>
+
+                                                    <!-- STANDARD ACTIONS COLUMN (REMOVE MEMBER) -->
+                                                    <td class="text-center align-middle" data-column="5"
+                                                        style="border: 1px solid #dee2e6 !important; white-space: nowrap;">
+                                                        <div class="d-flex justify-content-center align-items-center"
+                                                            role="group" aria-label="Member Actions">
+
+                                                            <!-- Delete Form with SweetAlert2 Integration -->
+                                                            <form
+                                                                action="{{ route('admin.team.members.destroy', [$team->id, $member->id]) }}"
+                                                                method="POST" style="display: inline-block;"
+                                                                id="delete-form-member-{{ $member->id }}">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="button"
+                                                                    class="btn btn-danger btn-sm btn-icon shadow-sm mx-1 rounded"
+                                                                    title="Remove Member"
+                                                                    style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
+                                                                    onclick="confirmDelete('member', {{ $member->id }})">
+                                                                    <i class="now-ui-icons ui-1_simple-remove"
+                                                                        style="font-size: 13px;"></i>
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                @empty
+                                                <!-- Empty State Row when no team members exist -->
+                                                <tr id="noTeamsDefault">
+                                                    <td colspan="6" class="text-center text-muted py-5"
+                                                        style="border: 1px solid #dee2e6 !important;">
+                                                        <div class="py-4">
+                                                            <i class="now-ui-icons users_circle-08 fa-3x mb-3 text-muted"
+                                                                style="font-size: 28px;"></i>
+                                                            <p class="font-weight-bold mb-1">No team members found.</p>
+                                                            <p class="text-sm text-muted">Click "Add New Members" to add
+                                                                one.</p>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        @else
-                        <div class="text-center py-5">
-                            <i class="now-ui-icons users_single-02 text-muted mb-3" style="font-size: 48px;"></i>
-                            <p class="text-muted font-weight-bold mb-0">No members found assigned to this team yet.</p>
-                        </div>
-                        @endif
                     </div>
-                </div>
 
-            </div>
-        </div>
+                    @endcan
 
-    </div>
-</div>
-@endsection
+                    @endsection

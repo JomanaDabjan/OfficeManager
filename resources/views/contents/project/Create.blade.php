@@ -9,6 +9,8 @@
 <!-- MAIN FORM WRAPPER SECTION                                                 -->
 <!-- ========================================================================= -->
 
+@can('create', \App\Models\Project::class)
+
 <!-- Main Form Card Container Centered -->
 <div class="row justify-content-center">
     <div class="col-lg-9 col-md-10">
@@ -155,5 +157,7 @@
         </div>
     </div>
 </div>
+
+@endcan
 
 @endsection
