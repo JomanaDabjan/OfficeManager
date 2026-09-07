@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('Main_Content')
+
+@can('view', $task)
+
 <div class="content mt-3">
     <div class="row">
         <div class="col-md-12">
@@ -251,4 +254,7 @@
         </div>
     </div>
 </div>
+
+@endcan
+
 @endsection

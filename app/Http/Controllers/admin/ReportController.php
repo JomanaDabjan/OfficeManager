@@ -9,26 +9,23 @@ use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use App\Models\Team;
+use App\Models\Report;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-
-// Import Barryvdh DomPDF facade for PDF export functionality
-use Barryvdh\DomPDF\Facade\Pdf;
-// Import custom Excel export classes for projects and tasks
-use App\Exports\ProjectsExport;
-use App\Exports\TaskExport;
-// Import Excel facade from Maatwebsite package for handling spreadsheet downloads
-use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 /**
  * =========================================================================
  * REPORT CONTROLLER (ANALYTICS & REPORTING MANAGEMENT)
  * =========================================================================
  * This controller aggregates system data for projects, tasks, and users
- * to generate comprehensive analytical reports, printable views, and downloadable files.
+ * to generate comprehensive analytical reports.
  */
 class ReportController extends Controller
 {
+
+    use AuthorizesRequests;
     /**
      * =====================================================================
      * DISPLAY REPORT INDEX HUB
@@ -39,6 +36,8 @@ class ReportController extends Controller
      */
     public function index(): View
     {
+        $this->authorize('viewAny', Report::class);
+
         return view('contents.report.Index');
     }
 
@@ -54,6 +53,8 @@ class ReportController extends Controller
      */
     public function taskreport(Request $request): View
     {
+        $this->authorize('viewAny', Report::class);
+
         // Using the Model Local Scope for clean filtering
         $query = Task::with(['project', 'assignedUser'])->reportFilter($request);
         $tasks = $query->paginate(10)->appends($request->query());
@@ -106,152 +107,154 @@ class ReportController extends Controller
      */
     public function projectreport(Request $request)
     {
-        // Using the Project Model Local Scope for filtering and eager loading
-        $query = Project::with(['manager', 'tasks.assignedUser'])->reportFilter($request);
+        $this->authorize('viewAny', Report::class);
 
-        // Count tasks for each project while maintaining filters
-        $query->withCount('tasks');
+        // ================================================================
+        // GET STATUS FILTER SEPARATELY
+        // ================================================================
 
-        // Apply pagination and append query parameters to links
-        $projects = $query->paginate(10)->appends($request->query());
+        $selectedStatus = $request->input('status');
+
+        // ================================================================
+        // REMOVE STATUS BEFORE USING reportFilter()
+        // ================================================================
+
+        $filterRequest = clone $request;
+
+        $filterRequest->query->remove('status');
+
+        $filterRequest->request->remove('status');
+
+        // ================================================================
+        // BASE PROJECT QUERY WITH MODEL SCOPES
+        // ================================================================
+
+        $query = Project::with(['manager', 'tasks.assignedUser'])
+            ->reportFilter($filterRequest)
+            ->statusFilter($selectedStatus)
+            ->withCount('tasks');
+
+        // ================================================================
+        // APPLY PAGINATION AFTER ALL FILTERS
+        // ================================================================
+
+        $projects = $query
+            ->paginate(10)
+            ->appends($request->query());
+
+        // ================================================================
+        // AJAX RESPONSE
+        // ================================================================
 
         if ($request->ajax()) {
-            return view('contents.report.partials.projects-table', compact('projects'));
+            return view(
+                'contents.report.partials.projects-table',
+                compact('projects')
+            );
         }
 
+        // ================================================================
+        // FILTER DATA
+        // ================================================================
+
         $allTitles = Project::pluck('title')->unique();
-        $managers = User::where('role', 'manager')->get();
 
-        return view('contents.report.ProjectReport', compact('projects', 'allTitles', 'managers'));
+        $managers = User::where(
+            'role',
+            'manager'
+        )->get();
+
+        // ================================================================
+        // RETURN PROJECT REPORT
+        // ================================================================
+
+        return view(
+            'contents.report.ProjectReport',
+            compact(
+                'projects',
+                'allTitles',
+                'managers'
+            )
+        );
     }
 
     /**
      * =====================================================================
-     * PRINT REPORTS (DIRECT BROWSER PRINT FOR PROJECTS & TASKS)
+     * USER REPORT
      * =====================================================================
+     * Handles user reporting and filtering analytics.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\View\View
      */
-
-    public function printProjectsReport(Request $request): View
+    public function userreport(Request $request): View
     {
-        $projects = collect();
-        Project::with(['manager', 'tasks.assignedUser'])->reportFilter($request)->chunk(500, function ($chunk) use (&$projects) {
-            $projects = $projects->concat($chunk);
-        });
+        $this->authorize('viewAny', Report::class);
 
-        // تقسيم البيانات إلى أجزاء (كل جزء 6 عناصر للطباعة المنظمة)
-        $chunks = $projects->values()->chunk(6);
+        $query = User::filter($request->only([
+            'search',
+            'name',
+            'role',
+            'position',
+            'department',
+            'status',
+            'date_from',
+            'date_to'
+        ]));
 
-        return view('contents.report.partial.Project_table', compact('chunks'));
-    }
+        $users = $query->paginate(10)->appends($request->query());
 
-    public function printTasksReport(Request $request): View
-    {
-        $tasks = collect();
-        Task::with(['project', 'assignedUser'])->reportFilter($request)->chunk(500, function ($chunk) use (&$tasks) {
-            $tasks = $tasks->concat($chunk);
-        });
+        $allNames = User::distinct()->pluck('name')->filter()->values();
+        $allPositions = User::distinct()->pluck('position')->filter()->values();
+        $allDepartments = User::distinct()->pluck('department')->filter()->values();
 
-        // تقسيم البيانات إلى أجزاء (كل جزء 6 مهام)
-        $chunks = $tasks->values()->chunk(6);
-
-        return view('contents.report.partial.Task_table', compact('chunks'));
+        return view(
+            'contents.report.UserReport',
+            compact(
+                'users',
+                'allNames',
+                'allPositions',
+                'allDepartments'
+            )
+        );
     }
 
     /**
      * =====================================================================
-     * EXPORT REPORTS AS PDF (FOR PROJECTS & TASKS)
+     * TEAM REPORT
      * =====================================================================
+     * Handles team reporting and analytical statistics.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\View\View
      */
-
-    public function exportProjectsPdf(Request $request)
+    public function teamreport(Request $request): View
     {
-        $projects = collect();
-        Project::with(['manager', 'tasks.assignedUser'])->reportFilter($request)->chunk(500, function ($chunk) use (&$projects) {
-            $projects = $projects->concat($chunk);
-        });
+        $this->authorize('viewAny', Report::class);
 
-        $chunks = $projects->values()->chunk(6);
-        $isPdf = true;
+        $query = Team::with(['leader', 'members', 'project'])
+            ->filter($request->only([
+                'team_name',
+                'project_id',
+                'team_leader_id'
+            ]));
 
-        $pdf = Pdf::loadView('contents.report.partial.Project_table', compact('chunks', 'isPdf'));
-        return $pdf->download('projects-report.pdf');
-    }
+        // Apply pagination and append query parameters to links
+        $teams = $query->paginate(10)->appends($request->query());
 
-    public function exportTasksPdf(Request $request)
-    {
-        $tasks = collect();
-        Task::with(['project', 'assignedUser'])->reportFilter($request)->chunk(500, function ($chunk) use (&$tasks) {
-            $tasks = $tasks->concat($chunk);
-        });
+        // Fetch data required for the filtering dropdowns in the UI
+        $allTeamNames = Team::pluck('name')->unique();
+        $projects = Project::all();
+        $leaders = User::all();
 
-        $chunks = $tasks->values()->chunk(6);
-        $isPdf = true;
-
-        $pdf = Pdf::loadView('contents.report.partial.Task_table', compact('chunks', 'isPdf'));
-        return $pdf->download('tasks-report.pdf');
-    }
-
-    /**
-     * =====================================================================
-     * EXPORT REPORTS AS EXCEL (FOR PROJECTS & TASKS)
-     * =====================================================================
-     */
-
-    public function exportProjectsExcel(Request $request)
-    {
-        return Excel::download(new ProjectsExport($request), 'projects-report.xlsx');
-    }
-
-    public function exportTasksExcel(Request $request)
-    {
-        return Excel::download(new TaskExport($request), 'tasks-report.xlsx');
-    }
-
-    /**
-     * =====================================================================
-     * SYSTEM OVERVIEW & STATISTICS REPORT
-     * =====================================================================
-     */
-    public function systemOverview(): View
-    {
-        $totalUsers = User::count();
-        $totalProjects = Project::count();
-        $totalTasks = Task::count();
-
-        $taskStatusBreakdown = Task::select('status', \DB::raw('count(*) as count'))
-            ->groupBy('status')
-            ->pluck('count', 'status');
-
-        return view('contents.report.system-overview', compact(
-            'totalUsers',
-            'totalProjects',
-            'totalTasks',
-            'taskStatusBreakdown'
-        ));
-    }
-
-    public function create()
-    {
-        abort(404);
-    }
-    public function store(Request $request)
-    {
-        abort(404);
-    }
-    public function show(string $id)
-    {
-        abort(404);
-    }
-    public function edit(string $id)
-    {
-        abort(404);
-    }
-    public function update(Request $request, string $id)
-    {
-        abort(404);
-    }
-    public function destroy(string $id)
-    {
-        abort(404);
+        return view(
+            'contents.report.TeamReport',
+            compact(
+                'teams',
+                'allTeamNames',
+                'projects',
+                'leaders'
+            )
+        );
     }
 }

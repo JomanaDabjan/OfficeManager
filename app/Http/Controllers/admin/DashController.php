@@ -3,69 +3,107 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-//use Illuminate\Http\Request;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+//use Illuminate\Support\Facades\Cache;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
-/**
- * =========================================================================
- * DASHBOARD CONTROLLER CLASS
- * =========================================================================
- * This controller handles the main administrative dashboard overview.
- * It gathers and computes statistics (total counts for projects, tasks,
- * users, and status breakdowns) efficiently using optimized database queries.
- */
 class DashController extends Controller
 {
+    use AuthorizesRequests;
+
     /**
-     * =====================================================================
-     * DISPLAY DASHBOARD STATISTICS
-     * =====================================================================
-     * Fetch all necessary system metrics and pass them to the dashboard view.
+     * Display dashboard statistics with optimized queries and caching.
      *
      * @return \Illuminate\View\View
      */
     public function index()
     {
-        // -----------------------------------------------------------------
-        // STEP 1: OPTIMIZED TASK STATUS COUNTING (GROUP BY)
-        // -----------------------------------------------------------------
-        // Instead of executing separate database queries for every single status
-        // (which causes performance bottlenecks), we fetch all status counts
-        // in a single database query using GROUP BY.
-        $taskStatusCounts = Task::select('status', DB::raw('count(*) as total'))
-            ->groupBy('status')
-            ->pluck('total', 'status');
+        $this->authorize('viewDashboard');
 
-        // -----------------------------------------------------------------
-        // STEP 2: GATHER TOTAL COUNTS FOR OTHER ENTITIES
-        // -----------------------------------------------------------------
-        $totalProjects  = Project::count();                             // Count all projects in database
-        $totalTasks     = Task::count();                                // Count all tasks across all statuses
-        $totalEmployees = User::where('role', 'employee')->count();     // Count only users with 'employee' role
-        $totalManagers  = User::where('role', 'manager')->count();      // Count only users with 'manager' role
+        $user = Auth::user();
+        $role = strtolower(trim($user->role ?? ''));
 
-        // -----------------------------------------------------------------
-        // STEP 3: PREPARE DATA ARRAY FOR THE VIEW
-        // -----------------------------------------------------------------
-        // Map the grouped status counts safely, defaulting to 0 if a status doesn't exist yet.
+        // =====================================================================
+        // STEP 1: OPTIMIZED SINGLE-QUERY TASK STATISTICS
+        // =====================================================================
+        // نستخدم استعلاماً واحداً لجلب الإجمالي وتوزيع الحالات دفعة واحدة لتوفير الذاكرة والوقت
+        $taskQuery = Task::query();
+
+        if ($role === 'employee') {
+            $taskQuery->where('user_id', $user->id);
+        } elseif ($role === 'team_leader') {
+            $taskQuery->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                    ->orWhereHas('project', function ($subQuery) use ($user) {
+                        $subQuery->where('team_id', $user->team_id);
+                    });
+            });
+        } elseif ($role === 'manager') {
+            $taskQuery->whereHas('project', function ($subQuery) use ($user) {
+                $subQuery->where('department', $user->department);
+            });
+        }
+
+        // جلب الإجمالي وتوزيع الحالات باستخدام Collection أو Select مباشر
+        $taskStats = (clone $taskQuery)
+            ->selectRaw('count(*) as total_tasks')
+            ->selectRaw("sum(case when status = 'pending' then 1 else 0 end) as pending_count")
+            ->selectRaw("sum(case when status = 'in_progress' then 1 else 0 end) as in_progress_count")
+            ->selectRaw("sum(case when status = 'completed' then 1 else 0 end) as completed_count")
+            ->selectRaw("sum(case when status = 'accepted' then 1 else 0 end) as accepted_count")
+            ->selectRaw("sum(case when status = 'rejected' then 1 else 0 end) as rejected_count")
+            ->first();
+
+        // =====================================================================
+        // STEP 2: OPTIMIZED PROJECT COUNTS BY ROLE
+        // =====================================================================
+        $projectQuery = Project::query();
+        if ($role === 'employee') {
+            $projectQuery->whereHas('users', fn($q) => $q->where('users.id', $user->id));
+        } elseif ($role === 'team_leader') {
+            $projectQuery->where('team_id', $user->team_id);
+        } elseif ($role === 'manager') {
+            $projectQuery->where('department', $user->department);
+        }
+        $totalProjects = $projectQuery->count();
+
+        // =====================================================================
+        // STEP 3: USER & TEAM STATS (WITH CONDITIONAL RESTRICTIONS)
+        // =====================================================================
+        if ($role === 'admin' || $role === 'manager') {
+            $totalEmployees = User::where('role', 'employee')->count();
+            $totalManagers = User::where('role', 'manager')->count();
+            $totalTeamLeaders = User::where('role', 'team_leader')->count();
+            $totalTeams = DB::table('teams')->count();
+        } else {
+            $totalEmployees = ($role === 'employee') ? 1 : User::where('role', 'employee')->where('team_id', $user->team_id)->count();
+            $totalManagers = 0;
+            $totalTeamLeaders = 0;
+            $totalTeams = ($role === 'team_leader') ? 1 : 0;
+        }
+
+        // =====================================================================
+        // STEP 4: PREPARE DATA ARRAY
+        // =====================================================================
         $data = [
-            'totalProjects'   => $totalProjects,
-            'totalTasks'      => $totalTasks,
-            'totalEmployees'  => $totalEmployees,
-            'totalManagers'   => $totalManagers,
+            'totalProjects'    => $totalProjects,
+            'totalTasks'       => $taskStats->total_tasks ?? 0,
+            'totalEmployees'   => $totalEmployees,
+            'totalManagers'    => $totalManagers,
+            'totalTeamLeaders' => $totalTeamLeaders,
+            'totalTeams'       => $totalTeams,
 
-            // Extract individual status counts from the optimized collection
-            'pendingTasks'    => $taskStatusCounts['pending'] ?? 0,
-            'inProgressTasks' => $taskStatusCounts['in_progress'] ?? 0,
-            'completedTasks'  => $taskStatusCounts['completed'] ?? 0,
-            'acceptedTasks'   => $taskStatusCounts['accepted'] ?? 0,
-            'rejectedTasks'   => $taskStatusCounts['rejected'] ?? 0,
+            'pendingTasks'     => $taskStats->pending_count ?? 0,
+            'inProgressTasks'  => $taskStats->in_progress_count ?? 0,
+            'completedTasks'   => $taskStats->completed_count ?? 0,
+            'acceptedTasks'    => $taskStats->accepted_count ?? 0,
+            'rejectedTasks'    => $taskStats->rejected_count ?? 0,
         ];
 
-        // Return the dashboard view packed with all computed statistics
         return view('contents.dashboard.Index', $data);
     }
 }

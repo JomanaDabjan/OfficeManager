@@ -19,12 +19,12 @@ class UserStoreRequest extends FormRequest
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'min:8'],
-            'role'          => ['required', 'string'],
+            'role'          => ['required', 'string', 'in:admin,manager,employee,team_leader'],
             'phone'         => ['nullable', 'string', 'max:50'],
             'position'      => ['nullable', 'string', 'max:255'],
             'department'    => ['nullable', 'string', 'max:255'],
             'status'        => ['nullable', 'in:active,deactivated'],
-            'working_hours' => ['nullable', 'integer'],
+            'working_hours' => ['nullable', 'string', 'max:255'],
             'joining_date'  => ['nullable', 'date'],
         ];
     }

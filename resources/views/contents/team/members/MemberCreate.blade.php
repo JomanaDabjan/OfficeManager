@@ -2,6 +2,9 @@
 
 @section('title', 'members add form')
 @section('Main_Content')
+
+@can('update', $team)
+
 <div class="content py-5 d-flex align-items-center justify-content-center" style="min-height: 85vh;">
     <div class="row justify-content-center w-100">
         <div class="col-md-8">
@@ -24,7 +27,7 @@
 
                 <!-- Card Body -->
                 <div class="card-body p-4">
-                    <form action="{{ route('admin.team.store', $team->id) }}" method="POST">
+                    <form action="{{ route('admin.team.members.store', $team->id) }}" method="POST">
                         @csrf
 
                         <!-- Validation Errors Alert -->
@@ -73,7 +76,7 @@
 
                         <!-- Card Footer / Action Buttons -->
                         <div class="d-flex justify-content-end align-items-center pt-3 border-top">
-                            <a href="{{ route('admin.team.create', $team->id) }}"
+                            <a href="{{ route('admin.team.members.create', $team->id) }}"
                                 class="btn btn-secondary btn-round me-2 px-4">Cancel</a>
                             <button type="submit" class="btn btn-round px-4 text-white"
                                 style="background-color: #f97316; border-color: #f97316;">Save Members</button>
@@ -84,4 +87,7 @@
         </div>
     </div>
 </div>
+
+@endcan
+
 @endsection

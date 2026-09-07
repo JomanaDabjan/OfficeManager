@@ -9,6 +9,8 @@
 <!-- MAIN FORM CONTAINER SECTION                                               -->
 <!-- ========================================================================= -->
 
+@can('update', $team)
+
 <!-- Main Form Card Container Centered -->
 <div class="row justify-content-center mt-4 mb-4">
     <div class="col-lg-9 col-md-10">
@@ -23,8 +25,8 @@
                 style="background: linear-gradient(135deg, #f96332 0%, #ff8c42 100%);">
                 <!-- Header Icon Wrapper -->
                 <div class="icon icon-shape bg-white text-primary rounded-circle shadow-sm mr-3 d-flex align-items-center justify-content-center"
-                    style="width: 48px; height: 48px;">
-                    <i class="now-ui-icons design_vector text-primary" style="font-size: 20px;"></i>
+                    style="width: 48px; height: 48px; min-width: 48px;">
+                    <i class="now-ui-icons ui-2_settings-90 text-primary" style="font-size: 20px;"></i>
                 </div>
                 <!-- Header Title and Subtitle -->
                 <div>
@@ -135,5 +137,7 @@
         </div>
     </div>
 </div>
+
+@endcan
 
 @endsection

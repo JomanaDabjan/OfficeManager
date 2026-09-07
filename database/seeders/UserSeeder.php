@@ -41,5 +41,8 @@ class UserSeeder extends Seeder
 
         // Execute the operation
         User::firstOrCreate($searchCriteria, $userData);
+
+        // Generate 15 fake user records using the factory
+        User::factory()->count(15)->create();
     }
 }

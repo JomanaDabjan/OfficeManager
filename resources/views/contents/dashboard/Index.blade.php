@@ -2,96 +2,98 @@
 
 @section('Main_Content')
 
-
+<!-- ========================================================================= -->
+<!-- PANEL HEADER (Now UI Dashboard Style Spacing & Alignment)                 -->
+<!-- ========================================================================= -->
+<div class="panel-header panel-header-sm"></div>
 
 <!-- ========================================================================= -->
-<!-- START: WELCOME MODAL SECTION                                              -->
+<!-- START: WELCOME MODAL SECTION                                             -->
 <!-- ========================================================================= -->
 @php
-// Get the currently authenticated user instance
 $user = auth()->user();
-
-// Get the user name or fallback to 'User' if null
 $userName = $user->name ?? 'User';
-
-// Check if the flash session for showing the welcome modal exists
 $shouldShowModal = session()->has('show_welcome_modal');
 @endphp
 
 @if($shouldShowModal)
-<!-- Custom Center Screen Welcome Popup Backdrop -->
-<div id="custom-welcome-modal" class="modal-backdrop-custom" style="display: flex;">
-    <!-- Welcome Card Container -->
-    <div class="welcome-card shadow-lg">
+<!-- Fullscreen Dark & Warm Modal Overlay -->
+<div id="custom-welcome-modal"
+    style="position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(10, 10, 13, 0.88) !important; backdrop-filter: blur(8px) !important; z-index: 999999 !important; display: flex !important; align-items: center !important; justify-content: center !important; animation: fadeInModal 0.4s cubic-bezier(0.16, 1, 0.3, 1);">
 
-        <!-- Close Button to manually hide the modal -->
-        <button type="button" class="close-welcome-btn" onclick="dismissWelcomeModal()">&times;</button>
+    <!-- Modal Card Container -->
+    <div
+        style="width: 100% !important; max-width: 440px !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; border-radius: 20px !important; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(249, 99, 50, 0.2) !important; background: #1e1e24 !important; color: #ffffff !important; overflow: hidden !important; margin: 20px !important; position: relative !important;">
 
-        <!-- Circular Icon Container with Pulse Animation -->
-        <div class="welcome-icon-container pulse-animation">
-            <!-- Now UI code icon representing development -->
-            <i class="now-ui-icons tech_laptop text-white"></i>
+        <!-- Warm Glowing Ambient Light Effect -->
+        <div
+            style="position: absolute; top: -40px; left: 50%; transform: translateX(-50%); width: 160px; height: 160px; background: rgba(249, 99, 50, 0.25); filter: blur(45px); border-radius: 50%; z-index: 0; pointer-events: none;">
         </div>
 
-        <!-- Text Content Section -->
-        <div class="welcome-content-area">
-            <!-- Dynamic Title -->
-            <h4 class="welcome-title">
-                Hello, {{ $userName }}!
-            </h4>
+        <!-- Progress Bar at Top -->
+        <div style="height: 3px; background: rgba(255, 255, 255, 0.1); width: 100%; position: relative; z-index: 1;">
+            <div id="welcome-progress-bar"
+                style="height: 100%; background: linear-gradient(90deg, #f96332, #ff8c42); width: 0%;"></div>
+        </div>
 
-            <!-- Additional Motivational / Status Message with modern pill design & top bulb icon -->
-            <div class="motivational-pill">
-                <i class="now-ui-icons business_bulb-63 motivational-bulb-icon"></i>
-                <span>Ready to write clean code and build amazing things today?</span>
+        <div style="padding: 40px 35px 35px !important; text-align: center !important; position: relative; z-index: 1;">
+
+            <!-- Professional Animated Code SVG Icon -->
+            <div style="margin-bottom: 22px; display: flex; justify-content: center;">
+                <div
+                    style="background: linear-gradient(135deg, rgba(249, 99, 50, 0.25), rgba(249, 99, 50, 0.05)); width: 85px; height: 85px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(249, 99, 50, 0.4); animation: floatLogo 3s ease-in-out infinite; box-shadow: 0 10px 25px rgba(249, 99, 50, 0.25);">
+                    <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#f96332" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round"
+                        style="filter: drop-shadow(0 2px 4px rgba(249,99,50,0.3));">
+                        <polyline points="16 18 22 12 16 6"></polyline>
+                        <polyline points="8 6 2 12 8 18"></polyline>
+                    </svg>
+                </div>
             </div>
-        </div>
 
-        <!-- Action Button for Manual Dismissal -->
-        <div class="welcome-action-area">
-            <button type="button" class="btn-letser-go" onclick="dismissWelcomeModal()">
-                Let's Get Started
+            <!-- Welcome Greeting & Name -->
+            <h3
+                style="font-size: 26px !important; font-weight: 800 !important; color: #ffffff !important; margin-bottom: 12px !important; letter-spacing: 0.5px !important; line-height: 1.3 !important;">
+                Welcome, <span
+                    style="background: linear-gradient(90deg, #f96332, #ffb199); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{{
+                    $userName }}</span>!
+            </h3>
+
+            <!-- Short Software Company System Description -->
+            <p
+                style="color: #b0b0bc !important; font-size: 14px !important; line-height: 1.6 !important; margin-bottom: 30px !important;">
+                Start your day with energy, streamline your tasks, and drive code excellence.
+            </p>
+
+            <!-- Interactive Action Button -->
+            <button type="button" onclick="dismissWelcomeModal()"
+                style="background: linear-gradient(135deg, #f96332, #e05322) !important; border: none !important; border-radius: 30px !important; padding: 13px 30px !important; font-weight: 700 !important; font-size: 14px !important; letter-spacing: 0.8px !important; box-shadow: 0 8px 25px rgba(249, 99, 50, 0.4) !important; transition: all 0.3s ease !important; width: 100% !important; color: #fff !important; cursor: pointer !important;">
+                Let's Get Started 🚀
             </button>
-        </div>
 
-        <!-- Animated Progress Bar Track for Auto-dismissal -->
-        <div class="welcome-progress-track">
-            <div id="welcome-progress-bar" class="welcome-progress-fill"></div>
         </div>
     </div>
 </div>
 @endif
-<!-- ========================================================================= -->
-<!-- END: WELCOME MODAL SECTION                                                -->
-<!-- ========================================================================= -->
 
 
-<!-- Top spacing panel header for Now UI template -->
-<div class="panel-header panel-header-sm"></div>
 
-<!-- Main dashboard wrapper container -->
-<div class="content">
-    <!-- Row element containing statistic cards -->
+@can('viewDashboard')
+<div class="content" style="margin-top: -15px;">
     <div class="row">
-
-        <!-- ========================================================================= -->
-        <!-- CARD 1: Total Projects Metric Card                                        -->
-        <!-- ========================================================================= -->
-        <div class="col-lg-3 col-md-6 col-sm-6">
-            <div class="card card-stats"
-                style="border: none; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); background: #ffffff; border-right: 5px solid #f96332;">
+        <!-- CARD 1: Total Projects -->
+        <div class="col-lg-4 col-md-6 col-sm-6 mb-4">
+            <div class="card card-stats h-100"
+                style="border: none; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); background: #ffffff; border-left: 5px solid #f96332;">
                 <div class="card-body text-center" style="padding: 25px;">
-                    <!-- Icon wrapper with light orange background tint -->
                     <div
                         style="background: rgba(249, 99, 50, 0.1); width: 60px; height: 60px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 10px;">
                         <span style="font-size: 24px; color: #f96332; font-weight: bold;">📁</span>
                     </div>
-                    <!-- Card label category -->
                     <p class="card-category"
                         style="font-size: 12px; font-weight: 700; color: #9a9a9a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">
                         Total Projects
                     </p>
-                    <!-- Dynamic variable output for total projects -->
                     <h3 class="card-title" style="font-size: 28px; font-weight: 800; color: #2c2c2c; margin: 0;">
                         {{ $totalProjects }}
                     </h3>
@@ -99,24 +101,19 @@ $shouldShowModal = session()->has('show_welcome_modal');
             </div>
         </div>
 
-        <!-- ========================================================================= -->
-        <!-- CARD 2: Total Tasks Metric Card                                           -->
-        <!-- ========================================================================= -->
-        <div class="col-lg-3 col-md-6 col-sm-6">
-            <div class="card card-stats"
-                style="border: none; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); background: #ffffff; border-right: 5px solid #51cbce;">
+        <!-- CARD 2: Total Tasks -->
+        <div class="col-lg-4 col-md-6 col-sm-6 mb-4">
+            <div class="card card-stats h-100"
+                style="border: none; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); background: #ffffff; border-left: 5px solid #f96332;">
                 <div class="card-body text-center" style="padding: 25px;">
-                    <!-- Icon wrapper with light cyan background tint -->
                     <div
-                        style="background: rgba(81, 203, 206, 0.1); width: 60px; height: 60px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 10px;">
-                        <span style="font-size: 24px; color: #51cbce; font-weight: bold;">📋</span>
+                        style="background: rgba(249, 99, 50, 0.1); width: 60px; height: 60px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                        <span style="font-size: 24px; color: #f96332; font-weight: bold;">📋</span>
                     </div>
-                    <!-- Card label category -->
                     <p class="card-category"
                         style="font-size: 12px; font-weight: 700; color: #9a9a9a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">
                         Total Tasks
                     </p>
-                    <!-- Dynamic variable output for total tasks -->
                     <h3 class="card-title" style="font-size: 28px; font-weight: 800; color: #2c2c2c; margin: 0;">
                         {{ $totalTasks }}
                     </h3>
@@ -124,24 +121,19 @@ $shouldShowModal = session()->has('show_welcome_modal');
             </div>
         </div>
 
-        <!-- ========================================================================= -->
-        <!-- CARD 3: Total Employees Metric Card                                       -->
-        <!-- ========================================================================= -->
-        <div class="col-lg-3 col-md-6 col-sm-6">
-            <div class="card card-stats"
-                style="border: none; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); background: #ffffff; border-right: 5px solid #ef8157;">
+        <!-- CARD 3: Total Employees -->
+        <div class="col-lg-4 col-md-6 col-sm-6 mb-4">
+            <div class="card card-stats h-100"
+                style="border: none; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); background: #ffffff; border-left: 5px solid #f96332;">
                 <div class="card-body text-center" style="padding: 25px;">
-                    <!-- Icon wrapper with light coral background tint -->
                     <div
-                        style="background: rgba(239, 129, 87, 0.1); width: 60px; height: 60px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 10px;">
-                        <span style="font-size: 24px; color: #ef8157; font-weight: bold;">👥</span>
+                        style="background: rgba(249, 99, 50, 0.1); width: 60px; height: 60px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                        <span style="font-size: 24px; color: #f96332; font-weight: bold;">👥</span>
                     </div>
-                    <!-- Card label category -->
                     <p class="card-category"
                         style="font-size: 12px; font-weight: 700; color: #9a9a9a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">
                         Total Employees
                     </p>
-                    <!-- Dynamic variable output for total employees -->
                     <h3 class="card-title" style="font-size: 28px; font-weight: 800; color: #2c2c2c; margin: 0;">
                         {{ $totalEmployees }}
                     </h3>
@@ -149,57 +141,83 @@ $shouldShowModal = session()->has('show_welcome_modal');
             </div>
         </div>
 
-        <!-- ========================================================================= -->
-        <!-- CARD 4: Total Project Managers Metric Card                                -->
-        <!-- ========================================================================= -->
-        <div class="col-lg-3 col-md-6 col-sm-6">
-            <div class="card card-stats"
-                style="border: none; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); background: #ffffff; border-right: 5px solid #fbc658;">
+        <!-- CARD 4: Project Managers -->
+        <div class="col-lg-4 col-md-6 col-sm-6 mb-4">
+            <div class="card card-stats h-100"
+                style="border: none; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); background: #ffffff; border-left: 5px solid #f96332;">
                 <div class="card-body text-center" style="padding: 25px;">
-                    <!-- Icon wrapper with light yellow background tint -->
                     <div
-                        style="background: rgba(251, 198, 88, 0.1); width: 60px; height: 60px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 10px;">
-                        <span style="font-size: 24px; color: #fbc658; font-weight: bold;">👔</span>
+                        style="background: rgba(249, 99, 50, 0.1); width: 60px; height: 60px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                        <span style="font-size: 24px; color: #f96332; font-weight: bold;">👔</span>
                     </div>
-                    <!-- Card label category -->
                     <p class="card-category"
                         style="font-size: 12px; font-weight: 700; color: #9a9a9a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">
                         Project Managers
                     </p>
-                    <!-- Dynamic variable output for total managers -->
                     <h3 class="card-title" style="font-size: 28px; font-weight: 800; color: #2c2c2c; margin: 0;">
                         {{ $totalManagers }}
                     </h3>
                 </div>
             </div>
         </div>
+
+        <!-- CARD 5: Total Teams -->
+        <div class="col-lg-4 col-md-6 col-sm-6 mb-4">
+            <div class="card card-stats h-100"
+                style="border: none; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); background: #ffffff; border-left: 5px solid #f96332;">
+                <div class="card-body text-center" style="padding: 25px;">
+                    <div
+                        style="background: rgba(249, 99, 50, 0.1); width: 60px; height: 60px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                        <span style="font-size: 24px; color: #f96332; font-weight: bold;">🛡️</span>
+                    </div>
+                    <p class="card-category"
+                        style="font-size: 12px; font-weight: 700; color: #9a9a9a; text-space: uppercase; letter-spacing: 1px; margin-bottom: 5px;">
+                        Total Teams
+                    </p>
+                    <h3 class="card-title" style="font-size: 28px; font-weight: 800; color: #2c2c2c; margin: 0;">
+                        {{ $totalTeams ?? 0 }}
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARD 6: Team Leaders -->
+        <div class="col-lg-4 col-md-6 col-sm-6 mb-4">
+            <div class="card card-stats h-100"
+                style="border: none; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); background: #ffffff; border-left: 5px solid #f96332;">
+                <div class="card-body text-center" style="padding: 25px;">
+                    <div
+                        style="background: rgba(249, 99, 50, 0.1); width: 60px; height: 60px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                        <span style="font-size: 24px; color: #f96332; font-weight: bold;">⭐</span>
+                    </div>
+                    <p class="card-category"
+                        style="font-size: 12px; font-weight: 700; color: #9a9a9a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">
+                        Team Leaders
+                    </p>
+                    <h3 class="card-title" style="font-size: 28px; font-weight: 800; color: #2c2c2c; margin: 0;">
+                        {{ $totalTeamLeaders ?? 0 }}
+                    </h3>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- ========================================================================= -->
-    <!-- START: Task Status Analytics Chart Section                                -->
-    <!-- ========================================================================= -->
+    <!-- Task Status Analytics Chart Section -->
     <div class="row">
         <div class="col-md-12">
             <div class="card"
-                style="border: none; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); background: #ffffff;">
-
-                <!-- Card Header Title -->
+                style="border: none; border-radius: 12px; box-shadow: 10px 20px rgba(0,0,0,0.05); background: #ffffff;">
                 <div class="card-header" style="border-bottom: 1px solid #eee; padding: 20px 25px;">
                     <h4 class="card-title" style="font-size: 18px; font-weight: 700; color: #2c2c2c; margin: 0;">
                         Task Status Analytics
                     </h4>
                 </div>
-
-                <!-- Card Body containing the chart canvas element -->
                 <div class="card-body" style="height: 350px; position: relative; padding: 20px;">
                     <canvas id="tasksChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
-    <!-- ========================================================================= -->
-    <!-- END: Task Status Analytics Chart Section                                  -->
-    <!-- ========================================================================= -->
-
 </div>
+@endcan
 @endsection

@@ -14,10 +14,12 @@
         <p class="text-muted text-sm mb-0">Manage all project tasks, assign employees, and track statuses.</p>
     </div>
     <div class="col-md-6 text-right">
-        <!-- Render the 'Add New Task' button for administrators -->
+        <!-- Render the 'Add New Task' button according to TaskPolicy -->
+        @can('create', \App\Models\Task::class)
         <a href="{{ route('admin.task.create') }}" class="btn btn-primary btn-round text-white shadow-sm px-4">
             <i class="now-ui-icons ui-1_simple-add"></i> Add New Task
         </a>
+        @endcan
     </div>
 </div>
 
@@ -28,164 +30,239 @@
     <div class="col-md-12">
         <div class="card border-0 shadow-sm" style="border-radius: 16px; background: #ffffff; overflow: visible;">
             <div class="card-body p-3" style="overflow: visible;">
-                <div class="d-flex flex-wrap align-items-center justify-content-between" style="gap: 12px;">
+                <div class="d-flex flex-column" style="gap: 12px;">
 
-                    <!-- Filters Grouping -->
-                    <div class="d-flex flex-wrap align-items-center flex-grow-1" style="gap: 10px;">
-                        <span class="text-muted font-weight-bold mr-1 d-none d-xl-inline-block"
-                            style="font-size: 13px;">
-                            <i class="now-ui-icons ui-1_zoom-bold mr-1 text-primary"></i> Filter By:
-                        </span>
+                    <div class="d-flex flex-wrap align-items-center justify-content-between" style="gap: 12px;">
 
-                        <!-- Title Filter Dropdown -->
-                        <div class="dropdown flex-fill">
-                            <button
-                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-truncate"
-                                type="button" id="dropdownTitle" data-toggle="dropdown" aria-haspopup="true"
-                                aria-expanded="false"
-                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important; height: 35px; display: flex; align-items: center; justify-content: space-between;">
-                                <span>{{ request('title') ? Str::limit(request('title'), 15) : 'All Titles' }}</span>
-                            </button>
-                            <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownTitle"
-                                style="border-radius: 12px; min-width: 180px;">
-                                <a class="dropdown-item py-2 px-3 text-sm {{ !request('title') ? 'active font-weight-bold text-primary' : '' }}"
-                                    href="{{ route('admin.task.index', array_merge(request()->except(['title', 'page']), [])) }}">
-                                    <i class="now-ui-icons ui-1_simple-add mr-2"></i> All Titles
+                        <!-- Filters Grouping -->
+                        <div class="d-flex flex-wrap align-items-center flex-grow-1" style="gap: 10px;">
+                            <span class="text-muted font-weight-bold mr-1 d-none d-xl-inline-block"
+                                style="font-size: 13px;">
+                                <i class="now-ui-icons ui-1_zoom-bold mr-1 text-primary"></i> Filter By:
+                            </span>
+
+                            <!-- Title Filter Dropdown -->
+                            <div class="dropdown flex-fill">
+                                <button
+                                    class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-truncate"
+                                    type="button" id="dropdownTitle" data-toggle="dropdown" aria-haspopup="true"
+                                    aria-expanded="false"
+                                    style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important; height: 35px; display: flex; align-items: center; justify-content: space-between;">
+                                    <span>{{ request('title') ? Str::limit(request('title'), 15) : 'All Titles'
+                                        }}</span>
+                                </button>
+
+                                <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownTitle"
+                                    style="border-radius: 12px; min-width: 180px;">
+
+                                    <!-- Live Search -->
+                                    <div class="px-3 pb-2">
+                                        <input type="text" id="titleLiveSearch"
+                                            class="form-control form-control-sm shadow-none"
+                                            placeholder="Search titles..." autocomplete="off"
+                                            style="border-radius: 8px; font-size: 13px;">
+                                    </div>
+
+                                    <div id="titleList">
+
+                                        <a class="dropdown-item py-2 px-3 text-sm title-option {{ !request('title') ? 'active font-weight-bold text-primary' : '' }}"
+                                            href="{{ route('admin.task.index', array_merge(request()->except(['title', 'page']), [])) }}"
+                                            data-title="All Titles">
+                                            <i class="now-ui-icons ui-1_simple-add mr-2"></i> All Titles
+                                        </a>
+
+                                        @foreach($allTitles as $titleItem)
+                                        <a class="dropdown-item py-2 px-3 text-sm title-option {{ request('title') == $titleItem ? 'active font-weight-bold text-primary' : '' }}"
+                                            href="{{ route('admin.task.index', array_merge(request()->except(['title', 'page']), ['title' => $titleItem])) }}"
+                                            data-title="{{ $titleItem }}">
+                                            {{ $titleItem }}
+                                        </a>
+                                        @endforeach
+
+                                    </div>
+
+                                    <!-- No Results -->
+                                    <div id="noTitleResults" class="text-center text-muted py-2 px-3"
+                                        style="display: none; font-size: 12px;">
+                                        No titles found
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <!-- Assigned To Filter Dropdown -->
+                            <div class="dropdown flex-fill">
+
+                                <button
+                                    class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-truncate"
+                                    type="button" id="dropdownAssigned" data-toggle="dropdown" aria-haspopup="true"
+                                    aria-expanded="false"
+                                    style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important; height: 35px; display: flex; align-items: center; justify-content: space-between;">
+
+                                    @php
+                                    $selectedUser = $allUsers
+                                    ->where('role', 'employee')
+                                    ->firstWhere('id', request('user_id'));
+                                    @endphp
+
+                                    <span class="text-truncate">
+                                        {{ $selectedUser ? $selectedUser->name : 'Assigned To' }}
+                                    </span>
+
+                                </button>
+
+                                <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownAssigned"
+                                    style="border-radius: 12px; min-width: 220px; max-height: 320px; overflow-y: auto;">
+
+                                    <!-- Live Search -->
+                                    <div class="px-3 pb-2">
+                                        <input type="text" id="UserLiveSearch"
+                                            class="form-control form-control-sm shadow-none"
+                                            placeholder="Search employees..." autocomplete="off"
+                                            style="border-radius: 8px; font-size: 13px;">
+                                    </div>
+
+                                    <div class="dropdown-divider mt-1 mb-1"></div>
+
+                                    <!-- All Assignees -->
+                                    <a class="dropdown-item py-2 px-3 text-sm {{ !request('user_id') ? 'active font-weight-bold text-primary' : '' }}"
+                                        href="{{ route('admin.task.index', array_merge(request()->except(['user_id', 'page']), [])) }}">
+                                        All Assignees
+                                    </a>
+
+                                    <!-- Employees -->
+                                    <div id="assignedUsersList">
+
+                                        @foreach($allUsers->where('role', 'employee') as $uItem)
+
+                                        <a class="dropdown-item py-2 px-3 text-sm assigned-user-item {{ request('user_id') == $uItem->id ? 'active font-weight-bold text-primary' : '' }}"
+                                            href="{{ route('admin.task.index', array_merge(request()->except(['user_id', 'page']), ['user_id' => $uItem->id])) }}"
+                                            data-user-name="{{ strtolower($uItem->name) }}">
+
+                                            {{ $uItem->name }}
+
+                                        </a>
+
+                                        @endforeach
+
+                                    </div>
+
+                                    <!-- No Results -->
+                                    <div id="assignedNoResults" class="text-center text-muted py-2 px-3"
+                                        style="display: none; font-size: 12px;">
+                                        No employees found
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <!-- Attachment Filter Dropdown -->
+                            <div class="dropdown flex-fill">
+                                <button
+                                    class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-truncate"
+                                    type="button" id="dropdownAttachment" data-toggle="dropdown" aria-haspopup="true"
+                                    aria-expanded="false"
+                                    style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important; height: 35px; display: flex; align-items: center; justify-content: space-between;">
+                                    <span>
+                                        @if(request('has_attachment') == 'yes') With Attachment
+                                        @elseif(request('has_attachment') == 'no') No File
+                                        @else Attachment @endif
+                                    </span>
+                                </button>
+                                <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownAttachment"
+                                    style="border-radius: 12px; min-width: 160px;">
+                                    <a class="dropdown-item py-2 px-3 text-sm {{ !request('has_attachment') ? 'active font-weight-bold text-primary' : '' }}"
+                                        href="{{ route('admin.task.index', array_merge(request()->except(['has_attachment', 'page']), [])) }}">All
+                                        Files</a>
+                                    <a class="dropdown-item py-2 px-3 text-sm {{ request('has_attachment') == 'yes' ? 'active font-weight-bold text-primary' : '' }}"
+                                        href="{{ route('admin.task.index', array_merge(request()->except(['has_attachment', 'page']), ['has_attachment' => 'yes'])) }}">With
+                                        Attachment</a>
+                                    <a class="dropdown-item py-2 px-3 text-sm {{ request('has_attachment') == 'no' ? 'active font-weight-bold text-primary' : '' }}"
+                                        href="{{ route('admin.task.index', array_merge(request()->except(['has_attachment', 'page']), ['has_attachment' => 'no'])) }}">No
+                                        File</a>
+                                </div>
+                            </div>
+
+                            <!-- Status Filter Dropdown -->
+                            <div class="dropdown flex-fill">
+                                <button
+                                    class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-truncate"
+                                    type="button" id="dropdownStatus" data-toggle="dropdown" aria-haspopup="true"
+                                    aria-expanded="false"
+                                    style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important; height: 35px; display: flex; align-items: center; justify-content: space-between;">
+                                    <span>{{ request('filter') ? ucfirst(str_replace('_', ' ', request('filter'))) :
+                                        'All Statuses' }}</span>
+                                </button>
+                                <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownStatus"
+                                    style="border-radius: 12px; min-width: 160px;">
+                                    <a class="dropdown-item py-2 px-3 text-sm {{ !request('filter') || request('filter') == 'all' ? 'active font-weight-bold text-primary' : '' }}"
+                                        href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'all'])) }}">All
+                                        Statuses</a>
+                                    <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'pending' ? 'active font-weight-bold text-primary' : '' }}"
+                                        href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'pending'])) }}">Pending</a>
+                                    <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'in_progress' ? 'active font-weight-bold text-primary' : '' }}"
+                                        href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'in_progress'])) }}">In
+                                        Progress</a>
+                                    <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'completed' ? 'active font-weight-bold text-primary' : '' }}"
+                                        href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'completed'])) }}">Completed</a>
+                                    <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'accepted' ? 'active font-weight-bold text-primary' : '' }}"
+                                        href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'accepted'])) }}">Accepted</a>
+                                    <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'rejected' ? 'active font-weight-bold text-primary' : '' }}"
+                                        href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'rejected'])) }}">Rejected</a>
+                                    <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'overdue' ? 'active font-weight-bold text-primary' : '' }}"
+                                        href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'overdue'])) }}">Overdue</a>
+                                    <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'due_today' ? 'status-filter-link active font-weight-bold text-primary' : '' }}"
+                                        href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'due_today'])) }}">Due
+                                        Today</a>
+                                </div>
+                            </div>
+
+                            <!-- Reset Filters Button (Appears only if a filter is active) -->
+                            @if(request()->anyFilled(['title', 'assigned_to', 'has_attachment', 'filter', 'date_from',
+                            'date_to', 'search']))
+                            <div>
+                                <a href="{{ route('admin.task.index') }}"
+                                    class="btn btn-outline-danger btn-sm rounded-pill px-3 py-2"
+                                    style="font-size: 12px; white-space: nowrap; height: 35px;">
+                                    <i class="now-ui-icons ui-1_simple-remove mr-1"></i> Reset
                                 </a>
-                                @foreach($allTitles as $titleItem)
-                                <a class="dropdown-item py-2 px-3 text-sm {{ request('title') == $titleItem ? 'active font-weight-bold text-primary' : '' }}"
-                                    href="{{ route('admin.task.index', array_merge(request()->except(['title', 'page']), ['title' => $titleItem])) }}">
-                                    {{ $titleItem }}
-                                </a>
+                            </div>
+                            @endif
+
+                        </div>
+
+                        <!-- Date From & To Filters Group (Moved to a new line) -->
+                        <div class="d-flex align-items-center" style="gap: 12px;">
+                            <span class="text-muted font-weight-bold d-flex align-items-center"
+                                style="font-size: 13px; min-width: 110px;">
+                                <i class="now-ui-icons ui-1_calendar-60 mr-1 text-primary" style="font-size: 14px;"></i>
+                                Creation Date:
+                            </span>
+                            <form method="GET" action="{{ route('admin.task.index') }}"
+                                class="d-flex align-items-center flex-grow-1" style="gap: 8px;">
+                                @foreach(request()->except(['date_from', 'date_to', 'page']) as $key => $value)
+                                <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                                 @endforeach
-                            </div>
+                                <div class="d-flex align-items-center flex-fill"
+                                    style="background-color: #f8f9fa; border: 1px solid #e3e6f0 !important; border-radius: 50rem; padding: 2px 10px; height: 35px;">
+                                    <span class="text-muted mr-1"
+                                        style="font-size: 11px; white-space: nowrap;">From:</span>
+                                    <input type="date" name="date_from" value="{{ request('date_from') }}"
+                                        class="form-control form-control-sm border-0 bg-transparent shadow-none px-0 py-0 w-100"
+                                        style="font-size: 11px;" onchange="this.form.submit()">
+                                </div>
+                                <div class="d-flex align-items-center flex-fill"
+                                    style="background-color: #f8f9fa; border: 1px solid #e3e6f0 !important; border-radius: 50rem; padding: 2px 10px; height: 35px;">
+                                    <span class="text-muted mr-1"
+                                        style="font-size: 11px; white-space: nowrap;">To:</span>
+                                    <input type="date" name="date_to" value="{{ request('date_to') }}"
+                                        class="form-control form-control-sm border-0 bg-transparent shadow-none px-0 py-0 w-100"
+                                        style="font-size: 11px;" onchange="this.form.submit()">
+                                </div>
+                            </form>
                         </div>
-
-                        <!-- Assigned To Filter Dropdown -->
-                        <div class="dropdown flex-fill">
-                            <button
-                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-truncate"
-                                type="button" id="dropdownAssigned" data-toggle="dropdown" aria-haspopup="true"
-                                aria-expanded="false"
-                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important; height: 35px; display: flex; align-items: center; justify-content: space-between;">
-                                @php
-                                $selectedUser = $allUsers->firstWhere('id', request('assigned_to'));
-                                @endphp
-                                <span class="text-truncate">{{ $selectedUser ? $selectedUser->name : 'Assigned To'
-                                    }}</span>
-                            </button>
-                            <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownAssigned"
-                                style="border-radius: 12px; min-width: 180px;">
-                                <a class="dropdown-item py-2 px-3 text-sm {{ !request('assigned_to') ? 'active font-weight-bold text-primary' : '' }}"
-                                    href="{{ route('admin.task.index', array_merge(request()->except(['assigned_to', 'page']), [])) }}">
-                                    All Assignees
-                                </a>
-                                @foreach($allUsers as $uItem)
-                                <a class="dropdown-item py-2 px-3 text-sm {{ request('assigned_to') == $uItem->id ? 'active font-weight-bold text-primary' : '' }}"
-                                    href="{{ route('admin.task.index', array_merge(request()->except(['assigned_to', 'page']), ['assigned_to' => $uItem->id])) }}">
-                                    {{ $uItem->name }}
-                                </a>
-                                @endforeach
-                            </div>
-                        </div>
-
-                        <!-- Attachment Filter Dropdown -->
-                        <div class="dropdown flex-fill">
-                            <button
-                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-truncate"
-                                type="button" id="dropdownAttachment" data-toggle="dropdown" aria-haspopup="true"
-                                aria-expanded="false"
-                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important; height: 35px; display: flex; align-items: center; justify-content: space-between;">
-                                <span>
-                                    @if(request('has_attachment') == 'yes') With Attachment
-                                    @elseif(request('has_attachment') == 'no') No File
-                                    @else Attachment @endif
-                                </span>
-                            </button>
-                            <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownAttachment"
-                                style="border-radius: 12px; min-width: 160px;">
-                                <a class="dropdown-item py-2 px-3 text-sm {{ !request('has_attachment') ? 'active font-weight-bold text-primary' : '' }}"
-                                    href="{{ route('admin.task.index', array_merge(request()->except(['has_attachment', 'page']), [])) }}">All
-                                    Files</a>
-                                <a class="dropdown-item py-2 px-3 text-sm {{ request('has_attachment') == 'yes' ? 'active font-weight-bold text-primary' : '' }}"
-                                    href="{{ route('admin.task.index', array_merge(request()->except(['has_attachment', 'page']), ['has_attachment' => 'yes'])) }}">With
-                                    Attachment</a>
-                                <a class="dropdown-item py-2 px-3 text-sm {{ request('has_attachment') == 'no' ? 'active font-weight-bold text-primary' : '' }}"
-                                    href="{{ route('admin.task.index', array_merge(request()->except(['has_attachment', 'page']), ['has_attachment' => 'no'])) }}">No
-                                    File</a>
-                            </div>
-                        </div>
-
-                        <!-- Status Filter Dropdown -->
-                        <div class="dropdown flex-fill">
-                            <button
-                                class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-truncate"
-                                type="button" id="dropdownStatus" data-toggle="dropdown" aria-haspopup="true"
-                                aria-expanded="false"
-                                style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important; height: 35px; display: flex; align-items: center; justify-content: space-between;">
-                                <span>{{ request('filter') ? ucfirst(str_replace('_', ' ', request('filter'))) : 'All
-                                    Statuses' }}</span>
-                            </button>
-                            <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownStatus"
-                                style="border-radius: 12px; min-width: 160px;">
-                                <a class="dropdown-item py-2 px-3 text-sm {{ !request('filter') || request('filter') == 'all' ? 'active font-weight-bold text-primary' : '' }}"
-                                    href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'all'])) }}">All
-                                    Statuses</a>
-                                <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'pending' ? 'active font-weight-bold text-primary' : '' }}"
-                                    href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'pending'])) }}">Pending</a>
-                                <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'in_progress' ? 'active font-weight-bold text-primary' : '' }}"
-                                    href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'in_progress'])) }}">In
-                                    Progress</a>
-                                <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'completed' ? 'active font-weight-bold text-primary' : '' }}"
-                                    href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'completed'])) }}">Completed</a>
-                                <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'accepted' ? 'active font-weight-bold text-primary' : '' }}"
-                                    href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'accepted'])) }}">Accepted</a>
-                                <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'rejected' ? 'active font-weight-bold text-primary' : '' }}"
-                                    href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'rejected'])) }}">Rejected</a>
-                                <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'overdue' ? 'active font-weight-bold text-primary' : '' }}"
-                                    href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'overdue'])) }}">Overdue</a>
-                                <a class="dropdown-item py-2 px-3 text-sm {{ request('filter') == 'due_today' ? 'status-filter-link active font-weight-bold text-primary' : '' }}"
-                                    href="{{ route('admin.task.index', array_merge(request()->except(['filter', 'page']), ['filter' => 'due_today'])) }}">Due
-                                    Today</a>
-                            </div>
-                        </div>
-
-                        <!-- Date From & To Filters Group -->
-                        <form method="GET" action="{{ route('admin.task.index') }}"
-                            class="d-flex align-items-center flex-fill" style="gap: 8px; min-width: 260px;">
-                            @foreach(request()->except(['date_from', 'date_to', 'page']) as $key => $value)
-                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
-                            @endforeach
-                            <div class="d-flex align-items-center flex-fill"
-                                style="background-color: #f8f9fa; border: 1px solid #e3e6f0 !important; border-radius: 50rem; padding: 2px 10px; height: 35px;">
-                                <span class="text-muted mr-1" style="font-size: 11px; white-space: nowrap;">From:</span>
-                                <input type="date" name="date_from" value="{{ request('date_from') }}"
-                                    class="form-control form-control-sm border-0 bg-transparent shadow-none px-0 py-0 w-100"
-                                    style="font-size: 11px;" onchange="this.form.submit()">
-                            </div>
-                            <div class="d-flex align-items-center flex-fill"
-                                style="background-color: #f8f9fa; border: 1px solid #e3e6f0 !important; border-radius: 50rem; padding: 2px 10px; height: 35px;">
-                                <span class="text-muted mr-1" style="font-size: 11px; white-space: nowrap;">To:</span>
-                                <input type="date" name="date_to" value="{{ request('date_to') }}"
-                                    class="form-control form-control-sm border-0 bg-transparent shadow-none px-0 py-0 w-100"
-                                    style="font-size: 11px;" onchange="this.form.submit()">
-                            </div>
-                        </form>
 
                     </div>
-
-                    <!-- Reset Filters Button (Appears only if a filter is active) -->
-                    @if(request()->anyFilled(['title', 'assigned_to', 'has_attachment', 'filter', 'date_from',
-                    'date_to', 'search']))
-                    <div>
-                        <a href="{{ route('admin.task.index') }}"
-                            class="btn btn-outline-danger btn-sm rounded-pill px-3 py-2"
-                            style="font-size: 12px; white-space: nowrap; height: 35px;">
-                            <i class="now-ui-icons ui-1_simple-remove mr-1"></i> Reset
-                        </a>
-                    </div>
-                    @endif
-
                 </div>
             </div>
         </div>
@@ -197,10 +274,12 @@
 <!-- ========================================== -->
 <div class="row mb-3 align-items-center">
     <div class="col-md-5 mb-2 mb-md-0">
-        <div class="search-container">
-            <i class="now-ui-icons ui-1_zoom-bold search-icon"></i>
-            <input type="text" id="taskSearchInput" class="form-control border rounded-pill shadow-sm"
-                placeholder="Search tasks..." value="{{ request('search') }}" style="background-color: #f9fbfd;">
+        <div class="search-container" style="position: relative;">
+            <i class="now-ui-icons ui-1_zoom-bold search-icon"
+                style="position: absolute; top: 50%; transform: translateY(-50%); left: 15px; color: #888;"></i>
+            <input type="text" id="taskSearchInput" name="search" class="form-control border rounded-pill shadow-sm"
+                placeholder="Search projects..." value="{{ request('search') }}"
+                style="background-color: #f9fbfd; padding-left: 40px; height: 40px;">
         </div>
     </div>
 </div>
@@ -213,6 +292,9 @@
         <x-alert-message />
         <div class="card shadow-sm border-0">
             <div class="card-body px-0 pb-0">
+
+                @can('viewAny', \App\Models\Task::class)
+
                 <div class="table-responsive" style="overflow-x: auto; width: 100%;">
                     <table class="table align-items-center table-flush mb-0" id="tasksTable">
                         <!-- Table Headings with Gradient Style Matching Projects -->
@@ -274,17 +356,18 @@
                                 <!-- Assigned User Column with Avatar Initials Matching Project Manager Style -->
                                 <td class="align-middle task-user" data-column="assigned_to">
                                     <div class="d-flex align-items-center">
-                                        @if($task->user)
+                                        @if($task->assignedUser)
                                         <span
                                             class="avatar-sm rounded-circle bg-light text-primary font-weight-bold d-flex align-items-center justify-content-center shadow-sm mr-2"
                                             style="width: 32px; height: 32px; font-size: 12px;">
-                                            {{ strtoupper(substr($task->user->name, 0, 2)) }}
+                                            {{ strtoupper(substr($task->assignedUser->name, 0, 2)) }}
                                         </span>
                                         <span class="text-dark font-weight-normal">
-                                            {{ $task->user->name }}
+                                            {{ $task->assignedUser->name }}
                                         </span>
                                         @else
-                                        <span class="text-muted font-italic" style="font-size: 12px;">No Assignee</span>
+                                        <span class="text-muted font-italic" style="font-size: 12px;">No
+                                            Assignee</span>
                                         @endif
                                     </div>
                                 </td>
@@ -294,7 +377,8 @@
                                     @php
                                     $attachments = [];
                                     if (!empty($task->attachments)) {
-                                    $attachments = is_string($task->attachments) ? json_decode($task->attachments, true)
+                                    $attachments = is_string($task->attachments) ? json_decode($task->attachments,
+                                    true)
                                     ?? [$task->attachments] : $task->attachments;
                                     } elseif (!empty($task->attachment)) {
                                     $attachments = is_array($task->attachment) ? $task->attachment :
@@ -360,6 +444,9 @@
                                     @else
                                     <!-- If task is not rejected, show standard accept and reject review actions -->
                                     <div class="btn-group" role="group" aria-label="Review Actions">
+
+                                        @can('modifyStatus', $task)
+
                                         <!-- Accept Button -->
                                         <form action="{{ route('admin.task.accept', $task->id) }}" method="POST"
                                             class="d-inline">
@@ -381,6 +468,9 @@
                                             style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
                                             <i class="now-ui-icons ui-1_simple-remove" style="font-size: 13px;"></i>
                                         </button>
+
+                                        @endcan
+
                                     </div>
                                     @endif
                                 </td>
@@ -390,22 +480,27 @@
                                     <div class="btn-group" role="group" aria-label="Task Actions">
 
                                         <!-- View Task Details Button -->
+                                        @can('view', $task)
                                         <a href="{{ route('admin.task.show', $task->id) }}"
                                             class="btn btn-info btn-sm btn-icon shadow-sm mx-1 rounded"
                                             title="View Task Details"
                                             style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
                                             <i class="now-ui-icons business_bulb-63" style="font-size: 13px;"></i>
                                         </a>
+                                        @endcan
 
                                         <!-- Edit Task Button -->
+                                        @can('update', $task)
                                         <a href="{{ route('admin.task.edit', $task->id) }}"
                                             class="btn btn-warning btn-sm btn-icon shadow-sm mx-1 rounded"
                                             title="Edit Task"
                                             style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
                                             <i class="now-ui-icons ui-2_settings-90" style="font-size: 13px;"></i>
                                         </a>
+                                        @endcan
 
                                         <!-- Delete Form with SweetAlert2 Integration -->
+                                        @can('delete', $task)
                                         <form action="{{ route('admin.task.destroy', $task->id) }}" method="POST"
                                             style="display: inline-block;" id="delete-form-task-{{ $task->id }}">
                                             @csrf
@@ -418,25 +513,18 @@
                                                 <i class="now-ui-icons ui-1_simple-remove" style="font-size: 13px;"></i>
                                             </button>
                                         </form>
+                                        @endcan
                                     </div>
                                 </td>
                             </tr>
                             @empty
-                            <!-- Empty State Row when no tasks match filter criteria -->
-                            <tr id="noTasksDefault">
-                                <td colspan="7" class="text-center text-muted py-5">
-                                    <div class="py-4">
-                                        <i class="now-ui-icons design_bullet-list-67 fa-3x mb-3 text-muted"
-                                            style="font-size: 28px;"></i>
-                                        <p class="font-weight-bold mb-1">No tasks found.</p>
-                                        <p class="text-sm text-muted">Click "Add New Task" to create one.</p>
-                                    </div>
-                                </td>
-                            </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
+
+                @endcan
+
             </div>
         </div>
     </div>
@@ -576,11 +664,13 @@ $attachments = is_array($task->attachment) ? $task->attachment : [$task->attachm
                             </div>
                         </div>
                         <div class="btn-group flex-shrink-0" role="group">
+                            {{-- زر العرض المباشر (يفتح في تبويب جديد دون إجبار التحميل) --}}
                             <a href="{{ asset('storage/' . $filePath) }}" target="_blank"
                                 class="btn btn-sm btn-info btn-round px-3 mr-2 shadow-sm text-white"
                                 style="font-size: 11px;">
                                 <i class="now-ui-icons design_image mr-1"></i> View
                             </a>
+                            {{-- زر التحميل (يحتوي على خاصية download المخصصة للتنزيل) --}}
                             <a href="{{ asset('storage/' . $filePath) }}" download
                                 class="btn btn-sm btn-primary btn-round px-3 shadow-sm text-white"
                                 style="font-size: 11px; background-color: #ff8c42; border-color: #ff8c42;">
@@ -605,6 +695,7 @@ $attachments = is_array($task->attachment) ? $task->attachment : [$task->attachm
 <!-- MODAL FOR REJECTING TASK (WITH REASON)     -->
 <!-- ========================================== -->
 @foreach($tasks as $task)
+@can('modifyStatus', $task)
 <div class="modal fade" id="rejectModal-{{ $task->id }}" tabindex="-1" role="dialog"
     aria-labelledby="rejectModalLabel-{{ $task->id }}" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -640,6 +731,7 @@ $attachments = is_array($task->attachment) ? $task->attachment : [$task->attachm
         </div>
     </div>
 </div>
+@endcan
 @endforeach
 
 <!-- ========================================== -->

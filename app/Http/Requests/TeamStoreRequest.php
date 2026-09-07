@@ -49,6 +49,9 @@ class TeamStoreRequest extends FormRequest
             /* The project ID is required and must exist in the projects table */
             'project_id' => ['required', 'exists:projects,id'],
 
+            /* The team leader ID is required and must exist in the users table */
+            'team_leader_id' => ['required', 'exists:users,id'],
+
             /* Members must be sent as an array of user IDs, and each user must exist */
             'members'    => ['nullable', 'array'],
             'members.*'  => ['exists:users,id'],

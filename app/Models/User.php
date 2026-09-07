@@ -7,17 +7,25 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Builder; // Added for Query Scope Builder typing
 
+// =========================================================================
+// MAIN USER MODEL CLASS DEFINITION
+// =========================================================================
+
+/**
+ * The User Model represents the 'users' table in the database.
+ * It extends Laravel's Authenticatable class to handle user authentication,
+ * relationships, and custom query scopes.
+ */
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+    // =========================================================================
+    // MASS ASSIGNMENT PROTECTION (FILLABLE ATTRIBUTES)
+    // =========================================================================
     protected $fillable = [
         'name',
         'email',
@@ -31,21 +39,17 @@ class User extends Authenticatable
         'joining_date',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
+    // =========================================================================
+    // HIDDEN ATTRIBUTES FOR SERIALIZATION
+    // =========================================================================
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    // =========================================================================
+    // ATTRIBUTE CASTING CONFIGURATION
+    // =========================================================================
     protected function casts(): array
     {
         return [
@@ -54,7 +58,10 @@ class User extends Authenticatable
         ];
     }
 
-    // It means that a user can be associated with multiple projects (as an employee), and the relationship is defined through a pivot table named 'project_user'. The pivot table will contain the foreign keys for both the user and the project, along with an additional 'role' column to specify the role of the user in the project.
+    // =========================================================================
+    // ELOQUENT RELATIONSHIPS SECTION
+    // =========================================================================
+
     public function projects()
     {
         return $this->belongsToMany(Project::class, 'project_user')->withPivot('role');
@@ -65,27 +72,89 @@ class User extends Authenticatable
         return $this->hasMany(Task::class);
     }
 
-    // It means that a manager can manage multiple projects, and each project belongs to one manager. The foreign key in the projects table (manager_id) will reference the id of the user who is the manager.
     public function managedProjects()
     {
         return $this->hasMany(Project::class, 'manager_id');
     }
 
-    /**
-     * العلاقة الأولى: الفرق التي يقودها هذا المستخدم (في حال كان Manager أو Admin وقائداً لفريق).
-     * تعتمد على المفتاح الأجنبي team_leader_id في جدول teams.
-     */
     public function ledTeams()
     {
         return $this->hasMany(Team::class, 'team_leader_id');
     }
 
-    /**
-     * العلاقة الثانية: الفرق التي ينتمي إليها المستخدم كعضو عادي (إذا كان جدول الفرق يربط الأعضاء عبر جدول وسيط أو مفتاح أجنبي).
-     * تفترض وجود علاقة Many-to-Many عبر جدول team_user أو عمود team_id.
-     */
     public function teams()
     {
         return $this->belongsToMany(Team::class, 'team_user');
+    }
+
+    public function collaboratingTasks()
+    {
+        return $this->belongsToMany(Task::class, 'task_user', 'user_id', 'task_id')->withTimestamps();
+    }
+
+    // =========================================================================
+    // LOCAL QUERY SCOPES FOR FILTERING USERS
+    // =========================================================================
+
+    public function scopeFilter(Builder $query, array $filters): Builder
+    {
+        // -----------------------------------------------------------------
+        // 1. FILTER BY USER NAME
+        // -----------------------------------------------------------------
+        $query->when($filters['name'] ?? null, function ($query, $name) {
+            $query->where('name', $name);
+        });
+
+        // -----------------------------------------------------------------
+        // 2. FILTER BY USER ROLE
+        // -----------------------------------------------------------------
+        $query->when($filters['role'] ?? null, function ($query, $role) {
+            if ($role !== 'all') {
+                if (strtolower($role) === 'project manager' || strtolower($role) === 'manager' || strtolower($role) === 'project_manager') {
+                    $query->where('role', 'Manager');
+                } else {
+                    $query->where('role', $role);
+                }
+            }
+        });
+
+        // -----------------------------------------------------------------
+        // 3. FILTER BY JOB POSITION
+        // -----------------------------------------------------------------
+        $query->when($filters['position'] ?? null, function ($query, $position) {
+            $query->where('position', $position);
+        });
+
+        // -----------------------------------------------------------------
+        // 4. FILTER BY DEPARTMENT
+        // -----------------------------------------------------------------
+        $query->when($filters['department'] ?? null, function ($query, $department) {
+            $query->where('department', $department);
+        });
+
+        // -----------------------------------------------------------------
+        // 5. FILTER BY ACCOUNT STATUS
+        // -----------------------------------------------------------------
+        $query->when($filters['status'] ?? null, function ($query, $status) {
+            if ($status !== 'all') {
+                $query->where('status', $status);
+            }
+        });
+
+        // -----------------------------------------------------------------
+        // 6. FILTER BY JOINING DATE START RANGE (DATE FROM)
+        // -----------------------------------------------------------------
+        $query->when($filters['date_from'] ?? null, function ($query, $dateFrom) {
+            $query->whereDate('joining_date', '>=', $dateFrom);
+        });
+
+        // -----------------------------------------------------------------
+        // 7. FILTER BY JOINING DATE END RANGE (DATE TO)
+        // -----------------------------------------------------------------
+        $query->when($filters['date_to'] ?? null, function ($query, $dateTo) {
+            $query->whereDate('joining_date', '<=', $dateTo);
+        });
+
+        return $query;
     }
 }

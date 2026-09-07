@@ -63,7 +63,7 @@ class Task extends Model
     }
 
     /**
-     * Relationship: A task belongs to an assigned user (alternative naming).
+     * Relationship: A task belongs to an assigned user.
      * The foreign key 'user_id' explicitly links the task to the users table stored in the database.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -74,13 +74,14 @@ class Task extends Model
     }
 
     /**
-     * Relationship: A task belongs to a standard user.
+     * Relationship: A task can have multiple collaborating users (Many-to-Many).
+     * Requires a pivot table named 'task_user' (or custom).
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function user()
+    public function collaborators()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsToMany(User::class, 'task_user', 'task_id', 'user_id')->withTimestamps();
     }
 
     /**
@@ -293,7 +294,7 @@ class Task extends Model
         }
 
         /* Filter by user ID if provided and not set to 'all' */
-        if ($request->filled('year') || ($request->filled('user_id') && $request->user_id != 'all')) {
+        if ($request->filled('year') || ($request->filled('user_id') && $request->user_id != 'alt')) {
             if ($request->filled('user_id') && $request->user_id != 'all') {
                 $query->where('user_id', $request->user_id);
             }

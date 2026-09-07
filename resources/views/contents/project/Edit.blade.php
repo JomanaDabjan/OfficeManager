@@ -5,13 +5,16 @@
 
 @section('Main_Content')
 
-<!--
-  ====================================================================
-  PROJECT EDIT FORM CONTAINER
-  ====================================================================
-  Main wrapper centering the edit form card within the administrative layout.
-  ====================================================================
+<!-- 
+  ==================================================================== 
+  PROJECT EDIT FORM CONTAINER 
+  ==================================================================== 
+  Main wrapper centering the edit form card within the administrative layout. 
+  ==================================================================== 
 -->
+
+@can('update', $project)
+
 <div class="row justify-content-center">
     <div class="col-lg-9 col-md-10">
         <x-alert-message />
@@ -127,12 +130,12 @@
                         </div>
                     </div>
 
-                    <!--
-                      ====================================================================
-                      FORM ACTION BUTTONS SECTION
-                      ====================================================================
-                      Contains navigation cancel button and submission trigger button.
-                      ====================================================================
+                    <!-- 
+                      ==================================================================== 
+                      FORM ACTION BUTTONS SECTION 
+                      ==================================================================== 
+                      Contains navigation cancel button and submission trigger button. 
+                      ==================================================================== 
                     -->
                     <div class="row mt-4">
                         <div class="col-md-12 text-right">
@@ -154,5 +157,7 @@
         </div>
     </div>
 </div>
+
+@endcan
 
 @endsection

@@ -13,65 +13,66 @@
     <div class="sidebar-wrapper">
         <ul class="nav">
             <!-- Dashboard -->
+            @can('viewAny', App\Models\User::class)
             <li class="{{ request()->routeIs('admin.dash*') ? 'active' : '' }}">
                 <a href="{{ route('admin.dash.index') }}">
                     <i class="now-ui-icons design_app"></i>
                     <p>Dashboard</p>
                 </a>
             </li>
+            @endcan
 
             <!-- User Dropdown (Kept as requested) -->
-            <li class="{{ request()->routeIs('admin.users*') ? 'active' : '' }}">
-                <a data-toggle="collapse" href="#userDropdown"
-                    aria-expanded="{{ request()->routeIs('admin.users*') ? 'true' : 'false' }}">
-                    <i class="now-ui-icons users_single-02"></i>
-                    <p>User <b class="caret"></b></p>
+            @can('viewAny', App\Models\User::class)
+            <li class="{{ request()->routeIs('admin.user*') ? 'active' : '' }}">
+                <a href="{{ route('admin.user.index') }}">
+                    <i class=" now-ui-icons users_single-02"></i>
+                    <p>User</p>
                 </a>
-                <div class="collapse {{ request()->routeIs('admin.users*') ? 'show' : '' }}" id="userDropdown">
-                    <ul class="nav">
-                        <!--<li class="{{ request()->routeIs('admin.users.manager') ? 'active' : '' }}">
-                            <a href="#">Project Manager Profile</a>
-                        </li>-->
-                        <li class="{{ request()->routeIs('admin.users.employee') ? 'active' : '' }}">
-                            <a href="{{ route('admin.user.index', ['role' => 'employee']) }}">Employee Profile</a>
-                        </li>
-                    </ul>
-                </div>
             </li>
+            @endcan
 
 
             <!-- Team (Direct Link without Submenu) -->
+            @can('viewAny', App\Models\Team::class)
             <li class="{{ request()->routeIs('admin.team*') ? 'active' : '' }}">
                 <a href="{{ route('admin.team.index') }}">
                     <i class="now-ui-icons users_circle-08"></i>
                     <p>Team</p>
                 </a>
             </li>
+            @endcan
 
 
             <!-- Project (Direct Link without Submenu) -->
+            @can('viewAny', App\Models\Project::class)
             <li class="{{ request()->routeIs('admin.project*') ? 'active' : '' }}">
                 <a href="{{ route('admin.project.index') }}">
                     <i class="now-ui-icons business_briefcase-24"></i>
                     <p>Project</p>
                 </a>
             </li>
+            @endcan
 
             <!-- Task (Direct Link without Submenu) -->
+            @can('viewAny', App\Models\Task::class)
             <li class="{{ request()->routeIs('admin.task*') ? 'active' : '' }}">
                 <a href="{{ route('admin.task.index') }}">
                     <i class="now-ui-icons design_bullet-list-67"></i>
                     <p>Task</p>
                 </a>
             </li>
+            @endcan
 
             <!-- Report (Direct Link without Submenu) -->
+            @can('viewAny', App\Models\Report::class)
             <li class="{{ request()->routeIs('admin.report*') ? 'active' : '' }}">
                 <a href="{{ route('admin.report.index') }}">
                     <i class="now-ui-icons files_paper"></i>
                     <p>Report</p>
                 </a>
             </li>
+            @endcan
         </ul>
     </div>
 </div>

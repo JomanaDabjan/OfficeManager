@@ -46,6 +46,13 @@ class ProjectController extends Controller
         // Fetch projects, apply role permissions, search filters, and order
         // by latest while maintaining query parameters in pagination links.
         $projects = Project::with('manager')
+            ->when($request->filled('user_id'), function ($q) use ($request) {
+                // فلترة المشاريع التي يمتلكها أو يديرها هذا المستخدم المحدد من صفحة الـ Show
+                $q->where(function ($subQ) use ($request) {
+                    $subQ->where('manager_id', $request->user_id)
+                        ->orWhereHas('users', fn($uQuery) => $uQuery->where('users.id', $request->user_id));
+                });
+            })
             ->filterAndSearch($user, $request)
             ->latest()
             ->paginate(10)
@@ -55,8 +62,17 @@ class ProjectController extends Controller
         // 2. PREPARING DATA FOR VIEW FILTER DROPDOWNS
         // -----------------------------------------------------------------
         // Fetch unique project titles and managers who actually manage projects.
-        $allTitles = Project::select('title')->distinct()->pluck('title');
-        $managers  = User::whereHas('managedProjects')->select('id', 'name')->distinct()->get();
+        $allTitles = Project::select('title')
+            ->when($request->filled('user_id'), function ($q) use ($request) {
+                $q->where(function ($subQ) use ($request) {
+                    $subQ->where('manager_id', $request->user_id)
+                        ->orWhereHas('users', fn($uQuery) => $uQuery->where('users.id', $request->user_id));
+                });
+            })
+            ->distinct()
+            ->pluck('title');
+
+        $managers = User::whereHas('managedProjects')->select('id', 'name')->distinct()->get();
 
         // Return view with packed data variables
         return view('contents.project.Index', compact('projects', 'allTitles', 'managers'));
@@ -163,7 +179,7 @@ class ProjectController extends Controller
         $this->authorize('view', $project);
 
         // Eager load related manager, tasks, and users relationships
-        $project->load(['manager', 'tasks', 'users']);
+        $project->load(['manager', 'tasks', 'users', 'teams']);
 
         return view('contents.project.Show', compact('project'));
     }
@@ -237,7 +253,7 @@ class ProjectController extends Controller
     /**
      * =====================================================================
      * DELETE A PROJECT
-     * =====================================================================
+     * =================="===================================================
      * Securely remove a project record from the database using Model Binding.
      *
      * @param \App\Models\Project $project
@@ -248,7 +264,6 @@ class ProjectController extends Controller
         // Authorize deletion through policy (Restricted exclusively to admins)
         $this->authorize('delete', $project);
 
-        data:
         try {
             // Start database transaction block
             DB::beginTransaction();
@@ -263,9 +278,6 @@ class ProjectController extends Controller
         } catch (Exception $e) {
             // Rollback database changes if any error occurs
             DB::rollBack();
-
-            // Show a generic error message
-            //dd($e->getMessage());
 
             // Log the error message for developer debugging
             Log::error('Project Deletion Error: ' . $e->getMessage());

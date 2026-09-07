@@ -45,8 +45,8 @@ class TaskUpdateRequest extends FormRequest
             // Due date/time is optional, must be a valid date if provided.
             'due_date'    => ['nullable', 'date'],
 
-            // Attachment is optional during update, but if provided, must be a valid file within size limits.
-            'attachment'  => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,png,jpeg', 'max:2048'],
+            'attachments'   => ['nullable', 'array'],
+            'attachments.*' => ['file', 'mimes:pdf,doc,docx,jpg,png,jpeg', 'max:2048'],
         ];
     }
 }

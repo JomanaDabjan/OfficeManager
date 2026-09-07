@@ -16,19 +16,19 @@ class UserUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'  => ['required', 'string', 'max:255'],
+            'name'  => ['sometimes', 'required', 'string', 'max:255'],
 
             // The rule class mean that the email must be unique in the users table, but it will ignore the current user's email when checking for uniqueness.
             // This allows the user to keep their existing email address without triggering a validation error.
-            'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($this->route('user')->id)],
+            'email' => ['sometimes', 'required', 'email', Rule::unique('users', 'email')->ignore($this->route('user')->id)],
 
-            'role'  => ['required', 'in:project_manager,employee'],
+            'role'  => ['sometimes', 'required', 'in:admin,manager,team_leader,employee'],
             'password'      => ['nullable', 'string', 'min:6'],
             'phone'         => ['nullable', 'string', 'max:50'],
             'position'      => ['nullable', 'string', 'max:255'],
             'department'    => ['nullable', 'string', 'max:255'],
-            'status'        => ['nullable', 'in:active,deactivated'],
-            'working_hours' => ['nullable', 'numeric'],
+            'status'        => ['sometimes', 'nullable', 'in:active,deactivated'],
+            'working_hours' => ['nullable', 'string', 'max:255'],
             'joining_date'  => ['nullable', 'date'],
         ];
     }

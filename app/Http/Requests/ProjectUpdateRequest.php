@@ -41,6 +41,9 @@ class ProjectUpdateRequest extends FormRequest
 
             // Project end date is optional; must be a valid date and not earlier than start date if provided
             'end_date'    => ['sometimes', 'nullable', 'date', 'after_or_equal:start_date'],
+
+            // Budget is optional; if provided, it must be a numeric value and not negative
+            'budget' => ['sometimes', 'nullable', 'numeric', 'min:0'],
         ];
     }
 }

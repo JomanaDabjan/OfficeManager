@@ -40,6 +40,9 @@ class ProjectStoreRequest extends FormRequest
 
             // Project end date must be a valid date and must not be earlier than the start date.
             'end_date'    => ['nullable', 'date', 'after_or_equal:start_date'],
+
+            // Budget is optional; if provided, it must be a numeric value and not negative.
+            'budget' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 }
