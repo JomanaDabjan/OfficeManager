@@ -38,14 +38,16 @@
                 <!-- Action Buttons: Back & Edit -->
                 <div class="d-flex flex-wrap gap-2">
                     <a href="{{ route('admin.team.index') }}"
-                        class="btn btn-neutral btn-round btn-sm px-3 shadow-sm mr-2 mb-1">
-                        <i class="now-ui-icons arrows-1_minimal-left"></i> Back
+                        class="btn btn-neutral btn-round text-primary font-weight-bold btn-sm px-4 shadow-sm mr-2 mb-1"
+                        style="height: 36px; min-width: 120px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;">
+                        <i class="now-ui-icons arrows-1_minimal-left mr-1"></i> Back
                     </a>
 
                     @can('update', $team)
                     <a href="{{ route('admin.team.edit', $team->id) }}"
-                        class="btn btn-primary btn-round btn-sm px-3 shadow-sm mb-1">
-                        <i class="now-ui-icons ui-2_settings-90"></i> Edit Team
+                        class="btn btn-primary btn-round text-white font-weight-bold btn-sm px-4 shadow-sm mb-1"
+                        style="height: 36px; min-width: 120px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;">
+                        <i class="now-ui-icons ui-2_settings-90 mr-1"></i> Edit Team
                     </a>
                     @endcan
                 </div>
@@ -145,10 +147,8 @@
                             <div class="card shadow-sm border" style="border: 1px solid #dee2e6 !important;">
                                 <div class="card-body px-0 pb-0">
                                     <div class="table-responsive" style="overflow-x: auto; width: 100%;">
-                                        <!-- Corrected ID from teamsTable to match JS selector or updated JS -->
                                         <table class="table align-items-center table-flush mb-0 border" id="teamsTable"
                                             style="border: 1px solid #dee2e6; table-layout: auto;">
-                                            <!-- Table Headings with Gradient Style Matching Projects -->
                                             <thead
                                                 style="background: linear-gradient(135deg, #f96332 0%, #ff8c42 100%); color: white;">
                                                 <tr id="tableHeaders">
@@ -184,16 +184,17 @@
                                                         Profile <i class="now-ui-icons arrows-1_move-horizontal ml-1"
                                                             style="font-size: 10px; opacity: 0.7;"></i>
                                                     </th>
+                                                    @if(optional(auth()->user())->role !== 'employee')
                                                     <th class="py-3 font-weight-bold text-white pl-4 draggable-header draggable-th text-center align-middle"
                                                         draggable="true" data-column="5"
                                                         style="cursor: grab; font-size: 13px; border: 1px solid rgba(255,255,255,0.2) !important; white-space: nowrap;">
                                                         Actions <i class="now-ui-icons arrows-1_move-horizontal ml-1"
                                                             style="font-size: 10px; opacity: 0.7;"></i>
                                                     </th>
+                                                    @endif
                                                 </tr>
                                             </thead>
                                             <tbody id="tableBody">
-                                                <!-- Loop through each team member record using Laravel forelse directive -->
                                                 @forelse($team->members ?? $team->users ?? [] as $member)
                                                 <tr class="border-bottom team-row">
                                                     <!-- Member Name Column -->
@@ -230,21 +231,37 @@
                                                         </span>
                                                     </td>
 
-                                                    <!-- Joined Date & Time Column -->
+
+
+                                                    <!-- Joined Date Column Only -->
                                                     <td class="align-middle team-manager border-right text-center"
                                                         data-column="3"
                                                         style="border: 1px solid #dee2e6 !important; white-space: nowrap;">
+                                                        @php
+                                                        $rawDate = $member->pivot->created_at ?? $member->created_at;
+
+                                                        if ($rawDate) {
+                                                        // استخراج تاريخ اليوم فقط دون الساعات والدقائق
+                                                        $formattedDate =
+                                                        \Carbon\Carbon::parse($rawDate)->toDateString();
+                                                        } else {
+                                                        $formattedDate = 'N/A';
+                                                        }
+                                                        @endphp
                                                         <span class="text-muted">
                                                             <i class="now-ui-icons ui-1_calendar-60 mr-1"></i>
-                                                            {{ $member->pivot->created_at ??
-                                                            $member->created_at?->format('Y-m-d H:i') ?? 'N/A' }}
+                                                            <span>
+                                                                {{ $formattedDate }}
+                                                            </span>
                                                         </span>
-                                                    </td>
+                                                    </td> 
 
                                                     <!-- Profile Column -->
                                                     <td class="align-middle team-members-count border-right text-center"
                                                         data-column="4"
                                                         style="border: 1px solid #dee2e6 !important; white-space: nowrap;">
+                                                        @if(optional(auth()->user())->role !== 'employee' ||
+                                                        auth()->id() === $member->id)
                                                         <a href="{{ route('admin.user.show', $member->id) }}"
                                                             class="btn btn-info btn-sm btn-icon shadow-sm rounded"
                                                             title="View Profile"
@@ -252,15 +269,17 @@
                                                             <i class="now-ui-icons users_single-02"
                                                                 style="font-size: 13px;"></i>
                                                         </a>
+                                                        @else
+                                                        <span class="text-muted">-</span>
+                                                        @endif
                                                     </td>
 
-                                                    <!-- STANDARD ACTIONS COLUMN (REMOVE MEMBER) -->
+                                                    <!-- STANDARD ACTIONS COLUMN -->
+                                                    @if(optional(auth()->user())->role !== 'employee')
                                                     <td class="text-center align-middle" data-column="5"
                                                         style="border: 1px solid #dee2e6 !important; white-space: nowrap;">
                                                         <div class="d-flex justify-content-center align-items-center"
                                                             role="group" aria-label="Member Actions">
-
-                                                            <!-- Delete Form with SweetAlert2 Integration -->
                                                             <form
                                                                 action="{{ route('admin.team.members.destroy', [$team->id, $member->id]) }}"
                                                                 method="POST" style="display: inline-block;"
@@ -278,9 +297,9 @@
                                                             </form>
                                                         </div>
                                                     </td>
+                                                    @endif
                                                 </tr>
                                                 @empty
-                                                <!-- Empty State Row when no team members exist -->
                                                 <tr id="noTeamsDefault">
                                                     <td colspan="6" class="text-center text-muted py-5"
                                                         style="border: 1px solid #dee2e6 !important;">
@@ -301,7 +320,8 @@
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    @endcan
+                @endcan
 
-                    @endsection
+                @endsection

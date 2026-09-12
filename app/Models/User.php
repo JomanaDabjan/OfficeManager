@@ -7,7 +7,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Builder; // Added for Query Scope Builder typing
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 // =========================================================================
 // MAIN USER MODEL CLASS DEFINITION
@@ -37,6 +38,7 @@ class User extends Authenticatable
         'status',
         'working_hours',
         'joining_date',
+        'team_id',
     ];
 
     // =========================================================================
@@ -62,11 +64,6 @@ class User extends Authenticatable
     // ELOQUENT RELATIONSHIPS SECTION
     // =========================================================================
 
-    public function projects()
-    {
-        return $this->belongsToMany(Project::class, 'project_user')->withPivot('role');
-    }
-
     public function tasks()
     {
         return $this->hasMany(Task::class);
@@ -87,10 +84,145 @@ class User extends Authenticatable
         return $this->belongsToMany(Team::class, 'team_user');
     }
 
-    public function collaboratingTasks()
+    // =========================================================================
+    // AVAILABLE TEAM LEADERS
+    // =========================================================================
+
+    public static function availableTeamLeadersFor($user)
     {
-        return $this->belongsToMany(Task::class, 'task_user', 'user_id', 'task_id')->withTimestamps();
+        $role = strtolower(trim($user->role ?? ''));
+
+        return self::query()
+            ->when($role === 'manager', function ($query) use ($user) {
+                $query->whereHas('ledTeams.project', function ($projectQuery) use ($user) {
+                    $projectQuery->where('manager_id', $user->id);
+                });
+            })
+            ->when($role === 'team_leader', function ($query) use ($user) {
+                $query->where('id', $user->id);
+            })
+            ->when($role === 'employee', function ($query) use ($user) {
+                $query->whereHas('ledTeams', function ($teamQuery) use ($user) {
+                    $teamQuery->whereHas('members', function ($memberQuery) use ($user) {
+                        $memberQuery->where('users.id', $user->id);
+                    });
+                });
+            }, function ($query) {
+                $query->whereHas('ledTeams');
+            });
     }
+
+    // =========================================================================
+    // AVAILABLE EMPLOYEES
+    // =========================================================================
+
+    public static function availableUsersFor($user)
+    {
+        $role = strtolower(trim($user->role ?? ''));
+
+        return self::query()
+            ->where('role', 'employee')
+            ->when($role === 'manager', function ($query) use ($user) {
+                $query->whereHas('teams.project', function ($query) use ($user) {
+                    $query->where('manager_id', $user->id);
+                });
+            })
+            ->when($role === 'team_leader', function ($query) use ($user) {
+                $query->whereHas('teams', function ($query) use ($user) {
+                    $query->where('team_leader_id', $user->id);
+                });
+            })
+            ->when($role === 'employee', function ($query) use ($user) {
+                $query->where('id', $user->id);
+            })
+            ->get();
+    }
+
+    // =========================================================================
+    // USERS VISIBLE TO THE CURRENT USER
+    // =========================================================================
+
+    public function scopeVisibleTo(Builder $query, $user): Builder
+    {
+        $role = strtolower(trim($user->role ?? ''));
+
+        if ($role === 'manager') {
+            $query->where(function ($sub) use ($user) {
+                $sub->whereHas('tasks.project', function ($sq) use ($user) {
+                    $sq->where('projects.manager_id', $user->id);
+                })
+                    ->orWhereHas('ledTeams.project', function ($sq) use ($user) {
+                        $sq->where('projects.manager_id', $user->id);
+                    })
+                    ->orWhereHas('teams.project', function ($sq) use ($user) {
+                        $sq->where('projects.manager_id', $user->id);
+                    })
+                    ->orWhereHas('managedProjects', function ($sq) use ($user) {
+                        $sq->where('manager_id', $user->id);
+                    });
+            });
+        } elseif ($role === 'team_leader') {
+            // 1. جلب معرفات المشاريع التي يتبع لها قائد الفريق من خلال فرقه
+            $projectIds = DB::table('teams')
+                ->where('team_leader_id', $user->id)
+                ->pluck('project_id')
+                ->filter()
+                ->unique()
+                ->toArray();
+
+            // 2. جلب معرفات (IDs) مديري المشاريع الخاصة بتلك المشاريع
+            $managerIds = DB::table('projects')
+                ->whereIn('id', $projectIds)
+                ->whereNotNull('manager_id')
+                ->pluck('manager_id')
+                ->unique()
+                ->toArray();
+
+            $query->where(function ($sub) use ($user, $managerIds) {
+                $sub->whereHas('teams', function ($sq) use ($user) {
+                    $sq->where('teams.team_leader_id', $user->id);
+                })
+                    ->orWhereHas('ledTeams', function ($sq) use ($user) {
+                        $sq->where('team_leader_id', $user->id);
+                    })
+                    // 3. إضافة مديري المشاريع إلى النتائج المرئية لقائد الفريق
+                    ->orWhereIn('id', $managerIds);
+            });
+        } elseif ($role === 'employee') {
+            // جلب المشاريع المرتبطة بالموظف عن طريق الفرق فقط
+            $projectIds = DB::table('teams')
+                ->join('team_user', 'teams.id', '=', 'team_user.team_id')
+                ->where('team_user.user_id', $user->id)
+                ->pluck('teams.project_id')
+                ->merge(
+                    DB::table('teams')
+                        ->where('team_leader_id', $user->id)
+                        ->pluck('project_id')
+                )
+                ->filter()
+                ->unique()
+                ->toArray();
+
+            $query->where(function ($sub) use ($user, $projectIds) {
+                $sub->whereHas('tasks.project', function ($sq) use ($projectIds) {
+                    $sq->whereIn('projects.id', $projectIds);
+                })
+                    ->orWhereHas('teams.project', function ($sq) use ($projectIds) {
+                        $sq->whereIn('projects.id', $projectIds);
+                    })
+                    ->orWhereHas('ledTeams.project', function ($sq) use ($projectIds) {
+                        $sq->whereIn('projects.id', $projectIds);
+                    })
+                    ->orWhereHas('managedProjects', function ($sq) use ($projectIds) {
+                        $sq->whereIn('id', $projectIds);
+                    })
+                    ->orWhere('users.id', $user->id);
+            });
+        }
+
+        return $query;
+    }
+
 
     // =========================================================================
     // LOCAL QUERY SCOPES FOR FILTERING USERS
@@ -122,7 +254,45 @@ class User extends Authenticatable
         // 3. FILTER BY JOB POSITION
         // -----------------------------------------------------------------
         $query->when($filters['position'] ?? null, function ($query, $position) {
-            $query->where('position', $position);
+            // تنظيف القيمة القادمة من الطلب لتوحيدها
+            $cleanSearchPosition = ucwords(
+                preg_replace(
+                    '/\s+/',
+                    ' ',
+                    str_replace(
+                        ['-', '_'],
+                        ' ',
+                        strtolower(
+                            preg_replace('/[0-9]+/', '', $position)
+                        )
+                    )
+                )
+            );
+
+            // مطابقة position في قاعدة البيانات بعد إزالة الأرقام والشرطات والـ underscores
+            // وتوحيد المسافات وحالة الأحرف بنفس طريقة قيمة زر الفلترة
+            $query->whereRaw(
+                "TRIM(
+                    REGEXP_REPLACE(
+                        REGEXP_REPLACE(
+                            REPLACE(
+                                REPLACE(
+                                    LOWER(position),
+                                    '-',
+                                    ' '
+                                ),
+                                '_',
+                                ' '
+                            ),
+                            '[0-9]+',
+                            ''
+                        ),
+                        '[[:space:]]+',
+                        ' '
+                    )
+                ) = ?",
+                [strtolower(trim($cleanSearchPosition))]
+            );
         });
 
         // -----------------------------------------------------------------
@@ -142,18 +312,22 @@ class User extends Authenticatable
         });
 
         // -----------------------------------------------------------------
-        // 6. FILTER BY JOINING DATE START RANGE (DATE FROM)
+        // 6. FILTER BY JOINING DATE RANGE
         // -----------------------------------------------------------------
-        $query->when($filters['date_from'] ?? null, function ($query, $dateFrom) {
-            $query->whereDate('joining_date', '>=', $dateFrom);
-        });
+        $dateFrom = $filters['date_from'] ?? null;
+        $dateTo   = $filters['date_to'] ?? null;
 
-        // -----------------------------------------------------------------
-        // 7. FILTER BY JOINING DATE END RANGE (DATE TO)
-        // -----------------------------------------------------------------
-        $query->when($filters['date_to'] ?? null, function ($query, $dateTo) {
+        if ($dateFrom && $dateTo) {
+            $startDate = min($dateFrom, $dateTo);
+            $endDate   = max($dateFrom, $dateTo);
+
+            $query->whereDate('joining_date', '>=', $startDate)
+                ->whereDate('joining_date', '<=', $endDate);
+        } elseif ($dateFrom) {
+            $query->whereDate('joining_date', '>=', $dateFrom);
+        } elseif ($dateTo) {
             $query->whereDate('joining_date', '<=', $dateTo);
-        });
+        }
 
         return $query;
     }

@@ -40,6 +40,7 @@
         <div class="col-md-12">
 
             <!-- Info Alert Notice -->
+            @if(strtolower(trim(Auth::user()->role ?? '')) !== 'employee' )
             <div class="alert alert-warning border-0 shadow-sm mb-3 text-white"
                 style="background: linear-gradient(135deg, #f96332 0%, #ff8559 100%); border-radius: 12px; font-size: 13px;">
 
@@ -53,6 +54,7 @@
                 </div>
 
             </div>
+            @endif
 
 
             <!-- ========================================== -->
@@ -268,9 +270,8 @@
                 <i class="now-ui-icons ui-1_zoom-bold search-icon"
                     style="position: absolute; top: 50%; transform: translateY(-50%); left: 15px; color: #888;"></i>
 
-                <input type="text" id="taskSearchInput" name="search"
-                    class="form-control border rounded-pill shadow-sm" placeholder="Search teams..."
-                    value="{{ request('search') }}"
+                <input type="text" id="taskSearchInput" name="search" class="form-control border rounded-pill shadow-sm"
+                    placeholder="Search teams..." value="{{ request('search') }}"
                     style="background-color: #f9fbfd; padding-left: 40px; height: 40px;">
             </div>
         </div>
@@ -286,8 +287,7 @@
 
             <x-alert-message />
 
-            <div class="card border-0 shadow-sm"
-                style="border-radius: 16px; background: #ffffff; overflow: visible;">
+            <div class="card border-0 shadow-sm" style="border-radius: 16px; background: #ffffff; overflow: visible;">
 
                 <div class="card-body px-0 pb-0">
 
@@ -301,8 +301,7 @@
                             <!-- ========================================== -->
                             <!-- TABLE HEADER - SAME USER DESIGN            -->
                             <!-- ========================================== -->
-                            <thead
-                                style="background: linear-gradient(135deg, #f96332 0%, #ff8c42 100%); color: white;">
+                            <thead style="background: linear-gradient(135deg, #f96332 0%, #ff8c42 100%); color: white;">
 
                                 <tr id="tableHeaders">
 
@@ -408,12 +407,12 @@
 
 
                                     <!-- ========================================== -->
-                                    <!-- TEAM DESCRIPTION                           -->
+                                    <!-- TEAM DESCRIPTION (TABLE CELL)              -->
                                     <!-- ========================================== -->
                                     <td class="text-muted align-middle team-desc border-right text-center"
-                                        data-column="1"
-                                        style="border: 1px solid #dee2e6 !important; max-width: 200px;">
+                                        data-column="1" style="border: 1px solid #dee2e6 !important; max-width: 200px;">
 
+                                        @if(!empty($team->description))
                                         <span
                                             style="display: inline-block; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle;">
 
@@ -429,6 +428,11 @@
                                             More
 
                                         </button>
+                                        @else
+                                        <span class="text-muted" style="font-style: italic;">
+                                            No Description
+                                        </span>
+                                        @endif
 
                                     </td>
 
@@ -500,8 +504,7 @@
                                     <!-- ========================================== -->
                                     <!-- MEMBERS COUNT                              -->
                                     <!-- ========================================== -->
-                                    <td class="align-middle team-members-count border-right text-center"
-                                        data-column="4"
+                                    <td class="align-middle team-members-count border-right text-center" data-column="4"
                                         style="border: 1px solid #dee2e6 !important; white-space: nowrap;">
 
                                         <span class="badge badge-pill badge-primary px-3 py-2 text-white shadow-sm">
@@ -531,8 +534,7 @@
                                                 title="View Team Details"
                                                 style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
 
-                                                <i class="now-ui-icons business_bulb-63"
-                                                    style="font-size: 13px;"></i>
+                                                <i class="now-ui-icons business_bulb-63" style="font-size: 13px;"></i>
 
                                             </a>
                                             @endcan
@@ -545,8 +547,7 @@
                                                 title="Edit Team"
                                                 style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
 
-                                                <i class="now-ui-icons ui-2_settings-90"
-                                                    style="font-size: 13px;"></i>
+                                                <i class="now-ui-icons ui-2_settings-90" style="font-size: 13px;"></i>
 
                                             </a>
                                             @endcan
@@ -554,9 +555,8 @@
 
                                             <!-- Delete Form with SweetAlert2 Integration -->
                                             @can('delete', $team)
-                                            <form action="{{ route('admin.team.destroy', $team->id) }}"
-                                                method="POST" style="display: inline-block;"
-                                                id="delete-form-team-{{ $team->id }}">
+                                            <form action="{{ route('admin.team.destroy', $team->id) }}" method="POST"
+                                                style="display: inline-block;" id="delete-form-team-{{ $team->id }}">
 
                                                 @csrf
                                                 @method('DELETE')
@@ -585,22 +585,25 @@
                                 <!-- ========================================== -->
                                 <!-- DESCRIPTION MODAL                          -->
                                 <!-- ========================================== -->
-                                <div class="modal fade" id="teamDescModal-{{ $team->id }}" tabindex="-1"
-                                    role="dialog" aria-labelledby="teamDescModalLabel-{{ $team->id }}"
-                                    aria-hidden="true">
+                                <div class="modal fade" id="teamDescModal-{{ $team->id }}" tabindex="-1" role="dialog"
+                                    aria-labelledby="teamDescModalLabel-{{ $team->id }}" aria-hidden="true">
 
                                     <div class="modal-dialog modal-dialog-centered" role="document">
 
-                                        <div class="modal-content shadow border-0">
+                                        <div class="modal-content shadow-lg border-0"
+                                            style="border-radius: 16px; overflow: hidden; background: #ffffff;">
 
-                                            <div class="modal-header"
+                                            <div class="modal-header border-0 pb-3 pt-4 px-4"
                                                 style="background: linear-gradient(135deg, #f96332 0%, #ff8559 100%); color: white;">
 
-                                                <h5 class="modal-title font-weight-bold text-white d-flex align-items-center"
-                                                    id="teamDescModalLabel-{{ $team->id }}">
+                                                <h5 class="modal-title font-weight-bold text-white d-flex align-items-center m-0"
+                                                    id="teamDescModalLabel-{{ $team->id }}" style="font-size: 1.1rem;">
 
-                                                    <i class="now-ui-icons users_circle-08 mr-2"
-                                                        style="font-size: 18px; line-height: 0;"></i>
+                                                    <div style="background: rgba(255, 255, 255, 0.2); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;"
+                                                        class="mr-3">
+                                                        <i class="now-ui-icons users_circle-08 text-white"
+                                                            style="font-size: 18px; line-height: 0;"></i>
+                                                    </div>
 
                                                     <span>
                                                         {{ $team->name }} - Description
@@ -609,9 +612,12 @@
                                                 </h5>
 
                                                 <button type="button" class="close text-white" data-dismiss="modal"
-                                                    aria-label="Close" style="opacity: 1;">
+                                                    aria-label="Close"
+                                                    style="opacity: 0.8; text-shadow: none; transition: opacity 0.2s;"
+                                                    onmouseover="this.style.opacity='1'"
+                                                    onmouseout="this.style.opacity='0.8'">
 
-                                                    <span aria-hidden="true">
+                                                    <span aria-hidden="true" style="font-size: 1.5rem;">
                                                         &times;
                                                     </span>
 
@@ -620,22 +626,27 @@
                                             </div>
 
 
-                                            <div class="modal-body p-4 text-left">
+                                            <div class="modal-body p-4 text-left" style="background-color: #fcfcfc;">
 
-                                                <p class="text-dark"
-                                                    style="white-space: pre-line; line-height: 1.6;">
+                                                <div
+                                                    style="background: rgba(255, 112, 67, 0.04); border: 1px solid rgba(249, 99, 50, 0.12); border-radius: 12px; padding: 20px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);">
+                                                    <p class="text-dark m-0"
+                                                        style="white-space: pre-line; line-height: 1.8; font-size: 0.95rem;">
 
-                                                    {{ $team->description }}
+                                                        {{ $team->description }}
 
-                                                </p>
+                                                    </p>
+                                                </div>
 
                                             </div>
 
 
-                                            <div class="modal-footer border-0 pt-0">
+                                            <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-end"
+                                                style="background-color: #fcfcfc;">
 
-                                                <button type="button" class="btn btn-secondary btn-round px-4"
-                                                    data-dismiss="modal">
+                                                <button type="button" class="btn btn-secondary btn-round px-4 py-2"
+                                                    data-dismiss="modal"
+                                                    style="text-transform: none; font-weight: 600; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
 
                                                     Close
 
@@ -659,16 +670,21 @@
 
                                     <div class="modal-dialog modal-dialog-centered" role="document">
 
-                                        <div class="modal-content shadow border-0">
+                                        <div class="modal-content shadow-lg border-0"
+                                            style="border-radius: 16px; overflow: hidden; background: #ffffff;">
 
-                                            <div class="modal-header"
+                                            <div class="modal-header border-0 pb-3 pt-4 px-4"
                                                 style="background: linear-gradient(135deg, #f96332 0%, #ff8c42 100%); color: white;">
 
-                                                <h5 class="modal-title font-weight-bold text-white d-flex align-items-center"
-                                                    id="teamProjectModalLabel-{{ $team->id }}">
+                                                <h5 class="modal-title font-weight-bold text-white d-flex align-items-center m-0"
+                                                    id="teamProjectModalLabel-{{ $team->id }}"
+                                                    style="font-size: 1.1rem;">
 
-                                                    <i class="now-ui-icons users_circle-08 mr-2"
-                                                        style="font-size: 18px; line-height: 0;"></i>
+                                                    <div style="background: rgba(255, 255, 255, 0.2); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;"
+                                                        class="mr-3">
+                                                        <i class="now-ui-icons business_briefcase-24 text-white"
+                                                            style="font-size: 18px; line-height: 0;"></i>
+                                                    </div>
 
                                                     <span>
                                                         Project Name
@@ -677,9 +693,12 @@
                                                 </h5>
 
                                                 <button type="button" class="close text-white" data-dismiss="modal"
-                                                    aria-label="Close" style="opacity: 1;">
+                                                    aria-label="Close"
+                                                    style="opacity: 0.8; text-shadow: none; transition: opacity 0.2s;"
+                                                    onmouseover="this.style.opacity='1'"
+                                                    onmouseout="this.style.opacity='0.8'">
 
-                                                    <span aria-hidden="true">
+                                                    <span aria-hidden="true" style="font-size: 1.5rem;">
                                                         &times;
                                                     </span>
 
@@ -688,22 +707,27 @@
                                             </div>
 
 
-                                            <div class="modal-body p-4 text-left">
+                                            <div class="modal-body p-4 text-left" style="background-color: #fcfcfc;">
 
-                                                <p class="text-dark"
-                                                    style="white-space: pre-line; line-height: 1.6;">
+                                                <div
+                                                    style="background: rgba(249, 99, 50, 0.04); border: 1px solid rgba(249, 99, 50, 0.12); border-radius: 12px; padding: 20px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);">
+                                                    <p class="text-dark m-0"
+                                                        style="white-space: pre-line; line-height: 1.8; font-size: 0.95rem;">
 
-                                                    {{ $team->project->title ?? 'No Project' }}
+                                                        {{ $team->project->title ?? 'No Project' }}
 
-                                                </p>
+                                                    </p>
+                                                </div>
 
                                             </div>
 
 
-                                            <div class="modal-footer border-0 pt-0">
+                                            <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-end"
+                                                style="background-color: #fcfcfc;">
 
-                                                <button type="button" class="btn btn-secondary btn-round px-4"
-                                                    data-dismiss="modal">
+                                                <button type="button" class="btn btn-secondary btn-round px-4 py-2"
+                                                    data-dismiss="modal"
+                                                    style="text-transform: none; font-weight: 600; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
 
                                                     Close
 
@@ -719,6 +743,26 @@
 
 
                                 @empty
+                                <tr>
+                                    <td colspan="6" class="p-0">
+                                        <div class="datatable-empty-state"
+                                            style="padding: 45px 20px; text-align: center; width: 100%;">
+                                            <div
+                                                style="width: 64px; height: 64px; margin: 0 auto 16px auto; border-radius: 50%; background: linear-gradient(135deg, #fff1eb 0%, #ffe4d8 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(249, 99, 50, 0.12);">
+                                                <i class="now-ui-icons users_circle-08"
+                                                    style="font-size: 28px; color: #f96332;"></i>
+                                            </div>
+                                            <div
+                                                style="font-size: 16px; font-weight: 700; color: #32325d; margin-bottom: 6px;">
+                                                No teams available
+                                            </div>
+                                            <div
+                                                style="font-size: 13px; color: #8898aa; max-width: 420px; margin: 0 auto; line-height: 1.6;">
+                                                There is no team data to display at the moment.
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
                                 @endforelse
 
                             </tbody>

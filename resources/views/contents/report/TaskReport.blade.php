@@ -365,6 +365,96 @@
 
     </div>
 
+    <!-- Accepted Tasks Card -->
+
+    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-4">
+
+        <div class="card card-stats border-0 shadow-lg position-relative overflow-hidden"
+            style="border-radius: 18px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); transition: transform 0.2s ease;">
+
+            <div class="card-body p-4">
+
+                <div class="d-flex align-items-center justify-content-between">
+
+                    <div>
+
+                        <p class="card-category text-uppercase text-muted font-weight-bold mb-1"
+                            style="font-size: 10px; letter-spacing: 1px;">Accepted</p>
+
+                        <h3 class="card-title font-weight-bolder text-dark mb-0">
+
+                            {{ isset($acceptedTasksCount) ? $acceptedTasksCount : \App\Models\Task::where('status',
+                            'accepted')->count() }}
+
+                        </h3>
+
+                    </div>
+
+                    <div class="icon-shape text-white rounded-circle shadow d-flex align-items-center justify-content-center flex-shrink-0"
+                        style="width: 48px; height: 48px; background: linear-gradient(135deg, #20c997 0%, #198754 100%);">
+
+                        <i class="now-ui-icons ui-1_check" style="font-size: 20px;"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="position-absolute w-100"
+                style="height: 4px; bottom: 0; left: 0; background: linear-gradient(135deg, #20c997 0%, #198754 100%);">
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Rejected Tasks Card -->
+
+    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-4">
+
+        <div class="card card-stats border-0 shadow-lg position-relative overflow-hidden"
+            style="border-radius: 18px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); transition: transform 0.2s ease;">
+
+            <div class="card-body p-4">
+
+                <div class="d-flex align-items-center justify-content-between">
+
+                    <div>
+
+                        <p class="card-category text-uppercase text-muted font-weight-bold mb-1"
+                            style="font-size: 10px; letter-spacing: 1px;">Rejected</p>
+
+                        <h3 class="card-title font-weight-bolder text-dark mb-0">
+
+                            {{ isset($rejectedTasksCount) ? $rejectedTasksCount : \App\Models\Task::where('status',
+                            'rejected')->count() }}
+
+                        </h3>
+
+                    </div>
+
+                    <div class="icon-shape text-white rounded-circle shadow d-flex align-items-center justify-content-center flex-shrink-0"
+                        style="width: 48px; height: 48px; background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%);">
+
+                        <i class="now-ui-icons ui-1_simple-remove" style="font-size: 20px;"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="position-absolute w-100"
+                style="height: 4px; bottom: 0; left: 0; background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%);">
+
+            </div>
+
+        </div>
+
+    </div>
+
 </div>
 
 <!-- ========================================== -->
@@ -379,14 +469,16 @@
 
             <div class="card-body p-3" style="overflow: visible;">
 
-                <div class="d-flex flex-wrap align-items-center justify-content-between" style="gap: 12px;">
+                <div class="d-flex flex-column" style="gap: 12px;">
 
-                    <!-- Filters Grouping -->
+                    <!-- ========================================== -->
+                    <!-- FILTER BY SECTION                         -->
+                    <!-- ========================================== -->
 
-                    <div class="d-flex flex-wrap align-items-center flex-grow-1" style="gap: 10px;">
+                    <div class="d-flex flex-wrap align-items-center" style="gap: 10px;">
 
-                        <span class="text-muted font-weight-bold mr-1 d-none d-xl-inline-block"
-                            style="font-size: 13px;">
+                        <span class="text-muted font-weight-bold d-flex align-items-center mr-1"
+                            style="font-size: 13px; min-width: 75px;">
 
                             <i class="now-ui-icons ui-1_zoom-bold mr-1 text-primary"></i> Filter By:
 
@@ -402,9 +494,7 @@
                                 aria-expanded="false"
                                 style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important; height: 35px; display: flex; align-items: center; justify-content: space-between;">
 
-                                <span>{{ request('title') ? Str::limit(request('title'), 15) : 'All Titles'
-
-                                    }}</span>
+                                <span>{{ request('title') ? Str::limit(request('title'), 15) : 'All Titles' }}</span>
 
                             </button>
 
@@ -587,10 +677,25 @@
 
                         </div>
 
-                        <!-- Date From & To Filters Group -->
+                    </div>
+
+                    <!-- ========================================== -->
+                    <!-- CREATION DATE SECTION                      -->
+                    <!-- ========================================== -->
+
+                    <div class="d-flex align-items-center" style="gap: 12px;">
+
+                        <span class="text-muted font-weight-bold d-flex align-items-center"
+                            style="font-size: 13px; min-width: 110px;">
+
+                            <i class="now-ui-icons ui-1_calendar-60 mr-1 text-primary" style="font-size: 14px;"></i>
+
+                            Creation Date:
+
+                        </span>
 
                         <form method="GET" action="{{ route('admin.report.task-report') }}"
-                            class="d-flex align-items-center flex-fill" style="gap: 8px; min-width: 260px;">
+                            class="d-flex align-items-center flex-grow-1" style="gap: 8px;">
 
                             @foreach(request()->except(['date_from', 'date_to', 'page']) as $key => $value)
 
@@ -601,7 +706,12 @@
                             <div class="d-flex align-items-center flex-fill"
                                 style="background-color: #f8f9fa; border: 1px solid #e3e6f0 !important; border-radius: 50rem; padding: 2px 10px; height: 35px;">
 
-                                <span class="text-muted mr-1" style="font-size: 11px; white-space: nowrap;">From:</span>
+                                <span class="text-muted font-weight-bold mr-1"
+                                    style="font-size: 11px; white-space: nowrap;">
+
+                                    From:
+
+                                </span>
 
                                 <input type="date" name="date_from" value="{{ request('date_from') }}"
                                     class="form-control form-control-sm border-0 bg-transparent shadow-none px-0 py-0 w-100"
@@ -612,7 +722,12 @@
                             <div class="d-flex align-items-center flex-fill"
                                 style="background-color: #f8f9fa; border: 1px solid #e3e6f0 !important; border-radius: 50rem; padding: 2px 10px; height: 35px;">
 
-                                <span class="text-muted mr-1" style="font-size: 11px; white-space: nowrap;">To:</span>
+                                <span class="text-muted font-weight-bold mr-1"
+                                    style="font-size: 11px; white-space: nowrap;">
+
+                                    To:
+
+                                </span>
 
                                 <input type="date" name="date_to" value="{{ request('date_to') }}"
                                     class="form-control form-control-sm border-0 bg-transparent shadow-none px-0 py-0 w-100"
@@ -702,7 +817,7 @@
 
                             // تحديد الحالة الديناميكية (overdue أو due_today أو الحالة الأصلية)
 
-                            $status = $task->status ?? 'pending';
+                            $status = strtolower(trim($task->status ?? 'pending'));
 
                             $dueDate = $task->due_date ?? null;
 
@@ -710,7 +825,7 @@
 
                             $taskStatus = $status;
 
-                            if ($dueDate && !in_array($status, ['completed', 'accepted'])) {
+                            if ($dueDate && !in_array($status, ['completed', 'accepted', 'rejected'])) {
 
                             $taskDate = \Carbon\Carbon::parse($dueDate)->startOfDay();
 
@@ -886,8 +1001,6 @@
                                         <div class="font-weight-bold text-dark">{{ $task->started_at->format('Y-m-d') }}
                                         </div>
 
-                                        <div style="font-size: 11px;">{{ $task->started_at->format('H:i A') }}</div>
-
                                         @else
 
                                         <span class="italic">N/A</span>
@@ -909,8 +1022,6 @@
                                         <div class="font-weight-bold text-dark">{{ $task->due_date->format('Y-m-d') }}
                                         </div>
 
-                                        <div style="font-size: 11px;">{{ $task->due_date->format('H:i A') }}</div>
-
                                         @else
 
                                         <span class="italic">N/A</span>
@@ -921,7 +1032,7 @@
 
                                 </td>
 
-                                <!-- Last Update (Timestamp) -->
+                                <!-- Last Update (Date Only) -->
 
                                 <td class="align-middle">
 
@@ -929,13 +1040,9 @@
 
                                         @if($task->updated_at)
 
-                                        <div class="font-weight-bold text-dark">{{ $task->updated_at->format('Y-m-d') }}
+                                        <div class="font-weight-bold text-dark">
+                                            {{ $task->updated_at->format('Y-m-d') }}
                                         </div>
-
-                                        <div style="font-size: 11px;">{{ $task->updated_at->format('h:i A') }}</div>
-
-                                        <div class="text-info" style="font-size: 10px;">{{
-                                            $task->updated_at->diffForHumans() }}</div>
 
                                         @else
 
@@ -951,33 +1058,111 @@
 
                                 <td class="text-center align-middle" style="min-width: 150px;">
 
-                                    <span class="badge badge-pill mb-2 px-3 py-1 text-white shadow-sm
+                                    @if($taskStatus == 'accepted')
 
-                                    @if($taskStatus == 'completed') badge-success
+                                    <span class="badge badge-pill mb-2 px-3 py-1 shadow-sm"
+                                        style="background-color: rgba(40, 167, 69, 0.12) !important; color: #28a745 !important; border: 1px solid rgba(40, 167, 69, 0.25) !important;">
 
-                                    @elseif($taskStatus == 'in_progress') badge-warning
+                                        Accepted
 
-                                    @elseif($taskStatus == 'pending') badge-info
+                                    </span>
 
-                                    @elseif($taskStatus == 'overdue') badge-danger
+                                    @elseif($taskStatus == 'rejected')
 
-                                    @elseif($taskStatus == 'due_today') badge-primary
+                                    <span class="badge badge-pill mb-2 px-3 py-1 shadow-sm"
+                                        style="background-color: rgba(220, 53, 69, 0.12) !important; color: #dc3545 !important; border: 1px solid rgba(220, 53, 69, 0.25) !important;">
+
+                                        Rejected
+
+                                    </span>
+
+                                    @elseif($taskStatus == 'completed')
+
+                                    <span class="badge badge-pill mb-2 px-3 py-1 text-white shadow-sm badge-success">
+
+                                        Completed
+
+                                    </span>
+
+                                    @elseif($taskStatus == 'in_progress')
+
+                                    <span class="badge badge-pill mb-2 px-3 py-1 text-white shadow-sm badge-warning">
+
+                                        In Progress
+
+                                    </span>
+
+                                    @elseif($taskStatus == 'pending')
+
+                                    <span class="badge badge-pill mb-2 px-3 py-1 text-white shadow-sm badge-info">
+
+                                        Pending
+
+                                    </span>
+
+                                    @elseif($taskStatus == 'overdue')
+
+                                    <span class="badge badge-pill mb-2 px-3 py-1 text-white shadow-sm badge-danger">
+
+                                        Overdue
+
+                                    </span>
+
+                                    @elseif($taskStatus == 'due_today')
+
+                                    <span class="badge badge-pill mb-2 px-3 py-1 text-white shadow-sm"
+                                        style="background-color: #8965e0 !important;">
+
+                                        Due Today
+
+                                    </span>
 
                                     @else
 
-                                        badge-secondary
-
-                                    @endif" @if($taskStatus=='due_today' ) style="background-color: #8965e0;" @endif>
+                                    <span class="badge badge-pill mb-2 px-3 py-1 text-white shadow-sm badge-secondary">
 
                                         {{ ucfirst(str_replace('_', ' ', $taskStatus)) }}
 
                                     </span>
+
+                                    @endif
 
                                 </td>
 
                             </tr>
 
                             @empty
+
+                            <tr>
+                                <td colspan="8" class="p-0">
+                                    <div class="datatable-empty-state"
+                                        style="padding: 45px 20px; text-align: center; width: 100%;">
+
+                                        <div
+                                            style="width: 64px; height: 64px; margin: 0 auto 16px auto; border-radius: 50%; background: linear-gradient(135deg, #fff1eb 0%, #ffe4d8 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(249, 99, 50, 0.12);">
+
+                                            <i class="now-ui-icons design_bullet-list-67"
+                                                style="font-size: 28px; color: #f96332;"></i>
+
+                                        </div>
+
+                                        <div
+                                            style="font-size: 16px; font-weight: 700; color: #32325d; margin-bottom: 6px;">
+
+                                            No tasks available
+
+                                        </div>
+
+                                        <div
+                                            style="font-size: 13px; color: #8898aa; max-width: 420px; margin: 0 auto; line-height: 1.6;">
+
+                                            There is no task data to display at the moment.
+
+                                        </div>
+
+                                    </div>
+                                </td>
+                            </tr>
 
                             @endforelse
 

@@ -14,8 +14,8 @@ use Illuminate\View\View;
  * AUTHENTICATED SESSION CONTROLLER CLASS (SESSION & SECURITY MANAGEMENT)
  * =========================================================================
  * This controller manages the user authentication life cycle, including
- * rendering the login view, processing secure login submissions through
- * the LoginRequest, protecting user sessions, and handling secure logouts.
+ * rendering the login view, processing secure login submissions through the
+ * LoginRequest, protecting user sessions, and handling secure logouts.
  */
 class AuthenticatedSessionController extends Controller
 {
@@ -42,7 +42,7 @@ class AuthenticatedSessionController extends Controller
         // SECURITY LAYER 1: Authentication & Credential Verification
         // =====================================================================
         // Trigger the LoginRequest to validate input fields, check rate limiting,
-        // verify database existence, and check passwords securely.
+        // verify database existence, check account status, and check passwords securely.
         $request->authenticate();
 
         // =====================================================================
@@ -58,12 +58,12 @@ class AuthenticatedSessionController extends Controller
         // =====================================================================
         // Check if the user checked the 'remember me' input checkbox in the form.
         if ($request->boolean('remember')) {
-            // If checked, we explicitly instruct Laravel's auth guard to remember 
+            // If checked, we explicitly instruct Laravel's auth guard to remember
             // the currently authenticated user by generating a persistent token cookie.
             $user = Auth::user();
             Auth::login($user, remember: true);
         } else {
-            // If NOT checked, ensure any lingering remember tokens are cleared 
+            // If NOT checked, ensure any lingering remember tokens are cleared
             // so the session expires immediately when the browser is closed.
             $user = Auth::user();
             Auth::login($user, remember: false);

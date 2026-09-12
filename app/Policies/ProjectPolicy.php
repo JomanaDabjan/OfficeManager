@@ -39,7 +39,7 @@ class ProjectPolicy
      * @param \App\Models\Project $project
      * @return \Illuminate\Auth\Access\Response
      */
-    public function view(User $user, Project $project): Response
+   public function view(User $user, Project $project): Response
     {
         // =====================================================================
         // TIER 1: Admin Full Access
@@ -62,18 +62,26 @@ class ProjectPolicy
         // =====================================================================
         // TIER 2.5: Team Leader Ownership Check
         // =====================================================================
-        // Team Leaders can only view projects assigned directly to them.
+        // Team Leaders can view projects associated with the teams they lead.
         if ($user->role === 'team_leader') {
-            return $project->team_leader_id === $user->id
+            return $project->teams()->where('team_leader_id', $user->id)->exists()
                 ? Response::allow()
                 : Response::deny('You are not authorized to view this project because it is assigned to another team leader.');
         }
 
         // =====================================================================
-        // TIER 3: Employee Assignment Check
+        // TIER 3: Employee Assignment & Team Check
         // =====================================================================
-        // Regular employees can only view projects they are directly assigned to.
-        return $project->users()->where('user_id', $user->id)->exists()
+        // Regular employees can view projects they are directly assigned to OR belong to a team assigned to the project.
+        $isDirectlyAssigned = $project->users()->where('user_id', $user->id)->exists();
+        
+        $isInTeamOfProject = \Illuminate\Support\Facades\DB::table('team_user')
+            ->join('teams', 'teams.id', '=', 'team_user.team_id')
+            ->where('teams.project_id', $project->id)
+            ->where('team_user.user_id', $user->id)
+            ->exists();
+
+        return ($isDirectlyAssigned || $isInTeamOfProject)
             ? Response::allow()
             : Response::deny('You do not have permission to view this project as you are not assigned to it.');
     }

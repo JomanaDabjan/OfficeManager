@@ -77,17 +77,17 @@
 
                                     <div id="titleList">
 
-                                        <a class="dropdown-item py-2 px-3 text-sm title-option {{ !request('name') ? 'active font-weight-bold text-primary' : '' }}"
-                                            href="{{ route('admin.user.index', array_merge(request()->except(['name', 'page']), [])) }}"
-                                            data-title="All Names">
-                                            <i class="now-ui-icons ui-1_simple-add mr-2"></i> All Names
+                                        <a class="dropdown-item py-2 px-3 text-sm title-option {{ !request('title') ? 'active font-weight-bold text-primary' : '' }}"
+                                            href="{{ route('admin.project.index', request()->except(['title', 'page'])) }}"
+                                            data-title="All Titles">
+                                            <i class="now-ui-icons ui-1_simple-add mr-2"></i> All Titles
                                         </a>
 
-                                        @foreach($allTitles as $nameItem)
-                                        <a class="dropdown-item py-2 px-3 text-sm title-option {{ request('name') == $nameItem ? 'active font-weight-bold text-primary' : '' }}"
-                                            href="{{ route('admin.task.index', array_merge(request()->except(['name', 'page']), ['name' => $nameItem])) }}"
-                                            data-title="{{ $nameItem }}">
-                                            {{ $nameItem }}
+                                        @foreach($allTitles as $titleItem)
+                                        <a class="dropdown-item py-2 px-3 text-sm title-option {{ request('title') == $titleItem ? 'active font-weight-bold text-primary' : '' }}"
+                                            href="{{ route('admin.project.index', array_merge(request()->except(['title', 'page']), ['title' => $titleItem])) }}"
+                                            data-title="{{ $titleItem }}">
+                                            {{ $titleItem }}
                                         </a>
                                         @endforeach
 
@@ -96,7 +96,7 @@
                                     <!-- No Results -->
                                     <div id="noTitleResults" class="text-center text-muted py-2 px-3"
                                         style="display: none; font-size: 12px;">
-                                        No names found
+                                        No titles found
                                     </div>
 
                                 </div>
@@ -186,13 +186,11 @@
                                         Completed
                                     </a>
 
-                                    <!-- خيار الفلترة حسب المتأخرة -->
                                     <a class="dropdown-item py-2 px-3 text-sm {{ request('status') == 'overdue' ? 'active font-weight-bold text-primary' : '' }}"
                                         href="{{ route('admin.project.index', array_merge(request()->except(['status', 'page']), ['status' => 'overdue'])) }}">
                                         Overdue
                                     </a>
 
-                                    <!-- خيار الفلترة حسب المستحقة اليوم -->
                                     <a class="dropdown-item py-2 px-3 text-sm {{ request('status') == 'due_today' ? 'active font-weight-bold text-primary' : '' }}"
                                         href="{{ route('admin.project.index', array_merge(request()->except(['status', 'page']), ['status' => 'due_today'])) }}">
                                         Due Today
@@ -366,99 +364,126 @@
 <!-- ========================================== -->
 <div class="row mx-0">
 
-    <div class="col-md-12 px-4">
+    <div class="col-md-12 px-0">
 
         <x-alert-message />
 
-        <div class="card shadow-sm border" style="border: 1px solid #dee2e6 !important;">
+        <div class="card shadow-sm border-0">
 
             <div class="card-body px-0 pb-0">
 
-                <div class="table-responsive" style="overflow-x: auto; width: 100%;">
+                <div class="table-responsive" style="overflow-x: hidden; overflow-y: visible; width: 100%;">
 
                     @can('viewAny', \App\Models\Project::class)
-                    <table class="table align-items-center table-flush mb-0 border" id="projectsTable"
-                        style="border: 1px solid #dee2e6; table-layout: auto;">
 
-                        <!-- ========================================== -->
-                        <!-- TABLE HEADER                                -->
-                        <!-- SAME DESIGN AS TEAM TABLE                  -->
-                        <!-- ========================================== -->
+                    <table class="table table-bordered align-items-center mb-0" id="projectsTable"
+                        style="width: 100%; table-layout: fixed; margin-bottom: 0;">
+
                         <thead style="background: linear-gradient(135deg, #f96332 0%, #ff8c42 100%); color: white;">
 
                             <tr id="tableHeaders">
 
-                                <!-- ========================================== -->
-                                <!-- TITLE                                     -->
-                                <!-- ========================================== -->
-                                <th class="py-3 font-weight-bold text-white pl-4 draggable-header draggable-th text-center align-middle"
-                                    draggable="true" data-column="0"
-                                    style="cursor: grab; font-size: 13px; font-weight: 700 !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.2) !important; white-space: nowrap;">
+                                <!-- Title -->
+                                <th class="py-3 font-weight-bold text-white text-center align-middle draggable-header draggable-th"
+                                    draggable="true" data-column="0" style="
+                                        cursor: grab;
+                                        font-size: 11px;
+                                        font-weight: 700 !important;
+                                        color: #ffffff !important;
+                                        border: 1px solid rgba(255,255,255,0.2) !important;
+                                        white-space: normal;
+                                        word-break: break-word;
+                                        width: 22%;
+                                    ">
 
                                     Title
 
                                     <i class="now-ui-icons arrows-1_move-horizontal ml-1"
-                                        style="font-size: 10px; opacity: 0.7;"></i>
+                                        style="font-size: 9px; opacity: 0.7;"></i>
 
                                 </th>
 
 
-                                <!-- ========================================== -->
-                                <!-- DESCRIPTION                                -->
-                                <!-- ========================================== -->
-                                <th class="py-3 font-weight-bold text-white pl-4 draggable-header draggable-th text-center align-middle"
-                                    draggable="true" data-column="1"
-                                    style="cursor: grab; font-size: 13px; font-weight: 700 !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.2) !important; white-space: nowrap;">
+                                <!-- Description -->
+                                <th class="py-3 font-weight-bold text-white text-center align-middle draggable-header draggable-th"
+                                    draggable="true" data-column="1" style="
+                                        cursor: grab;
+                                        font-size: 11px;
+                                        font-weight: 700 !important;
+                                        color: #ffffff !important;
+                                        border: 1px solid rgba(255,255,255,0.2) !important;
+                                        white-space: normal;
+                                        word-break: break-word;
+                                        width: 25%;
+                                    ">
 
                                     Description
 
                                     <i class="now-ui-icons arrows-1_move-horizontal ml-1"
-                                        style="font-size: 10px; opacity: 0.7;"></i>
+                                        style="font-size: 9px; opacity: 0.7;"></i>
 
                                 </th>
 
 
-                                <!-- ========================================== -->
-                                <!-- MANAGER                                    -->
-                                <!-- ========================================== -->
-                                <th class="py-3 font-weight-bold text-white pl-4 draggable-header draggable-th text-center align-middle"
-                                    draggable="true" data-column="2"
-                                    style="cursor: grab; font-size: 13px; font-weight: 700 !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.2) !important; white-space: nowrap;">
+                                <!-- Manager -->
+                                <th class="py-3 font-weight-bold text-white text-center align-middle draggable-header draggable-th"
+                                    draggable="true" data-column="2" style="
+                                        cursor: grab;
+                                        font-size: 11px;
+                                        font-weight: 700 !important;
+                                        color: #ffffff !important;
+                                        border: 1px solid rgba(255,255,255,0.2) !important;
+                                        white-space: normal;
+                                        word-break: break-word;
+                                        width: 20%;
+                                    ">
 
                                     Manager
 
                                     <i class="now-ui-icons arrows-1_move-horizontal ml-1"
-                                        style="font-size: 10px; opacity: 0.7;"></i>
+                                        style="font-size: 9px; opacity: 0.7;"></i>
 
                                 </th>
 
 
-                                <!-- ========================================== -->
-                                <!-- STATUS                                     -->
-                                <!-- ========================================== -->
-                                <th class="py-3 font-weight-bold text-white pl-4 draggable-header draggable-th text-center align-middle"
-                                    draggable="true" data-column="3"
-                                    style="cursor: grab; font-size: 13px; font-weight: 700 !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.2) !important; white-space: nowrap;">
+                                <!-- Status -->
+                                <th class="py-3 font-weight-bold text-white text-center align-middle draggable-header draggable-th"
+                                    draggable="true" data-column="3" style="
+                                        cursor: grab;
+                                        font-size: 11px;
+                                        font-weight: 700 !important;
+                                        color: #ffffff !important;
+                                        border: 1px solid rgba(255,255,255,0.2) !important;
+                                        white-space: normal;
+                                        word-break: break-word;
+                                        width: 14%;
+                                    ">
 
                                     Status
 
                                     <i class="now-ui-icons arrows-1_move-horizontal ml-1"
-                                        style="font-size: 10px; opacity: 0.7;"></i>
+                                        style="font-size: 9px; opacity: 0.7;"></i>
 
                                 </th>
 
 
-                                <!-- ========================================== -->
-                                <!-- ACTIONS                                    -->
-                                <!-- ========================================== -->
-                                <th class="py-3 font-weight-bold text-white pl-4 draggable-header draggable-th text-center align-middle"
-                                    draggable="true" data-column="4"
-                                    style="cursor: grab; font-size: 13px; font-weight: 700 !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.2) !important; white-space: nowrap;">
+                                <!-- Actions -->
+                                <th class="py-3 font-weight-bold text-white text-center align-middle draggable-header draggable-th"
+                                    draggable="true" data-column="4" style="
+                                        cursor: grab;
+                                        font-size: 11px;
+                                        font-weight: 700 !important;
+                                        color: #ffffff !important;
+                                        border: 1px solid rgba(255,255,255,0.2) !important;
+                                        white-space: normal;
+                                        word-break: break-word;
+                                        width: 19%;
+                                    ">
 
                                     Actions
 
                                     <i class="now-ui-icons arrows-1_move-horizontal ml-1"
-                                        style="font-size: 10px; opacity: 0.7;"></i>
+                                        style="font-size: 9px; opacity: 0.7;"></i>
 
                                 </th>
 
@@ -467,12 +492,8 @@
                         </thead>
 
 
-                        <!-- ========================================== -->
-                        <!-- TABLE BODY                                  -->
-                        <!-- ========================================== -->
                         <tbody id="tableBody">
 
-                            <!-- Loop through each project record -->
                             @forelse($projects as $project)
 
                             @php
@@ -487,11 +508,9 @@
                             ? \Carbon\Carbon::parse($project->start_date)
                             : null;
 
-
                             $tasks = $project->tasks;
 
                             $hasTasks = $tasks->count() > 0;
-
 
                             $allTasksCompleted = $hasTasks
                             ? $tasks->every(function($task) {
@@ -500,11 +519,9 @@
                             })
                             : false;
 
-
-                            $rawStatus = strtolower(trim($project->status));
+                            $rawStatus = strtolower(trim($project->status ?? 'pending'));
 
                             $currentStatus = $rawStatus;
-
 
                             if ($rawStatus !== 'completed' && $rawStatus !== 'complete') {
 
@@ -538,7 +555,6 @@
 
                             }
 
-
                             $statusClass = match($currentStatus) {
 
                             'completed', 'complete' => 'badge-success',
@@ -558,33 +574,39 @@
                             @endphp
 
 
-                            <!-- ========================================== -->
-                            <!-- PROJECT ROW                                 -->
-                            <!-- ========================================== -->
                             <tr class="border-bottom project-row" data-status="{{ $currentStatus }}">
 
 
-                                <!-- ========================================== -->
-                                <!-- PROJECT TITLE                              -->
-                                <!-- ========================================== -->
-                                <td class="font-weight-bold text-dark pl-4 align-middle project-title border-right text-center"
-                                    data-column="0" data-col-index="0"
-                                    style="border: 1px solid #dee2e6 !important; word-break: break-word; white-space: normal; max-width: 180px; font-size: 13px;">
+                                <!-- Title -->
+                                <td class="font-weight-bold text-dark text-center align-middle" data-column="0"
+                                    data-col-index="0" style="
+                                        border: 1px solid #dee2e6 !important;
+                                        word-break: break-word;
+                                        white-space: normal;
+                                        font-size: 12px;
+                                        padding: 14px 10px;
+                                    ">
 
                                     {{ $project->title }}
 
                                 </td>
 
 
-                                <!-- ========================================== -->
-                                <!-- PROJECT DESCRIPTION                        -->
-                                <!-- ========================================== -->
-                                <td class="text-muted align-middle project-desc border-right text-center"
-                                    data-column="1" data-col-index="1"
-                                    style="border: 1px solid #dee2e6 !important; max-width: 200px; font-size: 13px;">
+                                <!-- Description -->
+                                <td class="text-muted text-center align-middle" data-column="1" data-col-index="1"
+                                    style="
+                                        border: 1px solid #dee2e6 !important;
+                                        word-break: break-word;
+                                        white-space: normal;
+                                        font-size: 12px;
+                                        padding: 14px 10px;
+                                    ">
 
-                                    <span
-                                        style="display: inline-block; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle;">
+                                    <span style="
+                                        display: inline;
+                                        word-break: break-word;
+                                        overflow-wrap: anywhere;
+                                    ">
 
                                         {{ Str::limit($project->description, 40) }}
 
@@ -594,8 +616,11 @@
 
                                     <button type="button"
                                         class="btn btn-link btn-sm p-0 ml-1 text-primary font-weight-bold"
-                                        data-toggle="modal" data-target="#descModal-{{ $project->id }}"
-                                        style="font-size: 12px; text-decoration: underline; vertical-align: baseline;">
+                                        data-toggle="modal" data-target="#descModal-{{ $project->id }}" style="
+                                            font-size: 10px;
+                                            text-decoration: underline;
+                                            vertical-align: baseline;
+                                        ">
 
                                         More
 
@@ -606,24 +631,32 @@
                                 </td>
 
 
-                                <!-- ========================================== -->
-                                <!-- ASSIGNED MANAGER                           -->
-                                <!-- ========================================== -->
-                                <td class="align-middle project-manager border-right text-center" data-column="2"
-                                    data-col-index="2"
-                                    style="border: 1px solid #dee2e6 !important; word-break: break-word; white-space: normal; max-width: 180px; font-size: 13px;">
+                                <!-- Manager -->
+                                <td class="align-middle text-center" data-column="2" data-col-index="2" style="
+                                        border: 1px solid #dee2e6 !important;
+                                        word-break: break-word;
+                                        white-space: normal;
+                                        font-size: 12px;
+                                        padding: 10px;
+                                    ">
 
                                     <div class="d-flex flex-column align-items-center justify-content-center">
 
                                         <span
                                             class="avatar-sm rounded-circle bg-light text-primary font-weight-bold d-flex align-items-center justify-content-center shadow-sm mb-1"
-                                            style="width: 32px; height: 32px; font-size: 12px; flex-shrink: 0;">
+                                            style="
+                                                width: 28px;
+                                                height: 28px;
+                                                font-size: 10px;
+                                                flex-shrink: 0;
+                                            ">
 
                                             {{ strtoupper(substr(optional($project->manager)->name ?? 'U', 0, 2)) }}
 
                                         </span>
 
-                                        <span class="text-dark font-weight-normal text-center">
+                                        <span class="text-dark font-weight-normal text-center"
+                                            style="word-break: break-word;">
 
                                             {{ optional($project->manager)->name ?? 'No Manager' }}
 
@@ -634,17 +667,18 @@
                                 </td>
 
 
-                                <!-- ========================================== -->
-                                <!-- PROJECT STATUS                             -->
-                                <!-- ========================================== -->
-                                <td class="align-middle project-status border-right text-center" data-column="3"
-                                    data-col-index="3"
-                                    style="border: 1px solid #dee2e6 !important; white-space: nowrap; font-size: 13px;">
+                                <!-- Status -->
+                                <td class="align-middle text-center" data-column="3" data-col-index="3" style="
+                                        border: 1px solid #dee2e6 !important;
+                                        white-space: normal;
+                                        font-size: 12px;
+                                        padding: 10px;
+                                    ">
 
-                                    <span class="badge badge-pill {{ $statusClass }} px-3 py-2 text-white shadow-sm"
+                                    <span class="badge badge-pill {{ $statusClass }} px-2 py-2 text-white shadow-sm"
                                         @if($currentStatus==='due_today' )
-                                        style="background-color: #6f42c1; font-size: 12px;" @else
-                                        style="font-size: 12px;" @endif>
+                                        style="background-color: #6f42c1; font-size: 11px;" @else
+                                        style="font-size: 11px;" @endif>
 
                                         {{ ucfirst(str_replace('_', ' ', $currentStatus)) }}
 
@@ -653,50 +687,56 @@
                                 </td>
 
 
-                                <!-- ========================================== -->
-                                <!-- ACTIONS                                     -->
-                                <!-- ========================================== -->
-                                <td class="text-center align-middle" data-column="4" data-col-index="4"
-                                    style="border: 1px solid #dee2e6 !important; white-space: nowrap;">
+                                <!-- Actions -->
+                                <td class="text-center align-middle" data-column="4" data-col-index="4" style="
+                                        border: 1px solid #dee2e6 !important;
+                                        white-space: normal;
+                                        padding: 10px;
+                                    ">
 
-                                    <div class="d-flex justify-content-center align-items-center" role="group"
+                                    <div class="d-flex justify-content-center align-items-center flex-wrap" role="group"
                                         aria-label="Project Actions">
 
-
-                                        <!-- ========================================== -->
-                                        <!-- VIEW PROJECT                              -->
-                                        <!-- ========================================== -->
                                         @can('view', $project)
+
                                         <a href="{{ route('admin.project.show', $project->id) }}"
-                                            class="btn btn-info btn-sm btn-icon shadow-sm mx-1 rounded"
-                                            title="View Project Details"
-                                            style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
+                                            class="btn btn-info btn-sm btn-icon shadow-sm mx-1 rounded mb-1"
+                                            title="View Project Details" style="
+                                                width: 30px;
+                                                height: 30px;
+                                                display: inline-flex;
+                                                align-items: center;
+                                                justify-content: center;
+                                            ">
 
-                                            <i class="now-ui-icons business_bulb-63" style="font-size: 13px;"></i>
+                                            <i class="now-ui-icons business_bulb-63" style="font-size: 12px;"></i>
 
                                         </a>
+
                                         @endcan
 
 
-                                        <!-- ========================================== -->
-                                        <!-- EDIT PROJECT                              -->
-                                        <!-- ========================================== -->
                                         @can('update', $project)
-                                        <a href="{{ route('admin.project.edit', $project->id) }}"
-                                            class="btn btn-warning btn-sm btn-icon shadow-sm mx-1 rounded"
-                                            title="Edit Project"
-                                            style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
 
-                                            <i class="now-ui-icons ui-2_settings-90" style="font-size: 13px;"></i>
+                                        <a href="{{ route('admin.project.edit', $project->id) }}"
+                                            class="btn btn-warning btn-sm btn-icon shadow-sm mx-1 rounded mb-1"
+                                            title="Edit Project" style="
+                                                width: 30px;
+                                                height: 30px;
+                                                display: inline-flex;
+                                                align-items: center;
+                                                justify-content: center;
+                                            ">
+
+                                            <i class="now-ui-icons ui-2_settings-90" style="font-size: 12px;"></i>
 
                                         </a>
+
                                         @endcan
 
 
-                                        <!-- ========================================== -->
-                                        <!-- DELETE PROJECT                            -->
-                                        <!-- ========================================== -->
                                         @can('delete', $project)
+
                                         <form action="{{ route('admin.project.destroy', $project->id) }}" method="POST"
                                             style="display: inline-block;" id="delete-form-project-{{ $project->id }}">
 
@@ -704,18 +744,22 @@
 
                                             @method('DELETE')
 
-
                                             <button type="button"
-                                                class="btn btn-danger btn-sm btn-icon shadow-sm mx-1 rounded"
-                                                title="Delete Project"
-                                                style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;"
-                                                onclick="confirmDelete('project', {{ $project->id }})">
+                                                class="btn btn-danger btn-sm btn-icon shadow-sm mx-1 rounded mb-1"
+                                                title="Delete Project" style="
+                                                    width: 30px;
+                                                    height: 30px;
+                                                    display: inline-flex;
+                                                    align-items: center;
+                                                    justify-content: center;
+                                                " onclick="confirmDelete('project', {{ $project->id }})">
 
-                                                <i class="now-ui-icons ui-1_simple-remove" style="font-size: 13px;"></i>
+                                                <i class="now-ui-icons ui-1_simple-remove" style="font-size: 12px;"></i>
 
                                             </button>
 
                                         </form>
+
                                         @endcan
 
                                     </div>
@@ -727,19 +771,78 @@
 
                             @empty
 
+                            <tr>
+
+                                <td colspan="5" class="p-0 text-center align-middle" style="
+                                        height: 240px;
+                                        vertical-align: middle !important;
+                                        border: 1px solid #dee2e6;
+                                    ">
+
+                                    <div class="datatable-empty-state" style="
+                                            padding: 45px 20px;
+                                            text-align: center;
+                                            width: 100%;
+                                            margin: 0 auto;
+                                        ">
+
+                                        <div style="
+                                            width: 64px;
+                                            height: 64px;
+                                            margin: 0 auto 16px auto;
+                                            border-radius: 50%;
+                                            background: linear-gradient(135deg, #fff1eb 0%, #ffe4d8 100%);
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            box-shadow: 0 6px 18px rgba(249, 99, 50, 0.12);
+                                        ">
+
+                                            <i class="now-ui-icons business_briefcase-24"
+                                                style="font-size: 28px; color: #f96332;"></i>
+
+                                        </div>
+
+                                        <div style="
+                                            font-size: 16px;
+                                            font-weight: 700;
+                                            color: #32325d;
+                                            margin-bottom: 6px;
+                                        ">
+
+                                            No projects available
+
+                                        </div>
+
+                                        <div style="
+                                            font-size: 13px;
+                                            color: #8898aa;
+                                            max-width: 420px;
+                                            margin: 0 auto;
+                                            line-height: 1.6;
+                                        ">
+
+                                            There is no project data to display at the moment.
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
                             @endforelse
 
                         </tbody>
 
                     </table>
+
                     @endcan
 
                 </div>
 
 
-                <!-- ========================================== -->
-                <!-- PAGINATION CONTROLS SECTION                -->
-                <!-- ========================================== -->
                 @if($projects->hasPages())
 
                 <div class="card-footer bg-white py-4 d-flex justify-content-between align-items-center">
@@ -747,21 +850,14 @@
                     <div class="text-muted text-sm">
 
                         Showing
-
                         <b>{{ $projects->firstItem() }}</b>
-
                         to
-
                         <b>{{ $projects->lastItem() }}</b>
-
                         of
-
                         <b>{{ $projects->total() }}</b>
-
                         entries
 
                     </div>
-
 
                     <div>
 
@@ -794,30 +890,33 @@
 
     <div class="modal-dialog modal-dialog-centered" role="document">
 
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+        <div class="modal-content shadow-lg border-0"
+            style="border-radius: 16px; overflow: hidden; background: #ffffff;">
 
+            <div class="modal-header border-0 pb-3 pt-4 px-4"
+                style="background: linear-gradient(135deg, #f96332 0%, #ff8c42 100%); color: white;">
 
-            <!-- ========================================== -->
-            <!-- MODAL HEADER                               -->
-            <!-- ========================================== -->
-            <div class="modal-header text-white" style="background: linear-gradient(135deg, #f96332 0%, #ff8c42 100%);">
+                <h5 class="modal-title font-weight-bold text-white d-flex align-items-center m-0"
+                    id="descModalLabel-{{ $project->id }}" style="font-size: 1.1rem;">
 
-                <h5 class="modal-title font-weight-bold" id="descModalLabel-{{ $project->id }}">
+                    <div style="background: rgba(255, 255, 255, 0.2); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;"
+                        class="mr-3">
+                        <i class="now-ui-icons business_briefcase-24 text-white"
+                            style="font-size: 18px; line-height: 0;"></i>
+                    </div>
 
-                    <i class="now-ui-icons business_briefcase-24 mr-2"></i>
-
-                    Description
+                    <span>
+                        Description
+                    </span>
 
                 </h5>
 
-
                 <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close"
-                    style="opacity: 0.9;">
+                    style="opacity: 0.8; text-shadow: none; transition: opacity 0.2s;"
+                    onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
 
-                    <span aria-hidden="true">
-
+                    <span aria-hidden="true" style="font-size: 1.5rem;">
                         &times;
-
                     </span>
 
                 </button>
@@ -825,26 +924,24 @@
             </div>
 
 
-            <!-- ========================================== -->
-            <!-- MODAL BODY                                 -->
-            <!-- ========================================== -->
-            <div class="modal-body p-4 text-dark" style="background-color: #f9fbfd; line-height: 1.6;">
+            <div class="modal-body p-4 text-left" style="background-color: #fcfcfc;">
 
-                <p class="mb-0" style="white-space: pre-line;">
+                <div
+                    style="background: rgba(249, 99, 50, 0.04); border: 1px solid rgba(249, 99, 50, 0.12); border-radius: 12px; padding: 20px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);">
+                    <p class="text-dark m-0" style="white-space: pre-line; line-height: 1.8; font-size: 0.95rem;">
 
-                    {{ $project->description }}
+                        {{ $project->description }}
 
-                </p>
+                    </p>
+                </div>
 
             </div>
 
 
-            <!-- ========================================== -->
-            <!-- MODAL FOOTER                               -->
-            <!-- ========================================== -->
-            <div class="modal-footer bg-white border-0 py-3">
+            <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-end" style="background-color: #fcfcfc;">
 
-                <button type="button" class="btn btn-secondary btn-round px-4 shadow-sm" data-dismiss="modal">
+                <button type="button" class="btn btn-secondary btn-round px-4 py-2" data-dismiss="modal"
+                    style="text-transform: none; font-weight: 600; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
 
                     Close
 
@@ -861,5 +958,4 @@
 @endif
 
 @endforeach
-
 @endsection

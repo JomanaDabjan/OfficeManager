@@ -15,7 +15,8 @@
 <div class="row justify-content-center mt-4 mb-4">
     <div class="col-lg-9 col-md-10">
 
-
+        <!-- Session / General Alert Message -->
+        <x-alert-message />
 
         <div class="card shadow-sm border-0 project-form-card">
 
@@ -40,14 +41,14 @@
                     <!-- CSRF Security Token Protection -->
                     @csrf
 
+
+
                     <!-- ========================================================= -->
                     <!-- ROW 1: PROJECT SELECTION                                  -->
                     <!-- ========================================================= -->
                     <div class="row">
                         <!-- Project Selection Field -->
                         <div class="col-md-12">
-                            <!-- Include Session Alert Message Component -->
-                            <x-alert-message />
                             <div class="form-group">
                                 <label class="form-control-label font-weight-bold text-dark">Project</label>
                                 <!-- Added select2-ajax class for dynamic search and pagination handling -->
@@ -112,11 +113,11 @@
                     <div class="row mt-3">
                         <div class="col-md-12">
                             <div class="form-group">
-                                <label class="form-control-label font-weight-bold text-dark">Description</label>
+                                <label class="form-control-label text-dark font-weight-bold">Description</label>
                                 <textarea name="description" rows="4" class="form-control"
                                     placeholder="Enter team description and objectives...">{{ old('description') }}</textarea>
                                 @error('description')
-                                <span class="text-danger text-sm mt-1 d-block">{{ $message++ }}</span>
+                                <span class="text-danger text-sm mt-1 d-block">{{ $message }}</span>
                                 @enderror
                             </div>
                         </div>

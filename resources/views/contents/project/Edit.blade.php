@@ -5,12 +5,12 @@
 
 @section('Main_Content')
 
-<!-- 
-  ==================================================================== 
-  PROJECT EDIT FORM CONTAINER 
-  ==================================================================== 
-  Main wrapper centering the edit form card within the administrative layout. 
-  ==================================================================== 
+<!--
+  ====================================================================
+  PROJECT EDIT FORM CONTAINER
+  ====================================================================
+  Main wrapper centering the edit form card within the administrative layout.
+  ====================================================================
 -->
 
 @can('update', $project)
@@ -55,6 +55,12 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label class="form-control-label font-weight-bold text-dark">Assign Manager</label>
+                                @if(auth()->user()->role === 'manager')
+                                <!-- إذا كان المستخدم مديراً، يتم عرض اسمه ولا يمكنه تعديله، وتُرسل قيمته الحالية خفية -->
+                                <input type="text" class="form-control" value="{{ auth()->user()->name }}" disabled>
+                                <input type="hidden" name="manager_id" value="{{ auth()->id() }}">
+                                @else
+                                <!-- إذا كان أدمن، نسمح له باختيار المدير المناسب من القائمة -->
                                 <select name="manager_id" class="form-control @error('manager_id') is-invalid @enderror"
                                     required>
                                     <option value="" disabled selected>Select project manager...</option>
@@ -65,6 +71,7 @@
                                     </option>
                                     @endforeach
                                 </select>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -130,12 +137,12 @@
                         </div>
                     </div>
 
-                    <!-- 
-                      ==================================================================== 
-                      FORM ACTION BUTTONS SECTION 
-                      ==================================================================== 
-                      Contains navigation cancel button and submission trigger button. 
-                      ==================================================================== 
+                    <!--
+                      ====================================================================
+                      FORM ACTION BUTTONS SECTION
+                      ====================================================================
+                      Contains navigation cancel button and submission trigger button.
+                      ====================================================================
                     -->
                     <div class="row mt-4">
                         <div class="col-md-12 text-right">

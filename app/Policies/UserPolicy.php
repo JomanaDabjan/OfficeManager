@@ -10,8 +10,8 @@ use Illuminate\Auth\Access\Response;
  * USER POLICY CLASS (ROLE-BASED AUTHORIZATION & ACCESS CONTROL)
  * =========================================================================
  * This policy handles all security rules and access permissions for User resources.
- * It strictly regulates which roles (Admin, Manager, Team Leader, Employee) 
- * can view, create, update, or delete users within the application based on 
+ * It strictly regulates which roles (Admin, Manager, Team Leader, Employee)
+ * can view, create, update, or delete users within the application based on
  * project and team relationships.
  */
 class UserPolicy
@@ -67,23 +67,24 @@ class UserPolicy
 
         // 3. Manager: Can view users ONLY if they belong to projects managed by this manager
         if ($role === 'manager') {
-            $isManaged = $model->projects()->where('manager_id', $user->id)->exists();
+            $isManaged = $model->teams()
+                ->whereHas('project', function ($query) use ($user) {
+                    $query->where('manager_id', $user->id);
+                })->exists()
+                || $model->projects()->where('manager_id', $user->id)->exists()
+                || $model->ledTeams()->whereHas('project', function ($query) use ($user) {
+                    $query->where('manager_id', $user->id);
+                })->exists();
 
             return $isManaged
                 ? Response::allow()
                 : Response::deny('Unauthorized action. You can only view users associated with your managed projects.');
         }
 
-        // 4. Team Leader: Can view users ONLY if they belong to a project or team led by this team leader
+        // 4. Team Leader: Can view users ONLY if they belong to a team led by this team leader or share the same team/project
         if ($role === 'team_leader') {
-            $isLed = $model->projects()->where('team_leader_id', $user->id)->exists()
-                || $model->teams()->where('team_leader_id', $user->id)->exists()
-                || $model->projects()->whereHas('users', function ($query) use ($user) {
-                    $query->where('user_id', $user->id);
-                })->exists()
-                || $model->teams()->whereHas('users', function ($query) use ($user) {
-                    $query->where('user_id', $user->id);
-                })->exists();
+            $isLed = $model->teams()->where('team_leader_id', $user->id)->exists()
+                || $model->teams()->whereIn('team_id', $user->teams()->pluck('teams.id'))->exists();
 
             return $isLed
                 ? Response::allow()
@@ -136,23 +137,9 @@ class UserPolicy
             return Response::allow();
         }
 
-        // 3. Manager: Can update users only if they belong to projects managed by this manager
-        if ($role === 'manager') {
-            $isManaged = $model->projects()->where('manager_id', $user->id)->exists();
-
-            return $isManaged
-                ? Response::allow()
-                : Response::deny('You cannot edit this user because they are not part of your managed projects.');
-        }
-
-        // 4. Team Leader: Can update users only if they belong to their projects or teams
-        if ($role === 'team_leader') {
-            $isLed = $model->projects()->where('team_leader_id', $user->id)->exists()
-                || $model->teams()->where('team_leader_id', $user->id)->exists();
-
-            return $isLed
-                ? Response::allow()
-                : Response::deny('You cannot edit this user because they are not part of your projects or teams.');
+        // 3. Manager & Team Leader: Restricted from modifying other user profiles for security
+        if (in_array($role, ['manager', 'team_leader'])) {
+            return Response::deny('Managers and Team Leaders are not authorized to modify user profiles.');
         }
 
         // 5. Employees cannot modify other user accounts

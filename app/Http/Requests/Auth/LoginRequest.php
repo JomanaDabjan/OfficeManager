@@ -65,6 +65,18 @@ class LoginRequest extends FormRequest
         }
 
         // =====================================================================
+        // SECURITY LAYER 3.5: Deactivated Account Protection
+        // =====================================================================
+        // Check the account status BEFORE verifying the password.
+        // A deactivated user is not allowed to authenticate again,
+        // even if the correct password is provided.
+        if (strtolower(trim($user->status ?? '')) === 'deactivated') {
+            throw ValidationException::withMessages([
+                'email' => 'Your account has been deactivated by an administrator. You cannot log in. Please contact the administrator if you believe this is a mistake.',
+            ]);
+        }
+
+        // =====================================================================
         // SECURITY LAYER 4: Password Verification & Authentication Guard
         // =====================================================================
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {

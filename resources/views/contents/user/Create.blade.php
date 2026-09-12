@@ -19,30 +19,28 @@
         </div>
 
         <div class="card-body p-4">
-            @if ($errors->any())
-            <div class="alert alert-danger" style="border-radius: 8px;">
-                <ul class="mb-0">
-                    @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-            @endif
 
             @can('create', \App\Models\User::class)
+
+            <x-alert-message />
 
             <form action="{{ route('admin.user.store') }}" method="POST" autocomplete="off">
                 @csrf
                 <input type="text" name="fake_username" style="display:none;" autocomplete="username">
                 <input type="password" name="fake_password" style="display:none;" autocomplete="current-password">
 
-                <!-- الحقول مرتبة بشكل عمودي وبدقة مطابقة لتصميم صفحة Create Team -->
+
                 <div class="form-group mb-4">
                     <label for="name" class="form-label font-weight-bold text-muted"
                         style="font-size: 12px; letter-spacing: 1px;">FULL NAME</label>
                     <input type="text" class="form-control" id="name" name="name" value="{{ old('name') }}"
                         placeholder="Enter full name..." autocomplete="off" required
                         style="border-radius: 8px; padding: 12px 15px; height: auto;">
+                    @error('name')
+                    <span class="text-danger text-sm mt-1 d-block">
+                        {{ $message }}
+                    </span>
+                    @enderror
                 </div>
 
                 <div class="form-group mb-4">
@@ -51,6 +49,11 @@
                     <input type="email" class="form-control" id="email" name="email" value="{{ old('email') }}"
                         placeholder="Enter email address..." autocomplete="new-email" required
                         style="border-radius: 8px; padding: 12px 15px; height: auto;">
+                    @error('email')
+                    <span class="text-danger text-sm mt-1 d-block">
+                        {{ $message }}
+                    </span>
+                    @enderror
                 </div>
 
                 <div class="form-group mb-4">
@@ -59,6 +62,11 @@
                     <input type="password" class="form-control" id="password" name="password"
                         placeholder="Enter secure password..." autocomplete="new-password" required
                         style="border-radius: 8px; padding: 12px 15px; height: auto;">
+                    @error('password')
+                    <span class="text-danger text-sm mt-1 d-block">
+                        {{ $message }}
+                    </span>
+                    @enderror
                 </div>
 
                 <div class="form-group mb-4">
@@ -68,12 +76,17 @@
                         style="border-radius: 8px; padding: 10px 15px; height: auto;">
                         <option value="">Select Role</option>
                         <option value="admin" {{ old('role')=='admin' ? 'selected' : '' }}>Admin</option>
-                        <option value="project_manager" {{ old('role')=='project_manager' ? 'selected' : '' }}>Project
+                        <option value="manager" {{ old('role')=='manager' ? 'selected' : '' }}>Project
                             Manager</option>
                         <option value="team_leader" {{ old('role')=='team_leader' ? 'selected' : '' }}>Team Leader
                         </option>
                         <option value="employee" {{ old('role')=='employee' ? 'selected' : '' }}>Employee</option>
                     </select>
+                    @error('role')
+                    <span class="text-danger text-sm mt-1 d-block">
+                        {{ $message }}
+                    </span>
+                    @enderror
                 </div>
 
                 <div class="form-group mb-4">
@@ -82,6 +95,11 @@
                     <input type="text" class="form-control" id="phone" name="phone" value="{{ old('phone') }}"
                         placeholder="Enter phone number..."
                         style="border-radius: 8px; padding: 12px 15px; height: auto;">
+                    @error('phone')
+                    <span class="text-danger text-sm mt-1 d-block">
+                        {{ $message }}
+                    </span>
+                    @enderror
                 </div>
 
                 <div class="form-group mb-4">
@@ -90,6 +108,11 @@
                     <input type="text" class="form-control" id="position" name="position" value="{{ old('position') }}"
                         placeholder="Enter job position..."
                         style="border-radius: 8px; padding: 12px 15px; height: auto;">
+                    @error('position')
+                    <span class="text-danger text-sm mt-1 d-block">
+                        {{ $message }}
+                    </span>
+                    @enderror
                 </div>
 
                 <div class="form-group mb-4">
@@ -98,6 +121,11 @@
                     <input type="text" class="form-control" id="department" name="department"
                         value="{{ old('department') }}" placeholder="Enter department name..."
                         style="border-radius: 8px; padding: 12px 15px; height: auto;">
+                    @error('department')
+                    <span class="text-danger text-sm mt-1 d-block">
+                        {{ $message }}
+                    </span>
+                    @enderror
                 </div>
 
                 <div class="form-group mb-4">
@@ -109,6 +137,11 @@
                         <option value="deactivated" {{ old('status')=='deactivated' ? 'selected' : '' }}>Deactivated
                         </option>
                     </select>
+                    @error('status')
+                    <span class="text-danger text-sm mt-1 d-block">
+                        {{ $message }}
+                    </span>
+                    @enderror
                 </div>
 
                 <div class="form-group mb-4">
@@ -117,6 +150,11 @@
                     <input type="number" class="form-control" id="working_hours" name="working_hours"
                         value="{{ old('working_hours') }}" placeholder="Enter working hours..."
                         style="border-radius: 8px; padding: 12px 15px; height: auto;">
+                    @error('working_hours')
+                    <span class="text-danger text-sm mt-1 d-block">
+                        {{ $message }}
+                    </span>
+                    @enderror
                 </div>
 
                 <div class="form-group mb-4">
@@ -124,6 +162,11 @@
                         style="font-size: 12px; letter-spacing: 1px;">JOINING DATE</label>
                     <input type="date" class="form-control" id="joining_date" name="joining_date"
                         value="{{ old('joining_date') }}" style="border-radius: 8px; padding: 12px 15px; height: auto;">
+                    @error('joining_date')
+                    <span class="text-danger text-sm mt-1 d-block">
+                        {{ $message }}
+                    </span>
+                    @enderror
                 </div>
 
 

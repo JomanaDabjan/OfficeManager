@@ -13,7 +13,10 @@ use App\Policies\ProjectPolicy;
 use App\Models\Report;
 use App\Policies\ReportPolicy;
 use App\Policies\DashboardPolicy;
+use App\Services\DeadlineNotificationService;
+use App\Services\ReportService;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,7 +26,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Register Report Service
+        $this->app->singleton(ReportService::class, function ($app) {
+            return new ReportService();
+        });
     }
 
     /**
@@ -37,5 +43,14 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Project::class, ProjectPolicy::class);
         Gate::policy(Report::class, ReportPolicy::class);
         Gate::define('viewDashboard', [DashboardPolicy::class, 'viewDashboard']);
+
+        View::composer('layouts.app', function ($view) {
+            $deadlineNotificationService = app(DeadlineNotificationService::class);
+
+            $view->with(
+                'deadlineNotifications',
+                $deadlineNotificationService->getNotifications()
+            );
+        });
     }
 }

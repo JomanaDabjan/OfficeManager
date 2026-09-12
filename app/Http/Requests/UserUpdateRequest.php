@@ -3,15 +3,34 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
+//use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
 class UserUpdateRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return Auth::check() && Auth::user()->role === 'admin';
+        $user = $this->user();
+        $targetUser = $this->route('user');
+
+        if (!$user) {
+            return false;
+        }
+
+        // 1. السماح للـ Admin بتعديل أي مستخدم
+        if (strtolower(trim($user->role)) === 'admin') {
+            return true;
+        }
+
+        // 2. السماح للمستخدم بتعديل حسابه الشخصي (حتى لو كان مدير مشروع)
+        if ($targetUser && $targetUser->id === $user->id) {
+            return true;
+        }
+
+        // 3. ترك بقية الصلاحيات لـ Policy عبر الـ Controller
+        return $user->can('update', $targetUser);
     }
+
 
     public function rules(): array
     {

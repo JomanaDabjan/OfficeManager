@@ -218,7 +218,7 @@
                             </div>
 
                             <!-- Reset Filters Button (Appears only if a filter is active) -->
-                            @if(request()->anyFilled(['title', 'assigned_to', 'has_attachment', 'filter', 'date_from',
+                            @if(request()->anyFilled(['title', 'user_id', 'has_attachment', 'filter', 'date_from',
                             'date_to', 'search']))
                             <div>
                                 <a href="{{ route('admin.task.index') }}"
@@ -231,38 +231,37 @@
 
                         </div>
 
-                        <!-- Date From & To Filters Group (Moved to a new line) -->
-                        <div class="d-flex align-items-center" style="gap: 12px;">
-                            <span class="text-muted font-weight-bold d-flex align-items-center"
-                                style="font-size: 13px; min-width: 110px;">
-                                <i class="now-ui-icons ui-1_calendar-60 mr-1 text-primary" style="font-size: 14px;"></i>
-                                Creation Date:
-                            </span>
-                            <form method="GET" action="{{ route('admin.task.index') }}"
-                                class="d-flex align-items-center flex-grow-1" style="gap: 8px;">
-                                @foreach(request()->except(['date_from', 'date_to', 'page']) as $key => $value)
-                                <input type="hidden" name="{{ $key }}" value="{{ $value }}">
-                                @endforeach
-                                <div class="d-flex align-items-center flex-fill"
-                                    style="background-color: #f8f9fa; border: 1px solid #e3e6f0 !important; border-radius: 50rem; padding: 2px 10px; height: 35px;">
-                                    <span class="text-muted mr-1"
-                                        style="font-size: 11px; white-space: nowrap;">From:</span>
-                                    <input type="date" name="date_from" value="{{ request('date_from') }}"
-                                        class="form-control form-control-sm border-0 bg-transparent shadow-none px-0 py-0 w-100"
-                                        style="font-size: 11px;" onchange="this.form.submit()">
-                                </div>
-                                <div class="d-flex align-items-center flex-fill"
-                                    style="background-color: #f8f9fa; border: 1px solid #e3e6f0 !important; border-radius: 50rem; padding: 2px 10px; height: 35px;">
-                                    <span class="text-muted mr-1"
-                                        style="font-size: 11px; white-space: nowrap;">To:</span>
-                                    <input type="date" name="date_to" value="{{ request('date_to') }}"
-                                        class="form-control form-control-sm border-0 bg-transparent shadow-none px-0 py-0 w-100"
-                                        style="font-size: 11px;" onchange="this.form.submit()">
-                                </div>
-                            </form>
-                        </div>
-
                     </div>
+
+                    <!-- Date From & To Filters Group (Moved to a new line) -->
+                    <div class="d-flex align-items-center" style="gap: 12px;">
+                        <span class="text-muted font-weight-bold d-flex align-items-center"
+                            style="font-size: 13px; min-width: 110px;">
+                            <i class="now-ui-icons ui-1_calendar-60 mr-1 text-primary" style="font-size: 14px;"></i>
+                            Creation Date:
+                        </span>
+                        <form method="GET" action="{{ route('admin.task.index') }}"
+                            class="d-flex align-items-center flex-grow-1" style="gap: 8px;">
+                            @foreach(request()->except(['date_from', 'date_to', 'page']) as $key => $value)
+                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                            @endforeach
+                            <div class="d-flex align-items-center flex-fill"
+                                style="background-color: #f8f9fa; border: 1px solid #e3e6f0 !important; border-radius: 50rem; padding: 2px 10px; height: 35px;">
+                                <span class="text-muted mr-1" style="font-size: 11px; white-space: nowrap;">From:</span>
+                                <input type="date" name="date_from" value="{{ request('date_from') }}"
+                                    class="form-control form-control-sm border-0 bg-transparent shadow-none px-0 py-0 w-100"
+                                    style="font-size: 11px;" onchange="this.form.submit()">
+                            </div>
+                            <div class="d-flex align-items-center flex-fill"
+                                style="background-color: #f8f9fa; border: 1px solid #e3e6f0 !important; border-radius: 50rem; padding: 2px 10px; height: 35px;">
+                                <span class="text-muted mr-1" style="font-size: 11px; white-space: nowrap;">To:</span>
+                                <input type="date" name="date_to" value="{{ request('date_to') }}"
+                                    class="form-control form-control-sm border-0 bg-transparent shadow-none px-0 py-0 w-100"
+                                    style="font-size: 11px;" onchange="this.form.submit()">
+                            </div>
+                        </form>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -305,7 +304,7 @@
                                 <th class="py-3 font-weight-bold text-white draggable-header" draggable="true"
                                     data-column="description" style="cursor: grab;">Description</th>
                                 <th class="py-3 font-weight-bold text-white draggable-header" draggable="true"
-                                    data-column="assigned_to" style="cursor: grab;">Assigned To</th>
+                                    data-column="user_id" style="cursor: grab;">Assigned To</th>
                                 <th class="py-3 font-weight-bold text-white draggable-header" draggable="true"
                                     data-column="attachment" style="cursor: grab;">Attachment</th>
                                 <th class="py-3 font-weight-bold text-white draggable-header" draggable="true"
@@ -319,42 +318,55 @@
                         <tbody>
                             <!-- Loop through each task record using Laravel forelse directive -->
                             @forelse($tasks as $task)
-                            @php
-                            $displayStatus = $task->status;
-                            $dueDate = $task->end_date ?? $task->due_date ?? null;
 
-                            if ($dueDate && !in_array($task->status, ['completed', 'accepted'])) {
-                            $today = \Carbon\Carbon::today();
-                            $taskDate = \Carbon\Carbon::parse($dueDate)->startOfDay();
+                            <tr class="border-bottom task-row" data-status="{{ $task->status_data }}">
 
-                            if ($taskDate->lt($today)) {
-                            $displayStatus = 'overdue';
-                            } elseif ($taskDate->eq($today)) {
-                            $displayStatus = 'due_today';
-                            }
-                            }
-                            @endphp
-                            <tr class="border-bottom task-row" data-status="{{ $displayStatus }}">
                                 <!-- Task Title Column -->
                                 <td class="font-weight-bold text-dark pl-4 align-middle task-title" data-column="title">
-                                    {{ $task->title }}
+                                    @if(!empty($task->title))
+                                    <span
+                                        style="display: inline-block; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle;">
+                                        {{ Str::limit($task->title, 40) }}
+                                    </span>
+                                    @if(strlen($task->title) > 15)
+                                    <button type="button"
+                                        class="btn btn-link btn-sm p-0 ml-1 text-primary font-weight-bold"
+                                        data-toggle="modal" data-target="#taskTitleModal-{{ $task->id }}"
+                                        style="font-size: 12px; text-decoration: underline; vertical-align: baseline;">
+                                        More
+                                    </button>
+                                    @endif
+                                    @else
+                                    <span class="text-muted" style="font-style: italic;">
+                                        No Title
+                                    </span>
+                                    @endif
                                 </td>
 
                                 <!-- Task Description Column (Clickable to open Modal) -->
                                 <td class="text-muted align-middle task-desc" data-column="description">
-                                    {{ Str::limit($task->description, 40) }}
-                                    @if(strlen($task->description) > 40)
+                                    @if(!empty($task->description))
+                                    <span
+                                        style="display: inline-block; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle;">
+                                        {{ Str::limit($task->description, 40) }}
+                                    </span>
+                                    @if(strlen($task->description) > 15)
                                     <button type="button"
                                         class="btn btn-link btn-sm p-0 ml-1 text-primary font-weight-bold"
                                         data-toggle="modal" data-target="#taskDescModal-{{ $task->id }}"
-                                        style="font-size: 12px; text-decoration: underline;">
+                                        style="font-size: 12px; text-decoration: underline; vertical-align: baseline;">
                                         More
                                     </button>
+                                    @endif
+                                    @else
+                                    <span class="text-muted" style="font-style: italic;">
+                                        No Description
+                                    </span>
                                     @endif
                                 </td>
 
                                 <!-- Assigned User Column with Avatar Initials Matching Project Manager Style -->
-                                <td class="align-middle task-user" data-column="assigned_to">
+                                <td class="align-middle task-user" data-column="user_id">
                                     <div class="d-flex align-items-center">
                                         @if($task->assignedUser)
                                         <span
@@ -374,56 +386,29 @@
 
                                 <!-- Attachment Column (Supports Single/Multiple Files via Collection or Array) -->
                                 <td class="align-middle task-attachment" data-column="attachment">
-                                    @php
-                                    $attachments = [];
-                                    if (!empty($task->attachments)) {
-                                    $attachments = is_string($task->attachments) ? json_decode($task->attachments,
-                                    true)
-                                    ?? [$task->attachments] : $task->attachments;
-                                    } elseif (!empty($task->attachment)) {
-                                    $attachments = is_array($task->attachment) ? $task->attachment :
-                                    [$task->attachment];
-                                    }
-                                    $fileCount = count($attachments);
-                                    @endphp
 
-                                    @if($fileCount > 0)
+                                    @if($task->file_count > 0)
                                     <button type="button"
                                         class="btn btn-sm btn-outline-primary btn-round px-3 py-1 shadow-sm"
                                         data-toggle="modal" data-target="#taskFilesModal-{{ $task->id }}"
                                         style="font-size: 11px;">
-                                        <i class="now-ui-icons files_single-copy-04 mr-1"></i> View Files ({{ $fileCount
-                                        }})
+                                        <i class="now-ui-icons files_single-copy-04 mr-1"></i> View Files ({{
+                                        $task->file_count }})
                                     </button>
                                     @else
                                     <span class="text-muted font-italic" style="font-size: 12px;">No File</span>
                                     @endif
+
                                 </td>
 
-                                <!-- Task Status Column with Matching Dynamic Colors & Rejection Reason Tooltip/Modal Trigger -->
+                                <!-- Task Status Column -->
                                 <td class="align-middle task-status" data-column="status">
-                                    <span class="badge badge-pill
-                                        @if($displayStatus == 'completed') badge-success
-                                        @elseif($displayStatus == 'accepted') badge-primary
-                                        @elseif($displayStatus == 'in_progress') badge-warning
-                                        @elseif($displayStatus == 'pending') badge-info
-                                        @elseif($displayStatus == 'rejected') badge-danger
-                                        @elseif($displayStatus == 'overdue') badge-danger
-                                        @elseif($displayStatus == 'due_today') badge-purple
-                                        @else badge-secondary @endif px-3 py-2 text-white shadow-sm"
-                                        @if($displayStatus=='due_today' ) style="background-color: #6f42c1 !important;"
-                                        @endif>
-                                        {{ ucfirst(str_replace('_', ' ', $displayStatus ?? 'pending')) }}
+
+                                    <span class="badge badge-pill {{ $task->status_class }} px-3 py-2 shadow-sm"
+                                        style="display: inline-block !important; width: auto !important; min-width: 0 !important; height: auto !important; line-height: 1.2 !important; white-space: nowrap !important; border-radius: 50rem !important; {{ $task->status_style }}">
+                                        {{ $task->display_status_label }}
                                     </span>
 
-                                    <!-- Show reason button if status is rejected and rejection_reason exists -->
-                                    @if($task->status == 'rejected' && !empty($task->rejection_reason))
-                                    <button type="button" class="btn btn-link btn-sm text-danger p-0 ml-1"
-                                        data-toggle="modal" data-target="#rejectionReasonModal-{{ $task->id }}"
-                                        style="font-size: 11px;">
-                                        <i class="now-ui-icons info_circle"></i> Reason
-                                    </button>
-                                    @endif
                                 </td>
 
                                 <!-- REVIEW / ACTION COLUMN -->
@@ -468,6 +453,13 @@
                                             style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
                                             <i class="now-ui-icons ui-1_simple-remove" style="font-size: 13px;"></i>
                                         </button>
+
+                                        @else
+
+                                        <span class="text-muted font-weight-bold px-3 py-2 rounded-pill"
+                                            style="background-color: #f8f9fa; border: 1px solid #e3e6f0; font-size: 11px; display: inline-block; white-space: nowrap;">
+                                            No Review Action
+                                        </span>
 
                                         @endcan
 
@@ -517,7 +509,34 @@
                                     </div>
                                 </td>
                             </tr>
+
                             @empty
+                            <tr>
+                                <td colspan="7" class="p-0">
+                                    <div class="datatable-empty-state"
+                                        style="padding: 45px 20px; text-align: center; width: 100%;">
+
+                                        <div
+                                            style="width: 64px; height: 64px; margin: 0 auto 16px auto; border-radius: 50%; background: linear-gradient(135deg, #fff1eb 0%, #ffe4d8 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(249, 99, 50, 0.12);">
+
+                                            <i class="now-ui-icons design_bullet-list-67"
+                                                style="font-size: 28px; color: #f96332;"></i>
+
+                                        </div>
+
+                                        <div
+                                            style="font-size: 16px; font-weight: 700; color: #32325d; margin-bottom: 6px;">
+                                            No tasks available
+                                        </div>
+
+                                        <div
+                                            style="font-size: 13px; color: #8898aa; max-width: 420px; margin: 0 auto; line-height: 1.6;">
+                                            There is no task data to display at the moment.
+                                        </div>
+
+                                    </div>
+                                </td>
+                            </tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -549,48 +568,12 @@
 </div>
 
 <!-- ========================================== -->
-<!-- MODALS FOR TASK DESCRIPTIONS               -->
-<!-- ========================================== -->
-@foreach($tasks as $task)
-@if(strlen($task->description) > 40)
-<div class="modal fade" id="taskDescModal-{{ $task->id }}" tabindex="-1" role="dialog"
-    aria-labelledby="taskDescModalLabel-{{ $task->id }}" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
-            <div class="modal-header text-white" style="background: linear-gradient(135deg, #f96332 0%, #ff8c42 100%);">
-                <h5 class="modal-title font-weight-bold" id="taskDescModalLabel-{{ $task->id }}">
-                    <i class="now-ui-icons design_bullet-list-67 mr-2"></i> Task Description
-                </h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close"
-                    style="opacity: 0.9;">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body p-4 text-dark" style="background-color: #f9fbfd; line-height: 1.6;">
-                <p class="mb-0" style="white-space: pre-line;">{{ $task->description }}</p>
-            </div>
-            <div class="modal-footer bg-white border-0 py-3">
-                <button type="button" class="btn btn-secondary btn-round px-4 shadow-sm"
-                    data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-@endif
-@endforeach
-
-<!-- ========================================== -->
 <!-- MODALS FOR TASK ATTACHMENTS FILES          -->
 <!-- ========================================== -->
 @foreach($tasks as $task)
 @php
-$attachments = [];
-if (!empty($task->attachments)) {
-$attachments = is_string($task->attachments) ? json_decode($task->attachments, true) ?? [$task->attachments] :
-$task->attachments;
-} elseif (!empty($task->attachment)) {
-$attachments = is_array($task->attachment) ? $task->attachment : [$task->attachment];
-}
+$attachmentService = app(\App\Services\TaskAttachmentService::class);
+$attachments = $attachmentService->getFormattedAttachments($task);
 @endphp
 
 @if(count($attachments) > 0)
@@ -610,68 +593,66 @@ $attachments = is_array($task->attachment) ? $task->attachment : [$task->attachm
             <div class="modal-body p-4" style="background-color: #f9fbfd;">
                 <div class="list-group shadow-sm" style="border-radius: 10px; overflow: hidden;">
                     @foreach($attachments as $file)
-                    @php
-                    $filePath = is_array($file) ? ($file['path'] ?? $file['file'] ?? '') : $file;
-                    $filePath = trim($filePath, '"[] ');
-                    $fileName = basename($filePath);
-                    $extension = strtolower(pathinfo(parse_url($fileName, PHP_URL_PATH), PATHINFO_EXTENSION));
-                    $extension = rtrim($extension, '"]');
-
-                    $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg']);
-                    $isVideo = in_array($extension, ['mp4', 'mov', 'avi', 'mkv', 'webm']);
-                    $isPdf = $extension === 'pdf';
-                    $isDoc = in_array($extension, ['doc', 'docx', 'txt', 'rtf']);
-                    $isArchive = in_array($extension, ['zip', 'rar', 'tar', 'gz']);
-                    @endphp
                     <div
                         class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-3 border-bottom">
                         <div class="d-flex align-items-center text-truncate mr-3">
-                            @if($isImage)
-                            <div class="mr-3 shadow-sm rounded-circle overflow-hidden d-flex align-items-center justify-content-center"
-                                style="min-width: 40px; width: 40px; height: 40px; background-color: #fee2e2;">
-                                <img src="{{ asset('storage/' . $filePath) }}" alt="img"
+                            @if($file['is_image'])
+                            <div class="mr-3 shadow-sm rounded overflow-hidden d-flex align-items-center justify-content-center"
+                                style="min-width: 65px; width: 65px; height: 65px; background-color: #fee2e2;">
+                                <img src="{{ asset('storage/' . $file['path']) }}" alt="img"
                                     style="width: 100%; height: 100%; object-fit: cover;">
                             </div>
                             @else
-                            <div class="rounded-circle mr-3 shadow-sm text-white d-flex align-items-center justify-content-center"
-                                style="min-width: 40px; width: 40px; height: 40px; background: linear-gradient(135deg,
-                                @if($isVideo) #ef4444, #dc2626
-                                @elseif($isPdf) #f59e0b, #d97706
-                                @elseif($isDoc) #2563eb, #1d4ed8
-                                @elseif($isArchive) #8b5cf6, #7c3aed
+                            <div class="rounded mr-3 shadow-sm text-white d-flex align-items-center justify-content-center"
+                                style="min-width: 65px; width: 65px; height: 65px; background: linear-gradient(135deg,
+                                @if($file['is_video']) #ef4444, #dc2626
+                                @elseif($file['is_pdf']) #f59e0b, #d97706
+                                @elseif($file['is_doc']) #2563eb, #1d4ed8
+                                @elseif($file['is_archive']) #8b5cf6, #7c3aed
                                 @else #f96332, #ff8c42 @endif);">
 
-                                @if($isVideo)
-                                <i class="now-ui-icons media-2_sound-wave" style="font-size: 16px;"></i>
-                                @elseif($isPdf)
-                                <i class="now-ui-icons files_paper" style="font-size: 16px;"></i>
-                                @elseif($isDoc)
-                                <i class="now-ui-icons text_align-left" style="font-size: 16px;"></i>
-                                @elseif($isArchive)
-                                <i class="now-ui-icons files_archive" style="font-size: 16px;"></i>
+                                @if($file['is_video'])
+                                <i class="now-ui-icons media-2_sound-wave" style="font-size: 24px;"></i>
+                                @elseif($file['is_pdf'])
+                                <i class="now-ui-icons files_paper" style="font-size: 24px;"></i>
+                                @elseif($file['is_doc'])
+                                <i class="now-ui-icons text_align-left" style="font-size: 24px;"></i>
+                                @elseif($file['is_archive'])
+                                <i class="now-ui-icons files_archive" style="font-size: 24px;"></i>
                                 @else
-                                <i class="now-ui-icons files_single-copy-04" style="font-size: 16px;"></i>
+                                <i class="now-ui-icons files_single-copy-04" style="font-size: 24px;"></i>
                                 @endif
                             </div>
                             @endif
 
                             <div class="text-truncate">
                                 <span class="font-weight-bold text-dark d-block text-truncate" style="font-size: 14px;"
-                                    title="{{ $fileName }}">{{ $fileName }}</span>
+                                    title="{{ $file['name'] }}">{{ $file['name'] }}</span>
                                 <small class="text-muted text-uppercase font-weight-bold" style="font-size: 10px;">
-                                    {{ $extension ?: 'File' }} Document
+                                    {{ $file['extension'] ?: 'File' }} Document
                                 </small>
                             </div>
                         </div>
                         <div class="btn-group flex-shrink-0" role="group">
-                            {{-- زر العرض المباشر (يفتح في تبويب جديد دون إجبار التحميل) --}}
-                            <a href="{{ asset('storage/' . $filePath) }}" target="_blank"
+                            {{-- إذا كان الملف صورة، يفتح صفحة المعاينة المخصصة التي أنشأناها --}}
+                            @if($file['is_image'])
+                            <a href="{{ route('admin.task.view-attachment', ['path' => $file['path']]) }}"
+                                target="_blank" class="btn btn-sm btn-info btn-round px-3 mr-2 shadow-sm text-white"
+                                style="font-size: 11px;">
+                                <i class="now-ui-icons design_image mr-1"></i> View Image
+                            </a>
+                            @else
+                            {{-- إذا لم يكن صورة (مثل PDF أو مستند)، نجعل زر الـ View يوجهه للتحميل أو العرض المباشر
+                            المتاح --}}
+                            <a href="{{ asset('storage/' . $file['path']) }}" target="_blank"
                                 class="btn btn-sm btn-info btn-round px-3 mr-2 shadow-sm text-white"
                                 style="font-size: 11px;">
-                                <i class="now-ui-icons design_image mr-1"></i> View
+                                <i class="now-ui-icons files_paper mr-1"></i> Open File
                             </a>
-                            {{-- زر التحميل (يحتوي على خاصية download المخصصة للتنزيل) --}}
-                            <a href="{{ asset('storage/' . $filePath) }}" download
+                            @endif
+
+                            {{-- زر التحميل الثابت لجميع الملفات --}}
+                            <a href="{{ asset('storage/' . $file['path']) }}" download
                                 class="btn btn-sm btn-primary btn-round px-3 shadow-sm text-white"
                                 style="font-size: 11px; background-color: #ff8c42; border-color: #ff8c42;">
                                 <i class="now-ui-icons arrows-1_cloud-download-93 mr-1"></i> Download
@@ -690,6 +671,7 @@ $attachments = is_array($task->attachment) ? $task->attachment : [$task->attachm
 </div>
 @endif
 @endforeach
+
 
 <!-- ========================================== -->
 <!-- MODAL FOR REJECTING TASK (WITH REASON)     -->
@@ -741,29 +723,239 @@ $attachments = is_array($task->attachment) ? $task->attachment : [$task->attachm
 @if($task->status == 'rejected' && !empty($task->rejection_reason))
 <div class="modal fade" id="rejectionReasonModal-{{ $task->id }}" tabindex="-1" role="dialog"
     aria-labelledby="rejectionReasonModalLabel-{{ $task->id }}" aria-hidden="true">
+
     <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
-            <div class="modal-header text-white px-4 py-3"
-                style="background: linear-gradient(135deg, #f96332 0%, #ff8c42 100%);">
-                <h5 class="modal-title font-weight-bold" id="rejectionReasonModalLabel-{{ $task->id }}">
-                    <i class="now-ui-icons info_circle mr-2"></i> Rejection Reason
+
+        <div class="modal-content shadow-lg border-0"
+            style="border-radius: 16px; overflow: hidden; background: #ffffff;">
+
+            <div class="modal-header border-0 pb-3 pt-4 px-4"
+                style="background: linear-gradient(135deg, #f96332 0%, #ff8559 100%); color: white;">
+
+                <h5 class="modal-title font-weight-bold text-white d-flex align-items-center m-0"
+                    id="rejectionReasonModalLabel-{{ $task->id }}" style="font-size: 1.1rem;">
+
+                    <div style="background: rgba(255, 255, 255, 0.2); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;"
+                        class="mr-3">
+                        <i class="now-ui-icons travel_info text-white" style="font-size: 18px; line-height: 0;"></i>
+                    </div>
+
+                    <span>
+                        Rejection Reason
+                    </span>
+
                 </h5>
+
                 <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close"
-                    style="opacity: 0.9;">
-                    <span aria-hidden="true">&times;</span>
+                    style="opacity: 0.8; text-shadow: none; transition: opacity 0.2s;"
+                    onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+
+                    <span aria-hidden="true" style="font-size: 1.5rem;">
+                        &times;
+                    </span>
+
                 </button>
+
             </div>
-            <div class="modal-body p-4 text-dark" style="background-color: #f9fbfd; line-height: 1.6;">
-                <p class="mb-0" style="white-space: pre-line;">{{ $task->rejection_reason }}</p>
+
+
+            <div class="modal-body p-4 text-left" style="background-color: #fcfcfc;">
+
+                <div
+                    style="background: rgba(255, 112, 67, 0.04); border: 1px solid rgba(249, 99, 50, 0.12); border-radius: 12px; padding: 20px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);">
+                    <p class="text-dark m-0" style="white-space: pre-line; line-height: 1.8; font-size: 0.95rem;">
+
+                        {{ $task->rejection_reason }}
+
+                    </p>
+                </div>
+
             </div>
-            <div class="modal-footer bg-white border-0 py-3">
-                <button type="button" class="btn btn-secondary btn-round px-4 shadow-sm"
-                    data-dismiss="modal">Close</button>
+
+
+            <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-end" style="background-color: #fcfcfc;">
+
+                <button type="button" class="btn btn-secondary btn-round px-4 py-2" data-dismiss="modal"
+                    style="text-transform: none; font-weight: 600; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+
+                    Close
+
+                </button>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
 @endif
+@endforeach
+
+
+
+
+<!-- ========================================== -->
+<!-- MODALS FOR TASK TITLES                     -->
+<!-- ========================================== -->
+@foreach($tasks as $task)
+
+@if(strlen($task->title) > 15)
+
+<div class="modal fade" id="taskTitleModal-{{ $task->id }}" tabindex="-1" role="dialog"
+    aria-labelledby="taskTitleModalLabel-{{ $task->id }}" aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered" role="document">
+
+        <div class="modal-content shadow-lg border-0"
+            style="border-radius: 16px; overflow: hidden; background: #ffffff;">
+
+            <div class="modal-header border-0 pb-3 pt-4 px-4"
+                style="background: linear-gradient(135deg, #f96332 0%, #ff8c42 100%); color: white;">
+
+                <h5 class="modal-title font-weight-bold text-white d-flex align-items-center m-0"
+                    id="taskTitleModalLabel-{{ $task->id }}" style="font-size: 1.1rem;">
+
+                    <div style="background: rgba(255, 255, 255, 0.2); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;"
+                        class="mr-3">
+                        <i class="now-ui-icons text_caps-small text-white" style="font-size: 18px; line-height: 0;"></i>
+                    </div>
+
+                    <span>
+                        Task Title
+                    </span>
+
+                </h5>
+
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close"
+                    style="opacity: 0.8; text-shadow: none; transition: opacity 0.2s;"
+                    onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+
+                    <span aria-hidden="true" style="font-size: 1.5rem;">
+                        &times;
+                    </span>
+
+                </button>
+
+            </div>
+
+
+            <div class="modal-body p-4 text-left" style="background-color: #fcfcfc;">
+
+                <div
+                    style="background: rgba(249, 99, 50, 0.04); border: 1px solid rgba(249, 99, 50, 0.12); border-radius: 12px; padding: 20px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);">
+                    <p class="text-dark m-0" style="white-space: pre-line; line-height: 1.8; font-size: 0.95rem;">
+
+                        {{ $task->title }}
+
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-end" style="background-color: #fcfcfc;">
+
+                <button type="button" class="btn btn-secondary btn-round px-4 py-2" data-dismiss="modal"
+                    style="text-transform: none; font-weight: 600; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+
+                    Close
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@endif
+
+@endforeach
+
+
+
+<!-- ========================================== -->
+<!-- MODALS FOR TASK DESCRIPTIONS            -->
+<!-- ========================================== -->
+@foreach($tasks as $task)
+
+@if(strlen($task->description) > 15)
+
+<div class="modal fade" id="taskDescModal-{{ $task->id }}" tabindex="-1" role="dialog"
+    aria-labelledby="taskDescModalLabel-{{ $task->id }}" aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered" role="document">
+
+        <div class="modal-content shadow-lg border-0"
+            style="border-radius: 16px; overflow: hidden; background: #ffffff;">
+
+            <div class="modal-header border-0 pb-3 pt-4 px-4"
+                style="background: linear-gradient(135deg, #f96332 0%, #ff8c42 100%); color: white;">
+
+                <h5 class="modal-title font-weight-bold text-white d-flex align-items-center m-0"
+                    id="taskDescModalLabel-{{ $task->id }}" style="font-size: 1.1rem;">
+
+                    <div style="background: rgba(255, 255, 255, 0.2); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;"
+                        class="mr-3">
+                        <i class="now-ui-icons business_briefcase-24 text-white"
+                            style="font-size: 18px; line-height: 0;"></i>
+                    </div>
+
+                    <span>
+                        Description
+                    </span>
+
+                </h5>
+
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close"
+                    style="opacity: 0.8; text-shadow: none; transition: opacity 0.2s;"
+                    onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+
+                    <span aria-hidden="true" style="font-size: 1.5rem;">
+                        &times;
+                    </span>
+
+                </button>
+
+            </div>
+
+
+            <div class="modal-body p-4 text-left" style="background-color: #fcfcfc;">
+
+                <div
+                    style="background: rgba(249, 99, 50, 0.04); border: 1px solid rgba(249, 99, 50, 0.12); border-radius: 12px; padding: 20px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);">
+                    <p class="text-dark m-0" style="white-space: pre-line; line-height: 1.8; font-size: 0.95rem;">
+
+                        {{ $task->description }}
+
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-end" style="background-color: #fcfcfc;">
+
+                <button type="button" class="btn btn-secondary btn-round px-4 py-2" data-dismiss="modal"
+                    style="text-transform: none; font-weight: 600; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+
+                    Close
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@endif
+
 @endforeach
 
 @endsection

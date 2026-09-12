@@ -39,13 +39,20 @@ class TaskPolicy
     {
         $role = strtolower(trim($user->role));
 
-        // 1. Admin can view any task
-        // 2. Manager can view the task ONLY if they manage the project associated with this task
-        // 3. Team Leader can view the task ONLY if they are the team leader of the project associated with this task
-        // 4. Employee can view the task ONLY if it is assigned to them
         $isAdmin = ($role === 'admin');
-        $isProjectManager = ($role === 'manager' && $task->project && $task->project->manager_id === $user->id);
-        $isTeamLeader = ($role === 'team_leader' && $task->project && $task->project->team_leader_id === $user->id);
+
+        // مدير المشروع: يرى المهمة فقط إذا كانت تابعة لمشروعه بشكل مباشر، أو تابعة لفريق يخص مشروعه
+        $isProjectManager = ($role === 'manager' && (
+            // 1. المهمة مرتبطة مباشرة بمشروع يديره هذا المدير
+            ($task->project && $task->project->manager_id === $user->id) ||
+
+            // 2. أو المهمة مسندة لفريق يتبع لمشروع يديره هذا المدير
+            ($task->team && $task->team->project && $task->team->project->manager_id === $user->id)
+        ));
+
+        // قائد الفريق: يرى المهمة إذا كان الموظف المعين بالمهمة ينتمي إلى فريق يترأسه قائد الفريق الحالي
+        $isTeamLeader = ($role === 'team_leader' && $task->assignedUser && $task->assignedUser->teams()->where('team_leader_id', $user->id)->exists());
+
         $isAssignedEmployee = ($role === 'employee' && $task->user_id === $user->id);
 
         return ($isAdmin || $isProjectManager || $isTeamLeader || $isAssignedEmployee)
@@ -77,36 +84,35 @@ class TaskPolicy
     {
         $role = strtolower(trim($user->role));
 
-        // Admin and Manager have full update access, Team Leader can update if they manage the project's team leader role
         if ($role === 'admin' || $role === 'manager') {
             return Response::allow();
         }
 
-        if ($role === 'team_leader' && $task->project && $task->project->team_leader_id === $user->id) {
-            return Response::allow();
+        // التحقق مما إذا كان قائد الفريق مسؤولاً عن الفريق المرتبط بمشروع هذه المهمة
+        if ($role === 'team_leader' && $task->project) {
+            $isTeamLeaderOfProject = $task->project->teams()->where('team_leader_id', $user->id)->exists();
+            if ($isTeamLeaderOfProject) {
+                return Response::allow();
+            }
         }
 
         return Response::deny('Unauthorized action. Only administrators, managers, and authorized team leaders can update tasks.');
     }
 
-    /**
-     * Determine whether the user can delete the task.
-     *
-     * @param \App\Models\User $user
-     * @param \App\Models\Task $task
-     * @return \Illuminate\Auth\Access\Response
-     */
     public function delete(User $user, Task $task): Response
     {
         $role = strtolower(trim($user->role));
 
-        // Admin and Manager can delete, Team Leader can delete if they manage the project
         if ($role === 'admin' || $role === 'manager') {
             return Response::allow();
         }
 
-        if ($role === 'team_leader' && $task->project && $task->project->team_leader_id === $user->id) {
-            return Response::allow();
+        // التحقق مما إذا كان قائد الفريق مسؤولاً عن الفريق المرتبط بمشروع هذه المهمة
+        if ($role === 'team_leader' && $task->project) {
+            $isTeamLeaderOfProject = $task->project->teams()->where('team_leader_id', $user->id)->exists();
+            if ($isTeamLeaderOfProject) {
+                return Response::allow();
+            }
         }
 
         return Response::deny('Unauthorized action. Only administrators, managers, and authorized team leaders can delete tasks.');
