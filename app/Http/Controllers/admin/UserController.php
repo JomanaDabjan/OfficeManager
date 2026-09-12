@@ -4,6 +4,8 @@ namespace App\Http\Controllers\admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Project;
+use App\Models\Task;
 use App\Http\Requests\UserStoreRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -38,10 +40,8 @@ class UserController extends Controller
     {
         $this->authorize('viewAny', User::class);
 
-        // -----------------------------------------------------------------
-        // 1. EXTRACT ALL FILTER PARAMETERS FROM REQUEST
-        // -----------------------------------------------------------------
-        // We pull all relevant filter inputs sent from the view form (name, role, position, department, status, date range).
+        $user = Auth::user();
+
         $filters = $request->only([
             'name',
             'role',
@@ -52,31 +52,52 @@ class UserController extends Controller
             'date_to'
         ]);
 
-        // -----------------------------------------------------------------
-        // 2. FETCH DISTINCT DROPDOWN OPTIONS FOR THE UI VIEW
-        // -----------------------------------------------------------------
-        // We collect unique values from the database so the filter dropdowns can dynamically populate options.
-        $allNames = User::distinct()->pluck('name')->filter()->values();
-        $allPositions = User::distinct()->pluck('position')->filter()->values();
-        $allDepartments = User::distinct()->pluck('department')->filter()->values();
+        $allNames = User::query()
+            ->visibleTo($user)
+            ->distinct()
+            ->pluck('name')
+            ->filter()
+            ->values();
 
-        // -----------------------------------------------------------------
-        // 3. APPLY QUERY SCOPE AND PAGINATION
-        // -----------------------------------------------------------------
-        // We invoke our custom `scopeFilter` defined in the User model, passing the filters array,
-        // then paginate the results to display 15 users per page while maintaining query strings.
-        $users = User::filter($filters)->paginate(15)->appends($request->query());
+        $allPositions = User::query()
+            ->visibleTo($user)
+            ->whereNotNull('position')
+            ->pluck('position')
+            ->map(function ($position) {
+                // 1. إزالة الأرقام
+                $clean = preg_replace('/[0-9]+/', '', $position);
+                // 2. توحيد الفراغات والرموز (مثل الشرطات) وتغيير الأحرف الصغيرة
+                $clean = strtolower(trim(str_replace(['-', '_'], ' ', $clean)));
+                // 3. جعل الحرف الأول من كل كلمة كبيراً لتوحيد الشكل
+                return ucwords(trim($clean));
+            })
+            ->unique() // إزالة التكرار نهائياً بعد التوحيد
+            ->filter()
+            ->values();
 
-        // -----------------------------------------------------------------
-        // 4. RETURN THE VIEW WITH COMPACTED DATA
-        // -----------------------------------------------------------------
-        // Pass users collection and dropdown lists back to the Blade index view.
-        return view('contents.user.Index', compact(
-            'users',
-            'allNames',
-            'allPositions',
-            'allDepartments'
-        ));
+        $allDepartments = User::query()
+            ->visibleTo($user)
+            ->distinct()
+            ->pluck('department')
+            ->filter()
+            ->values();
+
+        $users = User::query()
+            ->visibleTo($user)
+            ->filter($filters)
+            ->latest()
+            ->paginate(15)
+            ->appends($request->query());
+
+        return view(
+            'contents.user.Index',
+            compact(
+                'users',
+                'allNames',
+                'allPositions',
+                'allDepartments'
+            )
+        );
     }
 
     // =========================================================================
@@ -132,8 +153,8 @@ class UserController extends Controller
     }
 
     // =========================================================================
-    // SHOW METHOD: DISPLAY USER DETAILS
-    // =========================================================================
+// SHOW METHOD: DISPLAY USER DETAILS
+// =========================================================================
     /**
      * Display the specified user details along with statistics.
      *
@@ -144,11 +165,67 @@ class UserController extends Controller
     {
         $this->authorize('view', $user);
 
-        // Calculate various project and task metrics for the user profile view
-        $activeProjectsCount = $user->projects()->where('status', 'active')->count();
-        $pastProjectsCount = $user->projects()->where('status', 'completed')->count();
-        $tasksCount = $user->tasks()->count();
-        $completedTasksCount = $user->tasks()->where('status', 'completed')->count();
+        // =========================================================================
+        // GET PROJECT IDS RELATED TO THE USER
+        // =========================================================================
+
+        // Projects through teams where the user is a member
+        $teamProjectIds = DB::table('teams')
+            ->join('team_user', 'teams.id', '=', 'team_user.team_id')
+            ->where('team_user.user_id', $user->id)
+            ->pluck('teams.project_id');
+
+        // Projects where the user is the team leader
+        $ledProjectIds = DB::table('teams')
+            ->where('team_leader_id', $user->id)
+            ->pluck('project_id');
+
+        // Projects where the user is the project manager
+        $managedProjectIds = DB::table('projects')
+            ->where('manager_id', $user->id)
+            ->pluck('id');
+
+        // Combine all project IDs and remove duplicates
+        $projectIds = $teamProjectIds
+            ->merge($ledProjectIds)
+            ->merge($managedProjectIds)
+            ->filter()
+            ->unique()
+            ->values();
+
+        // =========================================================================
+        // PROJECT STATISTICS
+        // =========================================================================
+
+        $activeProjectsCount = Project::query()
+            ->whereIn('id', $projectIds)
+            ->whereIn('status', [
+                'pending',
+                'in_progress'
+            ])
+            ->count();
+
+        $pastProjectsCount = Project::query()
+            ->whereIn('id', $projectIds)
+            ->where('status', 'completed')
+            ->count();
+
+        // =========================================================================
+        // TASK STATISTICS
+        // =========================================================================
+
+        $tasksCount = Task::query()
+            ->where('user_id', $user->id)
+            ->count();
+
+        $completedTasksCount = Task::query()
+            ->where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->count();
+
+        // =========================================================================
+        // RETURN USER SHOW VIEW
+        // =========================================================================
 
         return view('contents.user.Show', compact(
             'user',

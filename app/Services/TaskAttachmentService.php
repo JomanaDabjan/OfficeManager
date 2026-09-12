@@ -5,100 +5,132 @@ namespace App\Services;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-/**
- * =========================================================================
- * TASK ATTACHMENT SERVICE CLASS
- * =========================================================================
- * This service class is responsible for handling all file attachment
- * operations (uploading and deleting files securely) for tasks.
- * This keeps our controllers clean and follows the Single Responsibility Principle.
- */
 class TaskAttachmentService
 {
-    // =========================================================================
-    // UPLOAD ATTACHMENTS METHOD
-    // =========================================================================
-
-    /**
-     * Upload multiple attachments securely and return JSON encoded paths.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return string|null
-     */
     public function uploadAttachments($request)
     {
-        // -----------------------------------------------------------------
-        // STEP 1: Check if the request contains 'attachments' files
-        // -----------------------------------------------------------------
+        // قم بتغيير 'attachment' إلى 'attachments' بالجمع
         if (!$request->hasFile('attachments')) {
-            return null; // Return null if no files were uploaded
+            return null;
         }
 
-        // Initialize an empty array to store the paths of successfully uploaded files
         $uploadedFiles = [];
 
-        // -----------------------------------------------------------------
-        // STEP 2: Loop through each uploaded file and store it securely
-        // -----------------------------------------------------------------
+        // قم بتغيير 'attachment' إلى 'attachments' هنا أيضاً
         foreach ($request->file('attachments') as $file) {
-
-            // Generate a unique, safe filename to prevent overwriting and security issues
-            // Str::slug sanitizes the original filename (removes spaces and special characters)
             $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
             $safeName = Str::slug($originalName);
             $filename = time() . '_' . uniqid() . '_' . $safeName . '.' . $file->getClientOriginalExtension();
 
-            // Store the file in the 'public' disk inside the 'tasks_attachments' folder
             $file->storeAs('tasks_attachments', $filename, 'public');
 
-            // Save the relative file path to the array
             $uploadedFiles[] = 'tasks_attachments/' . $filename;
         }
 
-        // -----------------------------------------------------------------
-        // STEP 3: Convert the array of file paths into a JSON string for database storage
-        // -----------------------------------------------------------------
-        return json_encode($uploadedFiles);
+        return $uploadedFiles;
     }
 
-    // =========================================================================
-    // DELETE ATTACHMENTS METHOD
-    // =========================================================================
-
-    /**
-     * Delete old attachments from public storage safely.
-     *
-     * @param string|null $attachmentData
-     * @return void
-     */
     public function deleteAttachments($attachmentData)
     {
-        // -----------------------------------------------------------------
-        // STEP 1: Stop execution if there is no attachment data provided
-        // -----------------------------------------------------------------
         if (!$attachmentData) {
             return;
         }
 
-        // -----------------------------------------------------------------
-        // STEP 2: Decode JSON data back into an array (for multiple files)
-        // -----------------------------------------------------------------
-        $oldAttachments = json_decode($attachmentData, true);
+        $attachments = is_array($attachmentData)
+            ? $attachmentData
+            : [$attachmentData];
 
-        // -----------------------------------------------------------------
-        // STEP 3: Loop and delete each file if it exists in storage
-        // -----------------------------------------------------------------
-        if (is_array($oldAttachments)) {
-            foreach ($oldAttachments as $oldFile) {
-                // Check if file physically exists before attempting deletion to avoid errors
-                if (Storage::disk('public')->exists($oldFile)) {
-                    Storage::disk('public')->delete($oldFile);
-                }
+        foreach ($attachments as $attachment) {
+            $filePath = is_array($attachment)
+                ? ($attachment['path'] ?? $attachment['file'] ?? '')
+                : $attachment;
+
+            $filePath = trim($filePath, '"[] ');
+
+            if (!empty($filePath) && Storage::disk('public')->exists($filePath)) {
+                Storage::disk('public')->delete($filePath);
             }
         }
-        // Fallback for handling legacy single-file strings if any exist in the database
-        elseif (Storage::disk('public')->exists($attachmentData)) {
-            Storage::disk('public')->delete($attachmentData);
+    }
+
+    public function getFormattedAttachments($task)
+    {
+        $attachments = $task->attachments_list;
+
+        $formatted = [];
+
+        foreach ($attachments as $file) {
+            $filePath = is_array($file) ? ($file['path'] ?? $file['file'] ?? '') : $file;
+            $filePath = trim($filePath, '"[] ');
+
+            if (empty($filePath)) {
+                continue;
+            }
+
+            $fileName = basename($filePath);
+            $extension = strtolower(pathinfo(parse_url($fileName, PHP_URL_PATH), PATHINFO_EXTENSION));
+            $extension = rtrim($extension, '"]');
+
+            $formatted[] = [
+                'path'      => $filePath,
+                'name'      => $fileName,
+                'extension' => $extension,
+                'is_image'  => in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg']),
+                'is_video'  => in_array($extension, ['mp4', 'mov', 'avi', 'mkv', 'webm']),
+                'is_pdf'    => $extension === 'pdf',
+                'is_doc'     => in_array($extension, ['doc', 'docx', 'txt', 'rtf']),
+                'is_archive' => in_array($extension, ['zip', 'rar', 'tar', 'gz']),
+            ];
         }
+
+        return $formatted;
+    }
+
+    public function validateAndGetPath($request)
+    {
+        $path = $request->get('path');
+
+        if (!$path || !Storage::disk('public')->exists($path)) {
+            return null;
+        }
+
+        return $path;
+    }
+
+    public function handleTaskAttachments($request, $task)
+    {
+        // 1. جلب المرفقات الحالية من المهمة (باعتبارها مصفوفة جاهزة بسبب الـ Casts)
+        $currentAttachments = $task->attachments_list;
+
+        // 2. معالجة حذف ملفات محددة إذا طلبت الواجهة ذلك
+        if ($request->has('remove_attachments')) {
+            $filesToRemove = $request->input('remove_attachments', []);
+
+            foreach ($filesToRemove as $oldFile) {
+                $this->deleteAttachments($oldFile);
+
+                $currentAttachments = array_values(
+                    array_diff($currentAttachments, [$oldFile])
+                );
+            }
+        }
+
+        // 3. معالجة رفع ملفات جديدة
+        if ($request->hasFile('attachments')) {
+            // (اختياري) إذا أردت حذف جميع الملفات القديمة عند رفع ملفات جديدة بالكامل:
+            foreach ($currentAttachments as $oldFile) {
+                $this->deleteAttachments($oldFile);
+            }
+
+            $currentAttachments = [];
+
+            // رفع الملفات الجديدة باستخدام دالتك الموجودة مسبقاً uploadAttachments
+            $newAttachments = $this->uploadAttachments($request) ?? [];
+
+            $currentAttachments = $newAttachments;
+        }
+
+        // إرجاع المصفوفة النهائية لتخزينها في قاعدة البيانات
+        return !empty($currentAttachments) ? $currentAttachments : null;
     }
 }

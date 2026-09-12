@@ -5,25 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-/*
-|--------------------------------------------------------------------------
-| Team Model
-|--------------------------------------------------------------------------
-| This model represents the "teams" table in the database.
-| It handles team data, relationships with projects, members, and tasks.
-*/
-
 class Team extends Model
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Mass Assignment Protection
-    |--------------------------------------------------------------------------
-    | The $fillable array specifies which database columns can be
-    | filled safely using mass-assignment methods like Team::create()
-    | or $team->update().
-    */
-
     use HasFactory;
 
     protected $fillable = [
@@ -33,137 +16,136 @@ class Team extends Model
         'team_leader_id'
     ];
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Relationship: Team belongs to a Project (Many-to-One)
-    |--------------------------------------------------------------------------
-    | This method defines an Inverse One-to-Many relationship.
-    | Each team belongs to one specific project (linked via project_id).
-    | This project contains the project manager (manager_id).
-    */
-
     public function project()
     {
         return $this->belongsTo(Project::class);
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Relationship: Team has many Members (Many-to-Many)
-    |--------------------------------------------------------------------------
-    | This method defines a Many-to-Many relationship using a pivot table
-    | named 'team_user'. It allows a team to have multiple users (members),
-    | and a user to belong to multiple teams.
-    */
 
     public function members()
     {
         return $this->belongsToMany(User::class, 'team_user');
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Relationship: Team has many Tasks (One-to-Many)
-    |--------------------------------------------------------------------------
-    | This method defines a One-to-Many relationship. 
-    | A single team can be assigned multiple tasks (linked via team_id in tasks table).
-    */
-
     public function tasks()
     {
         return $this->hasMany(Task::class);
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Relationship: Team belongs to a Leader (Many-to-One)
-    |--------------------------------------------------------------------------
-    | This method defines an Inverse One-to-Many relationship with the User model.
-    | It links the team's team_leader_id to the user who acts as the team leader.
-    */
-
     public function leader()
     {
-        return $this->belongsTo(User::class, 'team_leader_id');
+        return $this->belongsTo(User::class, 'team_leader_id')
+            ->where('role', 'team_leader');
     }
 
+    public function manager()
+    {
+        return $this->hasOneThrough(
+            User::class,
+            Project::class,
+            'id',
+            'id',
+            'project_id',
+            'manager_id'
+        );
+    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Local Scope: Filter Teams based on request parameters
-    |--------------------------------------------------------------------------
-    | This scope allows us to cleanly chain filtering logic in our controller.
-    | It checks if specific filters (team_name, project_id, leader_id)
-    | are present in the request and applies SQL WHERE clauses dynamically.
-    */
+    public function scopeForUser($query, $user)
+    {
+        $role = strtolower(trim($user->role ?? ''));
+
+        if ($role === 'manager') {
+            $query->whereHas('project', function ($subQuery) use ($user) {
+                $subQuery->where('manager_id', $user->id);
+            });
+        } elseif ($role === 'team_leader' || $role === 'employee') {
+            $query->where(function ($q) use ($user) {
+                $q->where('team_leader_id', $user->id)
+                    ->orWhereHas('members', function ($sub) use ($user) {
+                        $sub->where('users.id', $user->id);
+                    });
+            });
+        }
+
+        return $query;
+    }
+
+    public static function availableNamesFor($user)
+    {
+        return self::query()
+            ->forUser($user)
+            ->pluck('name')
+            ->map(function ($name) {
+                // 1. إزالة الأرقام والرموز مثل أرقام الفرق (مثل Team 1)
+                $clean = preg_replace('/[0-9]+/', '', $name);
+                // 2. توحيد الأحرف الصغيرة وإزالة الشرطات والمسافات الزائدة
+                $clean = strtolower(trim(str_replace(['-', '_'], ' ', $clean)));
+                // 3. جعل الحرف الأول من كل كلمة كبيراً
+                return ucwords(trim($clean));
+            })
+            ->unique()
+            ->filter()
+            ->values();
+    }
 
     public function scopeFilter($query, array $filters)
     {
-        /*
-        |--------------------------------------------------------------------------
-        | Filter by Team Name
-        |--------------------------------------------------------------------------
-        */
-
         $query->when($filters['team_name'] ?? false, function ($query, $teamName) {
-
             if ($teamName !== 'all') {
+                // تنظيف القيمة القادمة من الطلب لتوحيدها
+                $cleanSearchTeam = ucwords(
+                    preg_replace(
+                        '/\s+/',
+                        ' ',
+                        str_replace(
+                            ['-', '_'],
+                            ' ',
+                            strtolower(
+                                preg_replace('/[0-9]+/', '', $teamName)
+                            )
+                        )
+                    )
+                );
 
-                $query->where('name', $teamName);
+                // مطابقة اسم الفريق في قاعدة البيانات بعد توحيد الأرقام والشرطات والـ underscores والمسافات وحالة الأحرف
+                $query->whereRaw(
+                    "TRIM(
+                        REGEXP_REPLACE(
+                            REGEXP_REPLACE(
+                                REPLACE(
+                                    REPLACE(
+                                        LOWER(name),
+                                        '-',
+                                        ' '
+                                    ),
+                                    '_',
+                                    ' '
+                                ),
+                                '[0-9]+',
+                                ''
+                            ),
+                            '[[:space:]]+',
+                            ' '
+                        )
+                    ) = ?",
+                    [strtolower(trim($cleanSearchTeam))]
+                );
             }
         });
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Filter by Project ID
-        |--------------------------------------------------------------------------
-        */
-
         $query->when($filters['project_id'] ?? false, function ($query, $projectId) {
-
             if ($projectId !== 'all' && !empty($projectId)) {
-
                 $query->where('project_id', (int) $projectId);
             }
         });
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Filter by Team Leader ID
-        |--------------------------------------------------------------------------
-        | Checks if a team leader filter is provided, not 'all', and not empty.
-        */
-
         $query->when($filters['team_leader_id'] ?? false, function ($query, $teamLeaderId) {
-
             if ($teamLeaderId !== 'all' && !empty($teamLeaderId)) {
-
                 $query->where('team_leader_id', (int) $teamLeaderId);
             }
         });
+
+        return $query;
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Local Scope: Report / Export Data
-    |--------------------------------------------------------------------------
-    | This scope prepares Team data for:
-    | - PDF export
-    | - Excel export
-    | - Print report
-    | - DataTables
-    |
-    | It loads the required relationships in advance and calculates
-    | the members count using SQL instead of executing a separate
-    | count query for every Team row.
-    */
 
     public function scopeReportData($query)
     {

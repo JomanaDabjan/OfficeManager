@@ -29,9 +29,18 @@
                     </div>
                     <div>
                         <a href="{{ route('admin.user.index') }}"
-                            class="btn btn-neutral btn-round text-primary font-weight-bold">
-                            <i class="now-ui-icons arrows-1_minimal-left"></i> Back
+                            class="btn btn-neutral btn-round text-primary font-weight-bold btn-sm px-4 shadow-sm"
+                            style="height: 36px; display: inline-flex; align-items: center; justify-content: center;">
+                            <i class="now-ui-icons arrows-1_minimal-left mr-1"></i> Back
                         </a>
+
+                        @can('update', $user)
+                        <a href="{{ route('admin.user.edit', $user->id) }}"
+                            class="btn btn-primary btn-round text-white font-weight-bold btn-sm px-4 shadow-sm"
+                            style="height: 36px; display: inline-flex; align-items: center; justify-content: center;">
+                            <i class="now-ui-icons ui-2_settings-90 mr-1"></i> Edit User
+                        </a>
+                        @endcan
                     </div>
                 </div>
 

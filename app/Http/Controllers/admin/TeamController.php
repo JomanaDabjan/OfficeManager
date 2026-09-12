@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB; // Import DB facade for database transactions
 use Illuminate\Http\Request; // Import Request class for handling HTTP requests
 use Illuminate\Support\Facades\Log; // Import Log facade for error logging
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Auth; // Import Auth facade for user authentication
 
 /*
 |--------------------------------------------------------------------------
@@ -39,8 +40,10 @@ class TeamController extends Controller
     {
         $this->authorize('viewAny', Team::class);
 
-        /* Fetch teams with pagination, eager loading, filtering scope, and member count */
+        $user = Auth::user();
+
         $teams = Team::with(['project.manager', 'leader', 'members'])
+            ->forUser($user)
             ->filter($request->only([
                 'team_name',
                 'project_id',
@@ -51,13 +54,21 @@ class TeamController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        /* Fetch data required for the filtering dropdowns in the UI */
-        $allTeamNames = Team::pluck('name')->unique();
-        $projects = Project::all();
-        $leaders = User::all(); // Adjust based on your leader role system
+        $allTeamNames = Team::availableNamesFor($user);
 
-        /* Return the index view located in resources/views/contents/team/Index.blade.php with all data */
-        return view('contents.team.Index', compact('teams', 'allTeamNames', 'projects', 'leaders'));
+        $projects = Project::availableFor($user)->get();
+
+        $leaders = User::availableTeamLeadersFor($user)->get();
+
+        return view(
+            'contents.team.Index',
+            compact(
+                'teams',
+                'allTeamNames',
+                'projects',
+                'leaders'
+            )
+        );
     }
 
     /*
@@ -154,8 +165,91 @@ class TeamController extends Controller
     {
         $this->authorize('update', $team);
 
-        $employees = User::where('role', 'employee')->get();
-        return view('contents.team.members.MemberCreate', compact('team', 'employees'));
+        $currentUser = auth()->user();
+
+        $employees = User::whereIn('role', ['employee', 'team_leader'])
+            ->where('status', '!=', 'deactivated')
+            ->get();
+
+        $filteredEmployees = $employees;
+        $projectManagerId = $team->manager ? $team->manager->id : null;
+
+        if ($currentUser) {
+            $userRole = strtolower($currentUser->role ?? '');
+
+            if ($userRole === 'team_leader' || $userRole === 'manager' || $userRole === 'admin') {
+                $filteredEmployees = $employees->filter(function ($employee) use ($currentUser, $team, $projectManagerId, $userRole) {
+
+                    // 1. التعديل الحاسم: استبعاد أي شخص رتبته الحالية team_leader من قائمة الأعضاء الجدد
+                    if ($employee->role === 'team_leader') {
+                        return false;
+                    }
+
+                    // 2. استبعاد قائد الفريق الحالي للفريق نفسه (إذا كان قد تحول لـ employee صدفة)
+                    if ($team->team_leader_id && $employee->id == $team->team_leader_id) {
+                        return false;
+                    }
+
+                    // 3. استبعاد الموظفين الذين يقودون فرقاً أخرى مسبقاً
+                    $isLeadingOtherTeam = \App\Models\Team::where('team_leader_id', $employee->id)
+                        ->where('id', '!=', $team->id)
+                        ->exists();
+
+                    if ($isLeadingOtherTeam) {
+                        return false;
+                    }
+
+                    $employeePos = strtolower(trim($employee->position ?? ''));
+                    $cleanEmployeePos = str_replace([' ', '-', '_', '.'], '', $employeePos);
+
+                    $cleanTeamName = strtolower(str_replace(['team', '_', '-', ' ', '.', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'], '', $team->name));
+
+                    // فحص ما إذا كان الفريق هو Full Stack
+                    $isFullStackTeam = str_contains($cleanTeamName, 'fullstack');
+                    $currentUserPos = strtolower(trim($currentUser->position ?? ''));
+                    $cleanUserPos = str_replace([' ', '-', '_', '.'], '', $currentUserPos);
+                    $isUserFullStack = str_contains($cleanUserPos, 'fullstack');
+
+                    if ($isFullStackTeam || $isUserFullStack) {
+                        return str_contains($cleanEmployeePos, 'fullstack');
+                    }
+
+                    // 4. شروط الـ Team Leader للفرق الأخرى
+                    if ($userRole === 'team_leader') {
+                        if ($projectManagerId && $employee->id == $projectManagerId) {
+                            return false;
+                        }
+
+                        $isCurrentUser = ($employee->id == $currentUser->id);
+                        if ($isCurrentUser) {
+                            return true;
+                        }
+
+                        return ($cleanEmployeePos === $cleanUserPos);
+                    }
+
+                    // 5. شروط الـ Manager والـ Admin
+                    if ($userRole === 'manager' || $userRole === 'admin') {
+                        return !empty($cleanEmployeePos) && (
+                            str_contains($cleanTeamName, $cleanEmployeePos) ||
+                            str_contains($cleanEmployeePos, $cleanTeamName)
+                        );
+                    }
+
+                    return false;
+                });
+            }
+        }
+
+        $groupedEmployees = $filteredEmployees->groupBy(function ($employee) {
+            $pos = strtolower(str_replace([' ', '-', '_'], '', $employee->position ?? ''));
+            if (str_contains($pos, 'fullstack')) {
+                return 'Full Stack';
+            }
+            return $employee->position ?: 'Unspecified Position';
+        });
+
+        return view('contents.team.members.MemberCreate', compact('team', 'filteredEmployees', 'groupedEmployees'));
     }
 
     /*
@@ -260,8 +354,7 @@ class TeamController extends Controller
             /* Update the team record using validated data from TeamUpdateRequest */
             $team->update($request->validated());
 
-            /* Sync team members (if members field is absent, pass an empty array to clear/sync) */
-            $team->members()->sync($request->input('members', []));
+            // تم حذف سطر الـ sync هنا لكي لا يتم تفريغ الأعضاء عند تحديث حقول الفريق الأساسية
 
             DB::commit();
 

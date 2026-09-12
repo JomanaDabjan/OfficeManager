@@ -344,103 +344,104 @@
     });
 </script>
 
+
 <!-- ========================================================================= -->
 <!-- LIVE SEARCH FOR ASSIGNED TO DROPDOWN                                    -->
 <!-- ========================================================================= -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
-    const searchInput = document.getElementById("UserLiveSearch");
-    const usersList = document.getElementById("assignedUsersList");
-    const noResults = document.getElementById("assignedNoResults");
-    const dropdownMenu = document.querySelector("#dropdownAssigned + .dropdown-menu");
+        const searchInput = document.getElementById("UserLiveSearch");
+        const usersList = document.getElementById("assignedUsersList");
+        const noResults = document.getElementById("assignedNoResults");
+        const dropdownMenu = document.querySelector("#dropdownAssigned + .dropdown-menu");
 
-    if (!searchInput || !usersList) {
-        return;
-    }
+        if (!searchInput || !usersList) {
+            return;
+        }
 
-    const userItems = usersList.querySelectorAll(".assigned-user-item");
+        const userItems = usersList.querySelectorAll(".assigned-user-item");
 
-    function filterUsers() {
+        function filterUsers() {
 
-        const searchValue = searchInput.value
-            .toLowerCase()
-            .trim();
-
-        let visibleCount = 0;
-
-        userItems.forEach(function (item) {
-
-            const userName = (
-                item.getAttribute("data-user-name") ||
-                item.textContent ||
-                ""
-            )
+            const searchValue = searchInput.value
                 .toLowerCase()
                 .trim();
 
-            if (userName.indexOf(searchValue) !== -1) {
+            let visibleCount = 0;
 
-                item.style.display = "";
+            userItems.forEach(function (item) {
 
-                visibleCount++;
+                const userName = (
+                    item.getAttribute("data-user-name") ||
+                    item.textContent ||
+                    ""
+                )
+                    .toLowerCase()
+                    .trim();
 
-            } else {
+                if (userName.indexOf(searchValue) !== -1) {
 
-                item.style.display = "none";
+                    item.style.display = "";
+
+                    visibleCount++;
+
+                } else {
+
+                    item.style.display = "none";
+
+                }
+
+            });
+
+            if (noResults) {
+
+                noResults.style.display =
+                    visibleCount === 0 ? "block" : "none";
 
             }
-
-        });
-
-        if (noResults) {
-
-            noResults.style.display =
-                visibleCount === 0 ? "block" : "none";
 
         }
 
-    }
+        searchInput.addEventListener("input", filterUsers);
 
-    searchInput.addEventListener("input", filterUsers);
-
-    /*
-     * Prevent Bootstrap dropdown from closing while
-     * interacting with the search input.
-     */
-    searchInput.addEventListener("click", function (event) {
-        event.stopPropagation();
-    });
-
-    searchInput.addEventListener("mousedown", function (event) {
-        event.stopPropagation();
-    });
-
-    searchInput.addEventListener("keydown", function (event) {
-        event.stopPropagation();
-    });
-
-    if (dropdownMenu) {
-
-        dropdownMenu.addEventListener("click", function (event) {
-
-            if (event.target === searchInput) {
-                event.stopPropagation();
-            }
-
+        /*
+         * Prevent Bootstrap dropdown from closing while
+         * interacting with the search input.
+         */
+        searchInput.addEventListener("click", function (event) {
+            event.stopPropagation();
         });
 
-        dropdownMenu.addEventListener("mousedown", function (event) {
-
-            if (event.target === searchInput) {
-                event.stopPropagation();
-            }
-
+        searchInput.addEventListener("mousedown", function (event) {
+            event.stopPropagation();
         });
 
-    }
+        searchInput.addEventListener("keydown", function (event) {
+            event.stopPropagation();
+        });
 
-});
+        if (dropdownMenu) {
+
+            dropdownMenu.addEventListener("click", function (event) {
+
+                if (event.target === searchInput) {
+                    event.stopPropagation();
+                }
+
+            });
+
+            dropdownMenu.addEventListener("mousedown", function (event) {
+
+                if (event.target === searchInput) {
+                    event.stopPropagation();
+                }
+
+            });
+
+        }
+
+    });
 </script>
 
 
@@ -453,36 +454,36 @@
         const employeeSearchInput =
             document.getElementById("employeeSearchInput");
 
-        const employeeRows =
-            document.querySelectorAll(
-                "#employeesTable tbody tr"
-            );
+        if (!employeeSearchInput) {
+            return;
+        }
 
-        if (employeeSearchInput) {
+        employeeSearchInput.addEventListener("input", function () {
 
-            employeeSearchInput.addEventListener("keyup", function () {
+            const query =
+                this.value.toLowerCase().trim();
 
-                const query =
-                    this.value.toLowerCase().trim();
+            const employeeRows =
+                document.querySelectorAll(
+                    "#usersTable tbody tr.border-bottom"
+                );
 
-                employeeRows.forEach(row => {
+            employeeRows.forEach(row => {
 
-                    const textContent =
-                        row.textContent.toLowerCase();
+                const textContent =
+                    row.textContent.toLowerCase();
 
-                    row.style.display =
-                        (
-                            query === "" ||
-                            textContent.includes(query)
-                        )
-                            ? ""
-                            : "none";
-
-                });
+                row.style.display =
+                    (
+                        query === "" ||
+                        textContent.includes(query)
+                    )
+                        ? ""
+                        : "none";
 
             });
 
-        }
+        });
 
     });
 </script>
@@ -513,7 +514,9 @@
                         'In Progress',
                         'Completed',
                         'Accepted',
-                        'Rejected'
+                        'Rejected',
+                        'Overdue',
+                        'Due Today'
                     ],
 
                     datasets: [{
@@ -523,15 +526,59 @@
                             {{ $inProgressTasks ?? 0 }},
                             {{ $completedTasks ?? 0 }},
                             {{ $acceptedTasks ?? 0 }},
-                            {{ $rejectedTasks ?? 0 }}
+                            {{ $rejectedTasks ?? 0 }},
+                            {{ $overdueTasks ?? 0 }},
+                            {{ $dueTodayTasks ?? 0 }}
                         ],
 
                         backgroundColor: [
-                            '#fbc658',
-                            '#51cbce',
-                            '#6bd098',
-                            '#28a745',
-                            '#dc3545'
+
+                            /* Pending */
+                            '#11cdef',
+
+                            /* In Progress */
+                            '#fbb140',
+
+                            /* Completed */
+                            '#2dce89',
+
+                            /* Accepted - Green Transparent */
+                            'rgba(40, 167, 69, 0.35)',
+
+                            /* Rejected - Red Transparent */
+                            'rgba(220, 53, 69, 0.35)',
+
+                            /* Overdue - Dark Red */
+                            '#dc3545',
+
+                            /* Due Today - Purple */
+                            '#8965e0'
+
+                        ],
+
+                        borderColor: [
+
+                            /* Pending */
+                            '#1171ef',
+
+                            /* In Progress */
+                            '#f39c12',
+
+                            /* Completed */
+                            '#198754',
+
+                            /* Accepted */
+                            'rgba(40, 167, 69, 0.65)',
+
+                            /* Rejected */
+                            'rgba(220, 53, 69, 0.65)',
+
+                            /* Overdue */
+                            '#a71d2a',
+
+                            /* Due Today */
+                            '#6f42c1'
+
                         ],
 
                         borderWidth: 1
@@ -650,40 +697,75 @@
 </script>
 
 
-
-
-
 <!-- ========================================================================= -->
 <!-- WELCOME MODAL CONTROL SCRIPT WITH PROGRESS BAR AND AUTO TIMED DISMISSAL   -->
 <!-- ========================================================================= -->
 <script>
     function dismissWelcomeModal() {
-        const modal = document.getElementById('custom-welcome-modal');
+
+        const modal =
+            document.getElementById(
+                'custom-welcome-modal'
+            );
+
         if (modal) {
-            modal.style.transition = 'opacity 0.35s ease';
-            modal.style.opacity = '0';
+
+            modal.style.transition =
+                'opacity 0.35s ease';
+
+            modal.style.opacity =
+                '0';
+
             setTimeout(() => {
-                modal.style.display = 'none';
+
+                modal.style.display =
+                    'none';
+
             }, 350);
         }
+
     }
 
+
     document.addEventListener("DOMContentLoaded", function () {
-        const progressBar = document.getElementById('welcome-progress-bar');
-        const timeoutDuration = 5000;
+
+        const progressBar =
+            document.getElementById(
+                'welcome-progress-bar'
+            );
+
+        const timeoutDuration =
+            5000;
+
 
         if (progressBar) {
-            progressBar.style.transition = 'none';
-            progressBar.style.width = '0%';
+
+            progressBar.style.transition =
+                'none';
+
+            progressBar.style.width =
+                '0%';
+
+
             setTimeout(() => {
-                progressBar.style.transition = `width ${timeoutDuration}ms linear`;
-                progressBar.style.width = '100%';
+
+                progressBar.style.transition =
+                    `width ${timeoutDuration}ms linear`;
+
+                progressBar.style.width =
+                    '100%';
+
             }, 300);
+
         }
 
+
         setTimeout(function () {
+
             dismissWelcomeModal();
+
         }, timeoutDuration);
+
     });
 </script>
 
@@ -1145,6 +1227,7 @@
                             normalizedOrder.push(
                                 index
                             );
+
                         }
 
                     }
@@ -1287,6 +1370,55 @@
             }
 
             // ============================================================
+            // FORCE CORRECT INITIAL ORDER FOR TASKS TABLE
+            // ============================================================
+
+            if (tableId === "tasksTable") {
+
+                const taskOrderVersionKey =
+                    "tasksTable_column_order_version";
+
+                const currentTaskOrderVersion =
+                    "v2";
+
+                const savedTaskOrderVersion =
+                    localStorage.getItem(
+                        taskOrderVersionKey
+                    );
+
+                if (
+                    savedTaskOrderVersion !==
+                    currentTaskOrderVersion
+                ) {
+
+                    localStorage.removeItem(
+                        storageKey
+                    );
+
+                    localStorage.setItem(
+                        taskOrderVersionKey,
+                        currentTaskOrderVersion
+                    );
+                }
+
+            }
+
+            // ============================================================
+            // DEFAULT INITIAL ORDER
+            // ============================================================
+
+            const defaultOrder =
+                [
+                    "title",
+                    "description",
+                    "user_id",
+                    "attachment",
+                    "status",
+                    "review_action",
+                    "actions"
+                ];
+
+            // ============================================================
             // LOAD SAVED ORDER
             // ============================================================
 
@@ -1308,7 +1440,7 @@
             }
 
             // ============================================================
-            // APPLY SAVED ORDER OR CURRENT ORDER
+            // APPLY SAVED ORDER OR DEFAULT ORDER
             // ============================================================
 
             if (
@@ -1319,6 +1451,13 @@
                 applyColumnOrder(
                     savedOrder,
                     false
+                );
+
+            } else if (tableId === "tasksTable") {
+
+                applyColumnOrder(
+                    defaultOrder,
+                    true
                 );
 
             } else {
@@ -1546,6 +1685,7 @@
 <!-- ========================================================================= -->
 <!-- LIVE SEARCH DROPDOWN FILTER MODULE                                        -->
 <!-- ========================================================================= -->
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
@@ -1784,7 +1924,6 @@
 
     });
 </script>
-
 
 <!-- ========================================================================= -->
 <!-- FILE UPLOAD PREVIEW AND MANAGEMENT MODULE                                 -->
@@ -2273,7 +2412,7 @@
         const emptyStateIcons = {
 
             teamsTable:
-                "now-ui-icons users_multiple-19",
+                "now-ui-icons users_circle-08",
 
             projectsTable:
                 "now-ui-icons business_briefcase-24",
@@ -2407,6 +2546,25 @@
 
                 </div>
             `;
+
+        }
+
+        // ================================================================
+        // USERS EMPTY STATE ELEMENT
+        // ================================================================
+
+        const usersTableEmptyState =
+            document.getElementById(
+                "usersTableEmptyState"
+            );
+
+        if (usersTableEmptyState) {
+
+            usersTableEmptyState.innerHTML =
+                createEmptyState(
+                    "usersTable"
+                );
+
         }
 
         // ================================================================
@@ -2419,15 +2577,17 @@
                 return "";
             }
 
-            text = text
-                .replace(/\s+/g, " ")
-                .trim();
+            text =
+                text
+                    .replace(/\s+/g, " ")
+                    .trim();
 
             // ------------------------------------------------------------
             // Detect exact repeated text.
             // ------------------------------------------------------------
 
-            const words = text.split(" ");
+            const words =
+                text.split(" ");
 
             if (words.length >= 4) {
 
@@ -2438,10 +2598,14 @@
                 ) {
 
                     const firstPart =
-                        words.slice(0, size).join(" ");
+                        words
+                            .slice(0, size)
+                            .join(" ");
 
                     const secondPart =
-                        words.slice(size, size * 2).join(" ");
+                        words
+                            .slice(size, size * 2)
+                            .join(" ");
 
                     if (
                         firstPart.toLowerCase() ===
@@ -2449,7 +2613,9 @@
                     ) {
 
                         const remaining =
-                            words.slice(size * 2).join(" ");
+                            words
+                                .slice(size * 2)
+                                .join(" ");
 
                         text =
                             firstPart +
@@ -2460,8 +2626,11 @@
                             );
 
                         break;
+
                     }
+
                 }
+
             }
 
             // ------------------------------------------------------------
@@ -2480,36 +2649,48 @@
 
                 const uniqueSentences = [];
 
-                sentences.forEach(function (sentence) {
+                sentences.forEach(
+                    function (sentence) {
 
-                    const normalized =
-                        sentence
-                            .toLowerCase()
-                            .replace(/\s+/g, " ")
-                            .trim();
+                        const normalized =
+                            sentence
+                                .toLowerCase()
+                                .replace(/\s+/g, " ")
+                                .trim();
 
-                    const alreadyExists =
-                        uniqueSentences.some(function (item) {
+                        const alreadyExists =
+                            uniqueSentences.some(
+                                function (item) {
 
-                            return (
-                                item
-                                    .toLowerCase()
-                                    .replace(/\s+/g, " ")
-                                    .trim() === normalized
+                                    return (
+                                        item
+                                            .toLowerCase()
+                                            .replace(/\s+/g, " ")
+                                            .trim() ===
+                                        normalized
+                                    );
+
+                                }
                             );
 
-                        });
+                        if (!alreadyExists) {
 
-                    if (!alreadyExists) {
-                        uniqueSentences.push(sentence);
+                            uniqueSentences.push(
+                                sentence
+                            );
+
+                        }
+
                     }
+                );
 
-                });
+                text =
+                    uniqueSentences.join(" ");
 
-                text = uniqueSentences.join(" ");
             }
 
             return text.trim();
+
         }
 
         // ================================================================
@@ -2522,7 +2703,8 @@
                 return "";
             }
 
-            const $cell = jQuery(cell);
+            const $cell =
+                jQuery(cell);
 
             // ------------------------------------------------------------
             // Full description elements inside the cell
@@ -2542,8 +2724,13 @@
                         .trim();
 
                 if (fullText) {
-                    return removeDuplicateText(fullText);
+
+                    return removeDuplicateText(
+                        fullText
+                    );
+
                 }
+
             }
 
             // ------------------------------------------------------------
@@ -2564,11 +2751,13 @@
             // ------------------------------------------------------------
 
             const dataAttributes = [
+
                 "full-description",
                 "description",
                 "content",
                 "text",
                 "more-text"
+
             ];
 
             for (
@@ -2579,7 +2768,8 @@
 
                 const value =
                     moreButton.attr(
-                        "data-" + dataAttributes[i]
+                        "data-" +
+                        dataAttributes[i]
                     );
 
                 if (value) {
@@ -2592,9 +2782,15 @@
                             .trim();
 
                     if (cleaned) {
-                        return removeDuplicateText(cleaned);
+
+                        return removeDuplicateText(
+                            cleaned
+                        );
+
                     }
+
                 }
+
             }
 
             // ------------------------------------------------------------
@@ -2614,8 +2810,12 @@
                     href &&
                     href.charAt(0) === "#"
                 ) {
-                    modalSelector = href;
+
+                    modalSelector =
+                        href;
+
                 }
+
             }
 
             // ------------------------------------------------------------
@@ -2627,7 +2827,9 @@
                 try {
 
                     const $modal =
-                        jQuery(modalSelector);
+                        jQuery(
+                            modalSelector
+                        );
 
                     if ($modal.length) {
 
@@ -2642,6 +2844,7 @@
                                 $modal.find(
                                     ".modal-content"
                                 ).first();
+
                         }
 
                         if ($content.length) {
@@ -2668,12 +2871,17 @@
                                 );
 
                             }
+
                         }
+
                     }
 
                 } catch (error) {
+
                     // Ignore invalid modal selectors.
+
                 }
+
             }
 
             // ------------------------------------------------------------
@@ -2708,6 +2916,7 @@
                             $relatedModal.find(
                                 ".modal-content"
                             ).first();
+
                     }
 
                     if ($content.length) {
@@ -2734,8 +2943,11 @@
                             );
 
                         }
+
                     }
+
                 }
+
             }
 
             // ------------------------------------------------------------
@@ -2768,6 +2980,7 @@
                             $modal.find(
                                 ".modal-content"
                             ).first();
+
                     }
 
                     if ($content.length) {
@@ -2794,11 +3007,15 @@
                             );
 
                         }
+
                     }
+
                 }
+
             }
 
             return "";
+
         }
 
         // ================================================================
@@ -2811,7 +3028,8 @@
                 return "";
             }
 
-            const $cell = jQuery(cell);
+            const $cell =
+                jQuery(cell);
 
             // ------------------------------------------------------------
             // IMPORTANT: Get complete More content first
@@ -2821,7 +3039,9 @@
                 getMoreContentText(cell);
 
             if (moreContent) {
+
                 return moreContent;
+
             }
 
             // ------------------------------------------------------------
@@ -2842,15 +3062,21 @@
                         .trim();
 
                 if (fullText) {
-                    return removeDuplicateText(fullText);
+
+                    return removeDuplicateText(
+                        fullText
+                    );
+
                 }
+
             }
 
             // ------------------------------------------------------------
             // Clone cell
             // ------------------------------------------------------------
 
-            const clone = cell.cloneNode(true);
+            const clone =
+                cell.cloneNode(true);
 
             // ------------------------------------------------------------
             // Remove hidden / interactive elements
@@ -2886,9 +3112,13 @@
             // Remove duplicate text
             // ------------------------------------------------------------
 
-            text = removeDuplicateText(text);
+            text =
+                removeDuplicateText(
+                    text
+                );
 
             return text;
+
         }
 
         // ================================================================
@@ -2901,7 +3131,11 @@
         ) {
 
             const header =
-                jQuery("#" + tableId + " thead th")
+                jQuery(
+                    "#" +
+                    tableId +
+                    " thead th"
+                )
                     .eq(column)
                     .text()
                     .replace(/\s+/g, " ")
@@ -2937,6 +3171,7 @@
             }
 
             return false;
+
         }
 
         // ================================================================
@@ -2948,37 +3183,46 @@
             const dateColumns = [];
 
             const headers =
-                jQuery("#" + tableId + " thead th");
+                jQuery(
+                    "#" +
+                    tableId +
+                    " thead th"
+                );
 
             let exportColumnIndex = 1;
 
-            headers.each(function (sourceIndex) {
+            headers.each(
+                function (sourceIndex) {
 
-                const $header =
-                    jQuery(this);
+                    const $header =
+                        jQuery(this);
 
-                if (!$header.is(":visible")) {
-                    return;
+                    if (!$header.is(":visible")) {
+
+                        return;
+
+                    }
+
+                    if (
+                        isReportDateColumn(
+                            tableId,
+                            sourceIndex
+                        )
+                    ) {
+
+                        dateColumns.push(
+                            exportColumnIndex
+                        );
+
+                    }
+
+                    exportColumnIndex++;
+
                 }
-
-                if (
-                    isReportDateColumn(
-                        tableId,
-                        sourceIndex
-                    )
-                ) {
-
-                    dateColumns.push(
-                        exportColumnIndex
-                    );
-
-                }
-
-                exportColumnIndex++;
-
-            });
+            );
 
             return dateColumns;
+
         }
 
         // ================================================================
@@ -3001,64 +3245,130 @@
                         letters.charCodeAt(i) -
                         64
                     );
+
             }
 
             return number;
+
         }
 
-        // ================================================================
-        // INITIALIZE REPORT
-        // ================================================================
+      function initializeReport(
+    tableId,
+    configuration
+) {
 
-        function initializeReport(
-            tableId,
-            configuration
+    const table =
+        jQuery(
+            "#" + tableId
+        );
+
+    // ------------------------------------------------------------
+    // Table does not exist on this page.
+    // ------------------------------------------------------------
+
+    if (!table.length) {
+        return;
+    }
+
+    // ============================================================
+    // REMOVE BLADE EMPTY ROW BEFORE DATATABLE INITIALIZATION
+    // ============================================================
+    // Blade uses a single TD with colspan when the table is empty.
+    // DataTables expects the number of TD elements to match the
+    // number of TH elements, so remove the Blade empty row and
+    // let DataTables display its own empty state.
+    // ============================================================
+
+    table.find("tbody tr").each(function () {
+
+        const $row = jQuery(this);
+
+        const $cells = $row.children("td, th");
+
+        if (
+            $cells.length === 1 &&
+            $cells.first().attr("colspan")
         ) {
+            $row.remove();
+        }
 
-            const table =
-                jQuery("#" + tableId);
+    });
 
-            // ------------------------------------------------------------
-            // Table does not exist on this page.
-            // ------------------------------------------------------------
+    // ============================================================
+    // IMPORTANT FIX
+    // ============================================================
+    //
+    // Management tables and Report tables use the same IDs.
+    //
+    // Management tables contain:
+    //
+    //      #tableHeaders
+    //
+    // because their headers support dragging/reordering.
+    //
+    // Therefore:
+    //
+    //      Management table = DO NOT initialize DataTables
+    //
+    //      Report table     = initialize DataTables normally
+    //
+    // ============================================================
 
-            if (!table.length) {
-                return;
-            }
+    if (
+        table.find(
+            "#tableHeaders"
+        ).length
+    ) {
 
-            // ------------------------------------------------------------
-            // Already initialized.
-            // ------------------------------------------------------------
+        return;
 
-            if (
-                jQuery.fn.DataTable.isDataTable(
-                    "#" + tableId
+    }
+
+    // ------------------------------------------------------------
+    // Already initialized.
+    // ------------------------------------------------------------
+
+    if (
+        jQuery.fn.DataTable.isDataTable(
+            "#" + tableId
+        )
+    ) {
+
+        return;
+
+    }
+
+    // ============================================================
+    // DATATABLE
+    // ============================================================
+
+    table.DataTable({
+
+        paging: false,
+
+        searching: false,
+
+        ordering: false,
+
+        info: false,
+
+        lengthChange: false,
+
+        dom: "Brt",
+
+        language: {
+
+            emptyTable:
+                createEmptyState(
+                    tableId
+                ),
+
+            zeroRecords:
+                createEmptyState(
+                    tableId
                 )
-            ) {
-                return;
-            }
 
-            // ============================================================
-            // DATATABLE
-            // ============================================================
-
-            table.DataTable({
-
-                // --------------------------------------------------------
-                // Basic DataTables settings
-                // --------------------------------------------------------
-
-                paging: false,
-
-                searching: false,
-
-                ordering: false,
-
-                info: false,
-
-                lengthChange: false,
-
-                dom: "Brt",
+        },
 
                 // ========================================================
                 // EMPTY TABLE DISPLAY
@@ -3067,10 +3377,14 @@
                 language: {
 
                     emptyTable:
-                        createEmptyState(tableId),
+                        createEmptyState(
+                            tableId
+                        ),
 
                     zeroRecords:
-                        createEmptyState(tableId)
+                        createEmptyState(
+                            tableId
+                        )
 
                 },
 
@@ -3088,13 +3402,16 @@
 
                         extend: "excelHtml5",
 
-                        title: configuration.title,
+                        title:
+                            configuration.title,
 
-                        filename: configuration.filename,
+                        filename:
+                            configuration.filename,
 
                         exportOptions: {
 
-                            columns: ":visible",
+                            columns:
+                                ":visible",
 
                             format: {
 
@@ -3105,7 +3422,9 @@
                                     node
                                 ) {
 
-                                    return cleanCellText(node);
+                                    return cleanCellText(
+                                        node
+                                    );
 
                                 }
 
@@ -3117,1094 +3436,1362 @@
                         // EXCEL CUSTOMIZATION
                         // =================================================
 
-                        customize: function (xlsx) {
-
-                            const sheet =
-                                xlsx.xl.worksheets[
-                                    "sheet1.xml"
-                                ];
-
-                            const styles =
-                                xlsx.xl[
-                                    "styles.xml"
-                                ];
-
-                            const $sheet =
-                                jQuery(sheet);
-
-                            const $styles =
-                                jQuery(styles);
-
-                            const $fonts =
-                                $styles.find("fonts");
-
-                            const $fills =
-                                $styles.find("fills");
-
-                            const $borders =
-                                $styles.find("borders");
-
-                            const $cellXfs =
-                                $styles.find("cellXfs");
-
-                            // =================================================
-                            // DATE COLUMNS
-                            // =================================================
-
-                            const excelDateColumns =
-                                getExcelDateColumns(
-                                    tableId
-                                );
-
-                            let fontCount =
-                                parseInt(
-                                    $fonts.attr("count") ||
-                                    $fonts.children().length,
-                                    10
-                                );
-
-                            let fillCount =
-                                parseInt(
-                                    $fills.attr("count") ||
-                                    $fills.children().length,
-                                    10
-                                );
-
-                            let borderCount =
-                                parseInt(
-                                    $borders.attr("count") ||
-                                    $borders.children().length,
-                                    10
-                                );
-
-                            let xfCount =
-                                parseInt(
-                                    $cellXfs.attr("count") ||
-                                    $cellXfs.children().length,
-                                    10
-                                );
-
-                            const regularFontId =
-                                fontCount;
-
-                            $fonts.append(
-                                '<font>' +
-                                    '<sz val="10"/>' +
-                                    '<name val="Arial"/>' +
-                                    '<family val="2"/>' +
-                                    '<color rgb="FF000000"/>' +
-                                '</font>'
-                            );
-
-                            fontCount++;
-
-                            const headerFontId =
-                                fontCount;
-
-                            $fonts.append(
-                                '<font>' +
-                                    '<b/>' +
-                                    '<sz val="10"/>' +
-                                    '<name val="Arial"/>' +
-                                    '<family val="2"/>' +
-                                    '<color rgb="FFFFFFFF"/>' +
-                                '</font>'
-                            );
-
-                            fontCount++;
-
-                            const titleFontId =
-                                fontCount;
-
-                            $fonts.append(
-                                '<font>' +
-                                    '<b/>' +
-                                    '<sz val="11"/>' +
-                                    '<name val="Arial"/>' +
-                                    '<family val="2"/>' +
-                                    '<color rgb="FFFFFFFF"/>' +
-                                '</font>'
-                            );
-
-                            fontCount++;
-
-                            const orangeFillId =
-                                fillCount;
-
-                            $fills.append(
-                                '<fill>' +
-                                    '<patternFill patternType="solid">' +
-                                        '<fgColor rgb="FFFF7043"/>' +
-                                        '<bgColor indexed="64"/>' +
-                                    '</patternFill>' +
-                                '</fill>'
-                            );
-
-                            fillCount++;
-
-                            const darkOrangeFillId =
-                                fillCount;
-
-                            $fills.append(
-                                '<fill>' +
-                                    '<patternFill patternType="solid">' +
-                                        '<fgColor rgb="FFE85D2A"/>' +
-                                        '<bgColor indexed="64"/>' +
-                                    '</patternFill>' +
-                                '</fill>'
-                            );
-
-                            fillCount++;
-
-                            const whiteFillId =
-                                fillCount;
-
-                            $fills.append(
-                                '<fill>' +
-                                    '<patternFill patternType="solid">' +
-                                        '<fgColor rgb="FFFFFFFF"/>' +
-                                        '<bgColor indexed="64"/>' +
-                                    '</patternFill>' +
-                                '</fill>'
-                            );
-
-                            fillCount++;
-
-                            const grayFillId =
-                                fillCount;
-
-                            $fills.append(
-                                '<fill>' +
-                                    '<patternFill patternType="solid">' +
-                                        '<fgColor rgb="FFF7F9FA"/>' +
-                                        '<bgColor indexed="64"/>' +
-                                    '</patternFill>' +
-                                '</fill>'
-                            );
-
-                            fillCount++;
-
-                            const borderId =
-                                borderCount;
-
-                            $borders.append(
-                                '<border>' +
-                                    '<left style="thin"><color rgb="FFD5DBE0"/></left>' +
-                                    '<right style="thin"><color rgb="FFD5DBE0"/></right>' +
-                                    '<top style="thin"><color rgb="FFD5DBE0"/></top>' +
-                                    '<bottom style="thin"><color rgb="FFD5DBE0"/></bottom>' +
-                                '</border>'
-                            );
-
-                            borderCount++;
-
-                            const titleXfId =
-                                xfCount;
-
-                            $cellXfs.append(
-                                '<xf numFmtId="0" fontId="' +
-                                    titleFontId +
-                                    '" fillId="' +
-                                    darkOrangeFillId +
-                                    '" borderId="' +
-                                    borderId +
-                                    '" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">' +
-                                    '<alignment horizontal="center" vertical="center" wrapText="1"/>' +
-                                '</xf>'
-                            );
-
-                            xfCount++;
-
-                            const headerXfId =
-                                xfCount;
-
-                            $cellXfs.append(
-                                '<xf numFmtId="0" fontId="' +
-                                    headerFontId +
-                                    '" fillId="' +
-                                    orangeFillId +
-                                    '" borderId="' +
-                                    borderId +
-                                    '" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">' +
-                                    '<alignment horizontal="center" vertical="center" wrapText="1"/>' +
-                                '</xf>'
-                            );
-
-                            xfCount++;
-
-                            const bodyWhiteXfId =
-                                xfCount;
-
-                            $cellXfs.append(
-                                '<xf numFmtId="0" fontId="' +
-                                    regularFontId +
-                                    '" fillId="' +
-                                    whiteFillId +
-                                    '" borderId="' +
-                                    borderId +
-                                    '" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">' +
-                                    '<alignment horizontal="center" vertical="center" wrapText="1"/>' +
-                                '</xf>'
-                            );
-
-                            xfCount++;
-
-                            const bodyGrayXfId =
-                                xfCount;
-
-                            $cellXfs.append(
-                                '<xf numFmtId="0" fontId="' +
-                                    regularFontId +
-                                    '" fillId="' +
-                                    grayFillId +
-                                    '" borderId="' +
-                                    borderId +
-                                    '" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">' +
-                                    '<alignment horizontal="center" vertical="center" wrapText="1"/>' +
-                                '</xf>'
-                            );
-
-                            xfCount++;
-
-                            // =================================================
-                            // CREATE EXCEL DATE FORMAT
-                            // =================================================
-
-                            const $numFmts =
-                                $styles.find("numFmts");
-
-                            let dateNumFmtId = 164;
-
-                            if ($numFmts.length) {
-
-                                const existingNumFmtIds =
-                                    $numFmts
-                                        .find("numFmt")
-                                        .map(function () {
-
-                                            return parseInt(
-                                                jQuery(this).attr(
-                                                    "numFmtId"
-                                                ),
-                                                10
-                                            );
-
-                                        })
-                                        .get();
-
-                                while (
-                                    existingNumFmtIds.includes(
-                                        dateNumFmtId
-                                    )
-                                ) {
-
-                                    dateNumFmtId++;
-
-                                }
-
-                                $numFmts.append(
-                                    '<numFmt numFmtId="' +
-                                        dateNumFmtId +
-                                        '" formatCode="d-m-yyyy"/>'
-                                );
-
-                                $numFmts.attr(
-                                    "count",
-                                    $numFmts.find("numFmt").length
-                                );
-
-                            } else {
-
-                                const $newNumFmts =
-                                    jQuery(
-                                        '<numFmts count="1">' +
-                                            '<numFmt numFmtId="' +
-                                                dateNumFmtId +
-                                                '" formatCode="d-m-yyyy"/>' +
-                                        '</numFmts>'
+                        customize:
+                            function (xlsx) {
+
+                                const sheet =
+                                    xlsx.xl.worksheets[
+                                        "sheet1.xml"
+                                    ];
+
+                                const styles =
+                                    xlsx.xl[
+                                        "styles.xml"
+                                    ];
+
+                                const $sheet =
+                                    jQuery(sheet);
+
+                                const $styles =
+                                    jQuery(styles);
+
+                                const $fonts =
+                                    $styles.find(
+                                        "fonts"
                                     );
 
-                                $styles
-                                    .find("fonts")
-                                    .before(
-                                        $newNumFmts
+                                const $fills =
+                                    $styles.find(
+                                        "fills"
                                     );
 
-                            }
+                                const $borders =
+                                    $styles.find(
+                                        "borders"
+                                    );
 
-                            // =================================================
-                            // DATE WHITE STYLE
-                            // =================================================
+                                const $cellXfs =
+                                    $styles.find(
+                                        "cellXfs"
+                                    );
 
-                            const dateWhiteXfId =
-                                xfCount;
+                                // =================================================
+                                // DATE COLUMNS
+                                // =================================================
 
-                            $cellXfs.append(
-                                '<xf numFmtId="' +
-                                    dateNumFmtId +
-                                    '" fontId="' +
-                                    regularFontId +
-                                    '" fillId="' +
-                                    whiteFillId +
-                                    '" borderId="' +
-                                    borderId +
-                                    '" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">' +
-                                    '<alignment horizontal="center" vertical="center" wrapText="1"/>' +
-                                '</xf>'
-                            );
+                                const excelDateColumns =
+                                    getExcelDateColumns(
+                                        tableId
+                                    );
 
-                            xfCount++;
+                                let fontCount =
+                                    parseInt(
+                                        $fonts.attr(
+                                            "count"
+                                        ) ||
+                                        $fonts.children().length,
+                                        10
+                                    );
 
-                            // =================================================
-                            // DATE GRAY STYLE
-                            // =================================================
+                                let fillCount =
+                                    parseInt(
+                                        $fills.attr(
+                                            "count"
+                                        ) ||
+                                        $fills.children().length,
+                                        10
+                                    );
 
-                            const dateGrayXfId =
-                                xfCount;
+                                let borderCount =
+                                    parseInt(
+                                        $borders.attr(
+                                            "count"
+                                        ) ||
+                                        $borders.children().length,
+                                        10
+                                    );
 
-                            $cellXfs.append(
-                                '<xf numFmtId="' +
-                                    dateNumFmtId +
-                                    '" fontId="' +
-                                    regularFontId +
-                                    '" fillId="' +
-                                    grayFillId +
-                                    '" borderId="' +
-                                    borderId +
-                                    '" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">' +
-                                    '<alignment horizontal="center" vertical="center" wrapText="1"/>' +
-                                '</xf>'
-                            );
+                                let xfCount =
+                                    parseInt(
+                                        $cellXfs.attr(
+                                            "count"
+                                        ) ||
+                                        $cellXfs.children().length,
+                                        10
+                                    );
 
-                            xfCount++;
+                                const regularFontId =
+                                    fontCount;
 
-                            $fonts.attr(
-                                "count",
-                                fontCount
-                            );
+                                $fonts.append(
+                                    '<font>' +
+                                        '<sz val="10"/>' +
+                                        '<name val="Arial"/>' +
+                                        '<family val="2"/>' +
+                                        '<color rgb="FF000000"/>' +
+                                    '</font>'
+                                );
 
-                            $fills.attr(
-                                "count",
-                                fillCount
-                            );
+                                fontCount++;
 
-                            $borders.attr(
-                                "count",
-                                borderCount
-                            );
+                                const headerFontId =
+                                    fontCount;
 
-                            $cellXfs.attr(
-                                "count",
-                                xfCount
-                            );
+                                $fonts.append(
+                                    '<font>' +
+                                        '<b/>' +
+                                        '<sz val="10"/>' +
+                                        '<name val="Arial"/>' +
+                                        '<family val="2"/>' +
+                                        '<color rgb="FFFFFFFF"/>' +
+                                    '</font>'
+                                );
 
-                            function getExcelCellText(cell) {
+                                fontCount++;
 
-                                const $cell =
-                                    jQuery(cell);
+                                const titleFontId =
+                                    fontCount;
 
-                                const type =
-                                    $cell.attr("t");
+                                $fonts.append(
+                                    '<font>' +
+                                        '<b/>' +
+                                        '<sz val="11"/>' +
+                                        '<name val="Arial"/>' +
+                                        '<family val="2"/>' +
+                                        '<color rgb="FFFFFFFF"/>' +
+                                    '</font>'
+                                );
 
-                                if (type === "s") {
+                                fontCount++;
 
-                                    const value =
-                                        $cell
-                                            .find("v")
-                                            .first()
-                                            .text();
+                                const orangeFillId =
+                                    fillCount;
 
-                                    if (value !== "") {
+                                $fills.append(
+                                    '<fill>' +
+                                        '<patternFill patternType="solid">' +
+                                            '<fgColor rgb="FFFF7043"/>' +
+                                            '<bgColor indexed="64"/>' +
+                                        '</patternFill>' +
+                                    '</fill>'
+                                );
 
-                                        const index =
-                                            parseInt(
-                                                value,
-                                                10
-                                            );
+                                fillCount++;
 
-                                        const sharedStrings =
-                                            xlsx.xl[
-                                                "sharedStrings.xml"
-                                            ];
+                                const darkOrangeFillId =
+                                    fillCount;
 
-                                        if (sharedStrings) {
+                                $fills.append(
+                                    '<fill>' +
+                                        '<patternFill patternType="solid">' +
+                                            '<fgColor rgb="FFE85D2A"/>' +
+                                            '<bgColor indexed="64"/>' +
+                                        '</patternFill>' +
+                                    '</fill>'
+                                );
 
-                                            const $shared =
-                                                jQuery(
-                                                    sharedStrings
-                                                );
+                                fillCount++;
 
-                                            const items =
-                                                $shared.find("si");
+                                const whiteFillId =
+                                    fillCount;
 
-                                            if (
-                                                items.length &&
-                                                items.eq(index).length
-                                            ) {
+                                $fills.append(
+                                    '<fill>' +
+                                        '<patternFill patternType="solid">' +
+                                            '<fgColor rgb="FFFFFFFF"/>' +
+                                            '<bgColor indexed="64"/>' +
+                                        '</patternFill>' +
+                                    '</fill>'
+                                );
 
-                                                return items
-                                                    .eq(index)
-                                                    .find("t")
-                                                    .map(function () {
+                                fillCount++;
 
-                                                        return jQuery(this).text();
+                                const grayFillId =
+                                    fillCount;
 
-                                                    })
-                                                    .get()
-                                                    .join("");
-                                            }
-                                        }
+                                $fills.append(
+                                    '<fill>' +
+                                        '<patternFill patternType="solid">' +
+                                            '<fgColor rgb="FFF7F9FA"/>' +
+                                            '<bgColor indexed="64"/>' +
+                                        '</patternFill>' +
+                                    '</fill>'
+                                );
+
+                                fillCount++;
+
+                                const borderId =
+                                    borderCount;
+
+                                $borders.append(
+                                    '<border>' +
+                                        '<left style="thin"><color rgb="FFD5DBE0"/></left>' +
+                                        '<right style="thin"><color rgb="FFD5DBE0"/></right>' +
+                                        '<top style="thin"><color rgb="FFD5DBE0"/></top>' +
+                                        '<bottom style="thin"><color rgb="FFD5DBE0"/></bottom>' +
+                                    '</border>'
+                                );
+
+                                borderCount++;
+
+                                const titleXfId =
+                                    xfCount;
+
+                                $cellXfs.append(
+                                    '<xf numFmtId="0" fontId="' +
+                                        titleFontId +
+                                        '" fillId="' +
+                                        darkOrangeFillId +
+                                        '" borderId="' +
+                                        borderId +
+                                        '" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">' +
+                                        '<alignment horizontal="center" vertical="center" wrapText="1"/>' +
+                                    '</xf>'
+                                );
+
+                                xfCount++;
+
+                                const headerXfId =
+                                    xfCount;
+
+                                $cellXfs.append(
+                                    '<xf numFmtId="0" fontId="' +
+                                        headerFontId +
+                                        '" fillId="' +
+                                        orangeFillId +
+                                        '" borderId="' +
+                                        borderId +
+                                        '" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">' +
+                                        '<alignment horizontal="center" vertical="center" wrapText="1"/>' +
+                                    '</xf>'
+                                );
+
+                                xfCount++;
+
+                                const bodyWhiteXfId =
+                                    xfCount;
+
+                                $cellXfs.append(
+                                    '<xf numFmtId="0" fontId="' +
+                                        regularFontId +
+                                        '" fillId="' +
+                                        whiteFillId +
+                                        '" borderId="' +
+                                        borderId +
+                                        '" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">' +
+                                        '<alignment horizontal="center" vertical="center" wrapText="1"/>' +
+                                    '</xf>'
+                                );
+
+                                xfCount++;
+
+                                const bodyGrayXfId =
+                                    xfCount;
+
+                                $cellXfs.append(
+                                    '<xf numFmtId="0" fontId="' +
+                                        regularFontId +
+                                        '" fillId="' +
+                                        grayFillId +
+                                        '" borderId="' +
+                                        borderId +
+                                        '" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">' +
+                                        '<alignment horizontal="center" vertical="center" wrapText="1"/>' +
+                                    '</xf>'
+                                );
+
+                                xfCount++;
+
+                                // =================================================
+                                // CREATE EXCEL DATE FORMAT
+                                // =================================================
+
+                                const $numFmts =
+                                    $styles.find(
+                                        "numFmts"
+                                    );
+
+                                let dateNumFmtId =
+                                    164;
+
+                                if ($numFmts.length) {
+
+                                    const existingNumFmtIds =
+                                        $numFmts
+                                            .find(
+                                                "numFmt"
+                                            )
+                                            .map(
+                                                function () {
+
+                                                    return parseInt(
+                                                        jQuery(this).attr(
+                                                            "numFmtId"
+                                                        ),
+                                                        10
+                                                    );
+
+                                                }
+                                            )
+                                            .get();
+
+                                    while (
+                                        existingNumFmtIds.includes(
+                                            dateNumFmtId
+                                        )
+                                    ) {
+
+                                        dateNumFmtId++;
+
                                     }
-                                }
 
-                                const inlineText =
-                                    $cell
-                                        .find("is t")
-                                        .map(function () {
+                                    $numFmts.append(
+                                        '<numFmt numFmtId="' +
+                                            dateNumFmtId +
+                                            '" formatCode="d-m-yyyy"/>'
+                                    );
 
-                                            return jQuery(this).text();
+                                    $numFmts.attr(
+                                        "count",
+                                        $numFmts.find(
+                                            "numFmt"
+                                        ).length
+                                    );
 
-                                        })
-                                        .get()
-                                        .join("");
+                                } else {
 
-                                if (inlineText) {
-                                    return inlineText;
-                                }
-
-                                return (
-                                    $cell
-                                        .find("v")
-                                        .first()
-                                        .text() ||
-                                    ""
-                                );
-                            }
-
-                            $sheet
-                                .find("row")
-                                .each(function () {
-
-                                    const $row =
-                                        jQuery(this);
-
-                                    const excelRow =
-                                        parseInt(
-                                            $row.attr("r"),
-                                            10
+                                    const $newNumFmts =
+                                        jQuery(
+                                            '<numFmts count="1">' +
+                                                '<numFmt numFmtId="' +
+                                                    dateNumFmtId +
+                                                    '" formatCode="d-m-yyyy"/>' +
+                                            '</numFmts>'
                                         );
 
-                                    if (excelRow === 1) {
+                                    $styles
+                                        .find(
+                                            "fonts"
+                                        )
+                                        .before(
+                                            $newNumFmts
+                                        );
 
-                                        $row.attr("customHeight", "1");
-                                        $row.attr("ht", "30");
-                                        $row.find("c").attr("s", titleXfId);
+                                }
 
-                                        return;
-                                    }
+                                // =================================================
+                                // DATE WHITE STYLE
+                                // =================================================
 
-                                    if (excelRow === 2) {
+                                const dateWhiteXfId =
+                                    xfCount;
 
-                                        $row.attr("customHeight", "1");
-                                        $row.attr("ht", "28");
-                                        $row.find("c").attr("s", headerXfId);
+                                $cellXfs.append(
+                                    '<xf numFmtId="' +
+                                        dateNumFmtId +
+                                        '" fontId="' +
+                                        regularFontId +
+                                        '" fillId="' +
+                                        whiteFillId +
+                                        '" borderId="' +
+                                        borderId +
+                                        '" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">' +
+                                        '<alignment horizontal="center" vertical="center" wrapText="1"/>' +
+                                    '</xf>'
+                                );
 
-                                        return;
-                                    }
+                                xfCount++;
 
-                                    const bodyIndex =
-                                        excelRow - 3;
+                                // =================================================
+                                // DATE GRAY STYLE
+                                // =================================================
 
-                                    const styleId =
-                                        bodyIndex % 2 === 0
-                                            ? bodyWhiteXfId
-                                            : bodyGrayXfId;
+                                const dateGrayXfId =
+                                    xfCount;
 
-                                    // =================================================
-                                    // APPLY DATE STYLE ONLY TO DATE COLUMNS
-                                    // =================================================
+                                $cellXfs.append(
+                                    '<xf numFmtId="' +
+                                        dateNumFmtId +
+                                        '" fontId="' +
+                                        regularFontId +
+                                        '" fillId="' +
+                                        grayFillId +
+                                        '" borderId="' +
+                                        borderId +
+                                        '" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">' +
+                                        '<alignment horizontal="center" vertical="center" wrapText="1"/>' +
+                                    '</xf>'
+                                );
 
-                                    $row.find("c").each(function () {
+                                xfCount++;
 
-                                        const $cell =
-                                            jQuery(this);
+                                $fonts.attr(
+                                    "count",
+                                    fontCount
+                                );
 
-                                        const reference =
-                                            $cell.attr("r") || "";
+                                $fills.attr(
+                                    "count",
+                                    fillCount
+                                );
 
-                                        const letters =
-                                            reference.replace(
-                                                /[0-9]/g,
-                                                ""
-                                            );
+                                $borders.attr(
+                                    "count",
+                                    borderCount
+                                );
 
-                                        const columnNumber =
-                                            columnLettersToNumber(
-                                                letters
-                                            );
+                                $cellXfs.attr(
+                                    "count",
+                                    xfCount
+                                );
 
-                                        if (
-                                            excelDateColumns.includes(
-                                                columnNumber
-                                            )
-                                        ) {
+                                function getExcelCellText(
+                                    cell
+                                ) {
 
-                                            $cell.attr(
-                                                "s",
-                                                bodyIndex % 2 === 0
-                                                    ? dateWhiteXfId
-                                                    : dateGrayXfId
-                                            );
+                                    const $cell =
+                                        jQuery(cell);
 
-                                        } else {
+                                    const type =
+                                        $cell.attr(
+                                            "t"
+                                        );
 
-                                            $cell.attr(
-                                                "s",
-                                                styleId
-                                            );
+                                    if (
+                                        type === "s"
+                                    ) {
 
-                                        }
-
-                                    });
-
-                                });
-
-                            const columnLengths = {};
-
-                            $sheet
-                                .find("row")
-                                .each(function () {
-
-                                    const $row =
-                                        jQuery(this);
-
-                                    $row.find("c").each(function () {
-
-                                        const $cell =
-                                            jQuery(this);
-
-                                        const reference =
-                                            $cell.attr("r") || "";
-
-                                        const letters =
-                                            reference.replace(
-                                                /[0-9]/g,
-                                                ""
-                                            );
-
-                                        if (!letters) {
-                                            return;
-                                        }
-
-                                        const columnNumber =
-                                            columnLettersToNumber(
-                                                letters
-                                            );
-
-                                        const text =
-                                            getExcelCellText(this)
-                                                .replace(/\s+/g, " ")
-                                                .trim();
-
-                                        const length =
-                                            text.length;
+                                        const value =
+                                            $cell
+                                                .find(
+                                                    "v"
+                                                )
+                                                .first()
+                                                .text();
 
                                         if (
-                                            !columnLengths[columnNumber]
+                                            value !== ""
                                         ) {
 
-                                            columnLengths[columnNumber] =
-                                                0;
-                                        }
-
-                                        if (
-                                            length >
-                                            columnLengths[columnNumber]
-                                        ) {
-
-                                            columnLengths[columnNumber] =
-                                                length;
-                                        }
-
-                                    });
-
-                                });
-
-                            const $cols =
-                                $sheet.find("cols").length
-                                    ? $sheet.find("cols")
-                                    : jQuery("<cols></cols>");
-
-                            if (!$cols.parent().length) {
-
-                                $sheet
-                                    .find("sheetData")
-                                    .before($cols);
-                            }
-
-                            $cols.empty();
-
-                            let totalColumns = 0;
-
-                            $sheet
-                                .find("row")
-                                .each(function () {
-
-                                    jQuery(this)
-                                        .find("c")
-                                        .each(function () {
-
-                                            const reference =
-                                                jQuery(this).attr("r") || "";
-
-                                            const letters =
-                                                reference.replace(
-                                                    /[0-9]/g,
-                                                    ""
+                                            const index =
+                                                parseInt(
+                                                    value,
+                                                    10
                                                 );
 
-                                            if (letters) {
+                                            const sharedStrings =
+                                                xlsx.xl[
+                                                    "sharedStrings.xml"
+                                                ];
 
-                                                const number =
-                                                    columnLettersToNumber(
-                                                        letters
+                                            if (
+                                                sharedStrings
+                                            ) {
+
+                                                const $shared =
+                                                    jQuery(
+                                                        sharedStrings
+                                                    );
+
+                                                const items =
+                                                    $shared.find(
+                                                        "si"
                                                     );
 
                                                 if (
-                                                    number >
-                                                    totalColumns
+                                                    items.length &&
+                                                    items.eq(
+                                                        index
+                                                    ).length
                                                 ) {
 
-                                                    totalColumns =
-                                                        number;
+                                                    return items
+                                                        .eq(
+                                                            index
+                                                        )
+                                                        .find(
+                                                            "t"
+                                                        )
+                                                        .map(
+                                                            function () {
+
+                                                                return jQuery(
+                                                                    this
+                                                                ).text();
+
+                                                            }
+                                                        )
+                                                        .get()
+                                                        .join("");
+
                                                 }
+
                                             }
 
-                                        });
+                                        }
 
-                                });
-
-                            for (
-                                let i = 1;
-                                i <= totalColumns;
-                                i++
-                            ) {
-
-                                const maxLength =
-                                    columnLengths[i] || 10;
-
-                                let minWidth = 15;
-                                let maxWidth = 55;
-
-                                if (i === 2) {
-                                    minWidth = 22;
-                                    maxWidth = 75;
-                                }
-
-                                if (i === 3) {
-                                    minWidth = 20;
-                                    maxWidth = 50;
-                                }
-
-                                if (i === 4) {
-                                    minWidth = 18;
-                                    maxWidth = 45;
-                                }
-
-                                if (i === 5) {
-                                    minWidth = 18;
-                                    maxWidth = 55;
-                                }
-
-                                if (i === 6) {
-                                    minWidth = 20;
-                                    maxWidth = 30;
-                                }
-
-                                // ------------------------------------------------
-                                // Date columns need enough width for d-m-yyyy
-                                // ------------------------------------------------
-
-                                if (
-                                    excelDateColumns.includes(i)
-                                ) {
-
-                                    minWidth = 15;
-                                    maxWidth = Math.max(
-                                        maxWidth,
-                                        18
-                                    );
-
-                                }
-
-                                let width =
-                                    maxLength + 4;
-
-                                width =
-                                    Math.max(
-                                        minWidth,
-                                        width
-                                    );
-
-                                width =
-                                    Math.min(
-                                        maxWidth,
-                                        width
-                                    );
-
-                                $cols.append(
-                                    '<col min="' +
-                                        i +
-                                        '" max="' +
-                                        i +
-                                        '" width="' +
-                                        width +
-                                        '" bestFit="1" customWidth="1"/>'
-                                );
-                            }
-
-                            $sheet
-                                .find("row")
-                                .each(function () {
-
-                                    const $row =
-                                        jQuery(this);
-
-                                    const excelRow =
-                                        parseInt(
-                                            $row.attr("r"),
-                                            10
-                                        );
-
-                                    if (excelRow <= 2) {
-                                        return;
                                     }
 
-                                    let requiredLines = 1;
+                                    const inlineText =
+                                        $cell
+                                            .find(
+                                                "is t"
+                                            )
+                                            .map(
+                                                function () {
 
-                                    $row
-                                        .find("c")
-                                        .each(function () {
+                                                    return jQuery(
+                                                        this
+                                                    ).text();
 
-                                            const $cell =
-                                                jQuery(this);
+                                                }
+                                            )
+                                            .get()
+                                            .join("");
 
-                                            const reference =
-                                                $cell.attr("r") || "";
+                                    if (
+                                        inlineText
+                                    ) {
 
-                                            const letters =
-                                                reference.replace(
-                                                    /[0-9]/g,
-                                                    ""
+                                        return inlineText;
+
+                                    }
+
+                                    return (
+                                        $cell
+                                            .find(
+                                                "v"
+                                            )
+                                            .first()
+                                            .text() ||
+                                        ""
+                                    );
+
+                                }
+
+                                $sheet
+                                    .find(
+                                        "row"
+                                    )
+                                    .each(
+                                        function () {
+
+                                            const $row =
+                                                jQuery(
+                                                    this
                                                 );
 
-                                            if (!letters) {
-                                                return;
-                                            }
-
-                                            const column =
-                                                columnLettersToNumber(
-                                                    letters
-                                                );
-
-                                            const text =
-                                                getExcelCellText(this)
-                                                    .replace(/\r?\n/g, " ")
-                                                    .trim();
-
-                                            if (!text) {
-                                                return;
-                                            }
-
-                                            const width =
-                                                Math.max(
-                                                    15,
-                                                    Math.min(
-                                                        100,
-                                                        (
-                                                            columnLengths[column] ||
-                                                            15
-                                                        ) + 4
-                                                    )
-                                                );
-
-                                            const estimatedLines =
-                                                Math.max(
-                                                    1,
-                                                    Math.ceil(
-                                                        text.length /
-                                                        Math.max(
-                                                            10,
-                                                            width - 2
-                                                        )
-                                                    )
+                                            const excelRow =
+                                                parseInt(
+                                                    $row.attr(
+                                                        "r"
+                                                    ),
+                                                    10
                                                 );
 
                                             if (
-                                                estimatedLines >
-                                                requiredLines
+                                                excelRow ===
+                                                1
                                             ) {
 
-                                                requiredLines =
-                                                    estimatedLines;
+                                                $row.attr(
+                                                    "customHeight",
+                                                    "1"
+                                                );
+
+                                                $row.attr(
+                                                    "ht",
+                                                    "30"
+                                                );
+
+                                                $row.find(
+                                                    "c"
+                                                ).attr(
+                                                    "s",
+                                                    titleXfId
+                                                );
+
+                                                return;
+
                                             }
 
-                                        });
+                                            if (
+                                                excelRow ===
+                                                2
+                                            ) {
 
-                                    requiredLines =
-                                        Math.max(
-                                            1,
-                                            Math.min(
-                                                requiredLines,
-                                                25
-                                            )
+                                                $row.attr(
+                                                    "customHeight",
+                                                    "1"
+                                                );
+
+                                                $row.attr(
+                                                    "ht",
+                                                    "28"
+                                                );
+
+                                                $row.find(
+                                                    "c"
+                                                ).attr(
+                                                    "s",
+                                                    headerXfId
+                                                );
+
+                                                return;
+
+                                            }
+
+                                            const bodyIndex =
+                                                excelRow -
+                                                3;
+
+                                            const styleId =
+                                                bodyIndex %
+                                                2 ===
+                                                0
+                                                    ? bodyWhiteXfId
+                                                    : bodyGrayXfId;
+
+                                            // =================================================
+                                            // APPLY DATE STYLE ONLY TO DATE COLUMNS
+                                            // =================================================
+
+                                            $row
+                                                .find(
+                                                    "c"
+                                                )
+                                                .each(
+                                                    function () {
+
+                                                        const $cell =
+                                                            jQuery(
+                                                                this
+                                                            );
+
+                                                        const reference =
+                                                            $cell.attr(
+                                                                "r"
+                                                            ) ||
+                                                            "";
+
+                                                        const letters =
+                                                            reference.replace(
+                                                                /[0-9]/g,
+                                                                ""
+                                                            );
+
+                                                        const columnNumber =
+                                                            columnLettersToNumber(
+                                                                letters
+                                                            );
+
+                                                        if (
+                                                            excelDateColumns.includes(
+                                                                columnNumber
+                                                            )
+                                                        ) {
+
+                                                            $cell.attr(
+                                                                "s",
+                                                                bodyIndex %
+                                                                    2 ===
+                                                                    0
+                                                                    ? dateWhiteXfId
+                                                                    : dateGrayXfId
+                                                            );
+
+                                                        } else {
+
+                                                            $cell.attr(
+                                                                "s",
+                                                                styleId
+                                                            );
+
+                                                        }
+
+                                                    }
+                                                );
+
+                                        }
+                                    );
+
+                                const columnLengths =
+                                    {};
+
+                                $sheet
+                                    .find(
+                                        "row"
+                                    )
+                                    .each(
+                                        function () {
+
+                                            const $row =
+                                                jQuery(
+                                                    this
+                                                );
+
+                                            $row
+                                                .find(
+                                                    "c"
+                                                )
+                                                .each(
+                                                    function () {
+
+                                                        const $cell =
+                                                            jQuery(
+                                                                this
+                                                            );
+
+                                                        const reference =
+                                                            $cell.attr(
+                                                                "r"
+                                                            ) ||
+                                                            "";
+
+                                                        const letters =
+                                                            reference.replace(
+                                                                /[0-9]/g,
+                                                                ""
+                                                            );
+
+                                                        if (!letters) {
+                                                            return;
+                                                        }
+
+                                                        const columnNumber =
+                                                            columnLettersToNumber(
+                                                                letters
+                                                            );
+
+                                                        const text =
+                                                            getExcelCellText(
+                                                                this
+                                                            )
+                                                                .replace(
+                                                                    /\s+/g,
+                                                                    " "
+                                                                )
+                                                                .trim();
+
+                                                        const length =
+                                                            text.length;
+
+                                                        if (
+                                                            !columnLengths[
+                                                                columnNumber
+                                                            ]
+                                                        ) {
+
+                                                            columnLengths[
+                                                                columnNumber
+                                                            ] =
+                                                                0;
+
+                                                        }
+
+                                                        if (
+                                                            length >
+                                                            columnLengths[
+                                                                columnNumber
+                                                            ]
+                                                        ) {
+
+                                                            columnLengths[
+                                                                columnNumber
+                                                            ] =
+                                                                length;
+
+                                                        }
+
+                                                    }
+                                                );
+
+                                        }
+                                    );
+
+                                const $cols =
+                                    $sheet.find(
+                                        "cols"
+                                    ).length
+                                        ? $sheet.find(
+                                            "cols"
+                                        )
+                                        : jQuery(
+                                            "<cols></cols>"
                                         );
 
-                                    const rowHeight =
-                                        Math.min(
-                                            350,
+                                if (
+                                    !$cols.parent().length
+                                ) {
+
+                                    $sheet
+                                        .find(
+                                            "sheetData"
+                                        )
+                                        .before(
+                                            $cols
+                                        );
+
+                                }
+
+                                $cols.empty();
+
+                                let totalColumns =
+                                    0;
+
+                                $sheet
+                                    .find(
+                                        "row"
+                                    )
+                                    .each(
+                                        function () {
+
+                                            jQuery(
+                                                this
+                                            )
+                                                .find(
+                                                    "c"
+                                                )
+                                                .each(
+                                                    function () {
+
+                                                        const reference =
+                                                            jQuery(
+                                                                this
+                                                            ).attr(
+                                                                "r"
+                                                            ) ||
+                                                            "";
+
+                                                        const letters =
+                                                            reference.replace(
+                                                                /[0-9]/g,
+                                                                ""
+                                                            );
+
+                                                        if (
+                                                            letters
+                                                        ) {
+
+                                                            const number =
+                                                                columnLettersToNumber(
+                                                                    letters
+                                                                );
+
+                                                            if (
+                                                                number >
+                                                                totalColumns
+                                                            ) {
+
+                                                                totalColumns =
+                                                                    number;
+
+                                                            }
+
+                                                        }
+
+                                                    }
+                                                );
+
+                                        }
+                                    );
+
+                                for (
+                                    let i = 1;
+                                    i <=
+                                    totalColumns;
+                                    i++
+                                ) {
+
+                                    const maxLength =
+                                        columnLengths[
+                                            i
+                                        ] ||
+                                        10;
+
+                                    let minWidth =
+                                        15;
+
+                                    let maxWidth =
+                                        55;
+
+                                    if (i === 2) {
+
+                                        minWidth =
+                                            22;
+
+                                        maxWidth =
+                                            75;
+
+                                    }
+
+                                    if (i === 3) {
+
+                                        minWidth =
+                                            20;
+
+                                        maxWidth =
+                                            50;
+
+                                    }
+
+                                    if (i === 4) {
+
+                                        minWidth =
+                                            18;
+
+                                        maxWidth =
+                                            45;
+
+                                    }
+
+                                    if (i === 5) {
+
+                                        minWidth =
+                                            18;
+
+                                        maxWidth =
+                                            55;
+
+                                    }
+
+                                    if (i === 6) {
+
+                                        minWidth =
+                                            20;
+
+                                        maxWidth =
+                                            30;
+
+                                    }
+
+                                    // ------------------------------------------------
+                                    // Date columns need enough width for d-m-yyyy
+                                    // ------------------------------------------------
+
+                                    if (
+                                        excelDateColumns.includes(
+                                            i
+                                        )
+                                    ) {
+
+                                        minWidth =
+                                            15;
+
+                                        maxWidth =
                                             Math.max(
-                                                30,
-                                                18 * requiredLines + 8
-                                            )
+                                                maxWidth,
+                                                18
+                                            );
+
+                                    }
+
+                                    let width =
+                                        maxLength +
+                                        4;
+
+                                    width =
+                                        Math.max(
+                                            minWidth,
+                                            width
                                         );
 
-                                    $row.attr(
-                                        "customHeight",
-                                        "1"
+                                    width =
+                                        Math.min(
+                                            maxWidth,
+                                            width
+                                        );
+
+                                    $cols.append(
+                                        '<col min="' +
+                                            i +
+                                            '" max="' +
+                                            i +
+                                            '" width="' +
+                                            width +
+                                            '" bestFit="1" customWidth="1"/>'
                                     );
 
-                                    $row.attr(
-                                        "ht",
-                                        rowHeight
+                                }
+
+                                $sheet
+                                    .find(
+                                        "row"
+                                    )
+                                    .each(
+                                        function () {
+
+                                            const $row =
+                                                jQuery(
+                                                    this
+                                                );
+
+                                            const excelRow =
+                                                parseInt(
+                                                    $row.attr(
+                                                        "r"
+                                                    ),
+                                                    10
+                                                );
+
+                                            if (
+                                                excelRow <=
+                                                2
+                                            ) {
+
+                                                return;
+
+                                            }
+
+                                            let requiredLines =
+                                                1;
+
+                                            $row
+                                                .find(
+                                                    "c"
+                                                )
+                                                .each(
+                                                    function () {
+
+                                                        const $cell =
+                                                            jQuery(
+                                                                this
+                                                            );
+
+                                                        const reference =
+                                                            $cell.attr(
+                                                                "r"
+                                                            ) ||
+                                                            "";
+
+                                                        const letters =
+                                                            reference.replace(
+                                                                /[0-9]/g,
+                                                                ""
+                                                            );
+
+                                                        if (!letters) {
+                                                            return;
+                                                        }
+
+                                                        const column =
+                                                            columnLettersToNumber(
+                                                                letters
+                                                            );
+
+                                                        const text =
+                                                            getExcelCellText(
+                                                                this
+                                                            )
+                                                                .replace(
+                                                                    /\r?\n/g,
+                                                                    " "
+                                                                )
+                                                                .trim();
+
+                                                        if (!text) {
+                                                            return;
+                                                        }
+
+                                                        const width =
+                                                            Math.max(
+                                                                15,
+                                                                Math.min(
+                                                                    100,
+                                                                    (
+                                                                        columnLengths[
+                                                                            column
+                                                                        ] ||
+                                                                        15
+                                                                    ) +
+                                                                    4
+                                                                )
+                                                            );
+
+                                                        const estimatedLines =
+                                                            Math.max(
+                                                                1,
+                                                                Math.ceil(
+                                                                    text.length /
+                                                                    Math.max(
+                                                                        10,
+                                                                        width -
+                                                                            2
+                                                                    )
+                                                                )
+                                                            );
+
+                                                        if (
+                                                            estimatedLines >
+                                                            requiredLines
+                                                        ) {
+
+                                                            requiredLines =
+                                                                estimatedLines;
+
+                                                        }
+
+                                                    }
+                                                );
+
+                                            requiredLines =
+                                                Math.max(
+                                                    1,
+                                                    Math.min(
+                                                        requiredLines,
+                                                        25
+                                                    )
+                                                );
+
+                                            const rowHeight =
+                                                Math.min(
+                                                    350,
+                                                    Math.max(
+                                                        30,
+                                                        18 *
+                                                            requiredLines +
+                                                            8
+                                                    )
+                                                );
+
+                                            $row.attr(
+                                                "customHeight",
+                                                "1"
+                                            );
+
+                                            $row.attr(
+                                                "ht",
+                                                rowHeight
+                                            );
+
+                                        }
                                     );
 
-                                });
-
-                        }
+                            }
 
                     },
 
-                    // ========================================================
+                    // ====================================================
                     // PDF
-                    // ========================================================
+                    // ====================================================
 
                     {
 
-                        extend: "pdfHtml5",
+                        extend:
+                            "pdfHtml5",
 
-                        title: configuration.title,
+                        title:
+                            configuration.title,
 
-                        filename: configuration.filename,
+                        filename:
+                            configuration.filename,
 
-                        orientation: "landscape",
+                        orientation:
+                            "landscape",
 
-                        pageSize: "A4",
+                        pageSize:
+                            "A4",
 
                         exportOptions: {
 
-                            columns: ":visible",
+                            columns:
+                                ":visible",
 
                             format: {
 
-                                body: function (
-                                    data,
-                                    row,
-                                    column,
-                                    node
-                                ) {
+                                body:
+                                    function (
+                                        data,
+                                        row,
+                                        column,
+                                        node
+                                    ) {
 
-                                    return cleanCellText(node);
+                                        return cleanCellText(
+                                            node
+                                        );
 
-                                }
+                                    }
 
                             }
 
                         },
 
                         // =================================================
-                        // PDF CUSTOMIZATION - MODIFIED ONLY
+                        // PDF CUSTOMIZATION
                         // =================================================
 
-                        customize: function (doc) {
+                        customize:
+                            function (doc) {
 
-                            doc.pageMargins = [
-                                20,
-                                30,
-                                20,
-                                30
-                            ];
+                                doc.pageMargins = [
+                                    20,
+                                    30,
+                                    20,
+                                    30
+                                ];
 
-                            doc.defaultStyle = {
+                                doc.defaultStyle = {
 
-                                fontSize: 8,
+                                    fontSize:
+                                        8,
 
-                                alignment: "center"
+                                    alignment:
+                                        "center"
 
-                            };
+                                };
 
-                            doc.styles.tableHeader = {
+                                doc.styles.tableHeader = {
 
-                                fontSize: 8.5,
+                                    fontSize:
+                                        8.5,
 
-                                bold: true,
+                                    bold:
+                                        true,
 
-                                color: "#ffffff",
+                                    color:
+                                        "#ffffff",
 
-                                fillColor: "#ff7043",
+                                    fillColor:
+                                        "#ff7043",
 
-                                alignment: "center",
+                                    alignment:
+                                        "center",
 
-                                margin: [
-                                    3,
-                                    5,
-                                    3,
-                                    5
-                                ],
+                                    margin: [
+                                        3,
+                                        5,
+                                        3,
+                                        5
+                                    ],
 
-                                noWrap: false
+                                    noWrap:
+                                        false
 
-                            };
+                                };
 
-                            // ------------------------------------------------
-                            // Locate PDF table
-                            // ------------------------------------------------
+                                // ------------------------------------------------
+                                // Locate PDF table
+                                // ------------------------------------------------
 
-                            let pdfContentIndex = -1;
-                            let pdfTable = null;
+                                let pdfContentIndex =
+                                    -1;
 
-                            if (
-                                doc.content &&
-                                doc.content.length
-                            ) {
+                                let pdfTable =
+                                    null;
 
-                                doc.content.forEach(
-                                    function (content, index) {
+                                if (
+                                    doc.content &&
+                                    doc.content.length
+                                ) {
 
-                                        if (content.table) {
+                                    doc.content.forEach(
+                                        function (
+                                            content,
+                                            index
+                                        ) {
 
-                                            pdfTable =
-                                                content.table;
+                                            if (
+                                                content.table
+                                            ) {
 
-                                            pdfContentIndex =
-                                                index;
-                                        }
+                                                pdfTable =
+                                                    content.table;
 
-                                    }
-                                );
-                            }
+                                                pdfContentIndex =
+                                                    index;
 
-                            if (
-                                pdfTable &&
-                                pdfTable.body &&
-                                pdfTable.body.length
-                            ) {
-
-                                const columnCount =
-                                    pdfTable.body[0].length;
-
-                                // =================================================
-                                // PDF CELL TEXT HELPER
-                                // =================================================
-
-                                function getPdfCellText(cell) {
-
-                                    if (
-                                        typeof cell === "string"
-                                    ) {
-
-                                        return cell;
-
-                                    }
-
-                                    if (
-                                        cell &&
-                                        typeof cell.text === "string"
-                                    ) {
-
-                                        return cell.text;
-
-                                    }
-
-                                    return "";
-
-                                }
-
-                                // =================================================
-                                // PREPARE HEADER
-                                // =================================================
-
-                                const headerRow =
-                                    pdfTable.body[0].map(
-                                        function (cell) {
-
-                                            const text =
-                                                getPdfCellText(cell)
-                                                    .replace(/\s+/g, " ")
-                                                    .trim();
-
-                                            return {
-
-                                                text: text,
-
-                                                fillColor: "#ff7043",
-
-                                                color: "#ffffff",
-
-                                                bold: true,
-
-                                                alignment: "center",
-
-                                                valign: "middle",
-
-                                                noWrap: false,
-
-                                                margin: [
-                                                    3,
-                                                    5,
-                                                    3,
-                                                    5
-                                                ]
-
-                                            };
+                                            }
 
                                         }
                                     );
 
-                                // =================================================
-                                // PREPARE BODY ROWS
-                                // =================================================
+                                }
 
-                                const dataRows = [];
-
-                                for (
-                                    let rowIndex = 1;
-                                    rowIndex <
-                                    pdfTable.body.length;
-                                    rowIndex++
+                                if (
+                                    pdfTable &&
+                                    pdfTable.body &&
+                                    pdfTable.body.length
                                 ) {
 
-                                    const sourceRow =
-                                        pdfTable.body[rowIndex];
+                                    const columnCount =
+                                        pdfTable.body[
+                                            0
+                                        ].length;
 
-                                    const outputRow =
-                                        sourceRow.map(
+                                    // =================================================
+                                    // PDF CELL TEXT HELPER
+                                    // =================================================
+
+                                    function getPdfCellText(
+                                        cell
+                                    ) {
+
+                                        if (
+                                            typeof cell ===
+                                            "string"
+                                        ) {
+
+                                            return cell;
+
+                                        }
+
+                                        if (
+                                            cell &&
+                                            typeof cell.text ===
+                                            "string"
+                                        ) {
+
+                                            return cell.text;
+
+                                        }
+
+                                        return "";
+
+                                    }
+
+                                    // =================================================
+                                    // PREPARE HEADER
+                                    // =================================================
+
+                                    const headerRow =
+                                        pdfTable.body[
+                                            0
+                                        ].map(
                                             function (cell) {
+
+                                                const text =
+                                                    getPdfCellText(
+                                                        cell
+                                                    )
+                                                        .replace(
+                                                            /\s+/g,
+                                                            " "
+                                                        )
+                                                        .trim();
 
                                                 return {
 
                                                     text:
-                                                        removeDuplicateText(
-                                                            getPdfCellText(cell)
-                                                                .replace(/\s+/g, " ")
-                                                                .trim()
-                                                        ),
+                                                        text,
 
-                                                    alignment: "center",
+                                                    fillColor:
+                                                        "#ff7043",
 
-                                                    valign: "middle",
+                                                    color:
+                                                        "#ffffff",
 
-                                                    noWrap: false,
+                                                    bold:
+                                                        true,
+
+                                                    alignment:
+                                                        "center",
+
+                                                    valign:
+                                                        "middle",
+
+                                                    noWrap:
+                                                        false,
 
                                                     margin: [
                                                         3,
@@ -4218,358 +4805,514 @@
                                             }
                                         );
 
-                                    if (rowIndex % 2 === 0) {
+                                    // =================================================
+                                    // PREPARE BODY ROWS
+                                    // =================================================
 
-                                        outputRow.forEach(
-                                            function (cell) {
+                                    const dataRows =
+                                        [];
 
-                                                cell.fillColor =
-                                                    "#f7f9fa";
+                                    for (
+                                        let rowIndex = 1;
+                                        rowIndex <
+                                        pdfTable.body.length;
+                                        rowIndex++
+                                    ) {
 
-                                            }
-                                        );
+                                        const sourceRow =
+                                            pdfTable.body[
+                                                rowIndex
+                                            ];
 
-                                    } else {
+                                        const outputRow =
+                                            sourceRow.map(
+                                                function (
+                                                    cell
+                                                ) {
 
-                                        outputRow.forEach(
-                                            function (cell) {
+                                                    return {
 
-                                                cell.fillColor =
-                                                    "#ffffff";
+                                                        text:
+                                                            removeDuplicateText(
+                                                                getPdfCellText(
+                                                                    cell
+                                                                )
+                                                                    .replace(
+                                                                        /\s+/g,
+                                                                        " "
+                                                                    )
+                                                                    .trim()
+                                                            ),
 
-                                            }
-                                        );
-                                    }
+                                                        alignment:
+                                                            "center",
 
-                                    dataRows.push(
-                                        outputRow
-                                    );
+                                                        valign:
+                                                            "middle",
 
-                                }
+                                                        noWrap:
+                                                            false,
 
-                                // =================================================
-                                // CALCULATE COLUMN WIDTHS FROM ACTUAL CONTENT
-                                // =================================================
+                                                        margin: [
+                                                            3,
+                                                            5,
+                                                            3,
+                                                            5
+                                                        ]
 
-                                const columnLengths =
-                                    Array(
-                                        columnCount
-                                    ).fill(
-                                        1
-                                    );
+                                                    };
 
-                                [
-                                    headerRow
-                                ]
-                                .concat(dataRows)
-                                .forEach(function (row) {
+                                                }
+                                            );
 
-                                    row.forEach(
-                                        function (cell, index) {
+                                        if (
+                                            rowIndex %
+                                                2 ===
+                                            0
+                                        ) {
 
-                                            const text =
-                                                getPdfCellText(cell)
-                                                    .replace(/\s+/g, " ")
-                                                    .trim();
+                                            outputRow.forEach(
+                                                function (
+                                                    cell
+                                                ) {
 
-                                            if (
-                                                text.length >
-                                                columnLengths[index]
-                                            ) {
+                                                    cell.fillColor =
+                                                        "#f7f9fa";
 
-                                                columnLengths[index] =
-                                                    text.length;
+                                                }
+                                            );
 
-                                            }
+                                        } else {
+
+                                            outputRow.forEach(
+                                                function (
+                                                    cell
+                                                ) {
+
+                                                    cell.fillColor =
+                                                        "#ffffff";
+
+                                                }
+                                            );
 
                                         }
-                                    );
 
-                                });
+                                        dataRows.push(
+                                            outputRow
+                                        );
 
-                                // =================================================
-                                // CREATE SMART WIDTH WEIGHTS
-                                // =================================================
+                                    }
 
-                                const widthWeights =
-                                    columnLengths.map(
-                                        function (length, index) {
+                                    // =================================================
+                                    // CALCULATE COLUMN WIDTHS FROM ACTUAL CONTENT
+                                    // =================================================
 
-                                            let weight =
-                                                Math.sqrt(
-                                                    Math.max(
-                                                        8,
-                                                        length
-                                                    )
-                                                );
+                                    const columnLengths =
+                                        Array(
+                                            columnCount
+                                        ).fill(
+                                            1
+                                        );
 
-                                            // ------------------------------------------------
-                                            // Give the second column more room because it is
-                                            // normally the Description / long-text column.
-                                            // ------------------------------------------------
+                                    [
+                                        headerRow
+                                    ]
+                                    .concat(
+                                        dataRows
+                                    )
+                                    .forEach(
+                                        function (
+                                            row
+                                        ) {
 
-                                            if (index === 1) {
+                                            row.forEach(
+                                                function (
+                                                    cell,
+                                                    index
+                                                ) {
 
-                                                weight *=
-                                                    1.45;
+                                                    const text =
+                                                        getPdfCellText(
+                                                            cell
+                                                        )
+                                                            .replace(
+                                                                /\s+/g,
+                                                                " "
+                                                            )
+                                                            .trim();
 
-                                            }
+                                                    if (
+                                                        text.length >
+                                                        columnLengths[
+                                                            index
+                                                        ]
+                                                    ) {
 
-                                            // ------------------------------------------------
-                                            // Long-text columns automatically receive extra room.
-                                            // ------------------------------------------------
+                                                        columnLengths[
+                                                            index
+                                                        ] =
+                                                            text.length;
 
-                                            if (length > 70) {
+                                                    }
 
-                                                weight *=
-                                                    1.25;
-
-                                            }
-
-                                            return Math.max(
-                                                1,
-                                                weight
+                                                }
                                             );
 
                                         }
                                     );
 
-                                const totalWeight =
-                                    widthWeights.reduce(
-                                        function (
-                                            total,
-                                            value
-                                        ) {
+                                    // =================================================
+                                    // CREATE SMART WIDTH WEIGHTS
+                                    // =================================================
 
-                                            return total + value;
+                                    const widthWeights =
+                                        columnLengths.map(
+                                            function (
+                                                length,
+                                                index
+                                            ) {
 
-                                        },
-                                        0
-                                    );
+                                                let weight =
+                                                    Math.sqrt(
+                                                        Math.max(
+                                                            8,
+                                                            length
+                                                        )
+                                                    );
 
-                                let pdfWidths =
-                                    widthWeights.map(
-                                        function (weight) {
+                                                if (
+                                                    index ===
+                                                    1
+                                                ) {
 
-                                            return (
-                                                weight /
-                                                totalWeight
-                                            ) * 100;
+                                                    weight *=
+                                                        1.45;
 
-                                        }
-                                    );
+                                                }
 
-                                // =================================================
-                                // KEEP VERY SHORT COLUMNS FROM BECOMING TOO WIDE
-                                // =================================================
+                                                if (
+                                                    length >
+                                                    70
+                                                ) {
 
-                                const minimumPercent =
-                                    columnCount >= 8
-                                        ? 7
-                                        : 9;
+                                                    weight *=
+                                                        1.25;
 
-                                const maximumPercent =
-                                    columnCount >= 8
-                                        ? 25
-                                        : 32;
-
-                                pdfWidths =
-                                    pdfWidths.map(
-                                        function (
-                                            width,
-                                            index
-                                        ) {
-
-                                            const length =
-                                                columnLengths[index] || 1;
-
-                                            if (length <= 12) {
+                                                }
 
                                                 return Math.max(
-                                                    7,
+                                                    1,
+                                                    weight
+                                                );
+
+                                            }
+                                        );
+
+                                    const totalWeight =
+                                        widthWeights.reduce(
+                                            function (
+                                                total,
+                                                value
+                                            ) {
+
+                                                return (
+                                                    total +
+                                                    value
+                                                );
+
+                                            },
+                                            0
+                                        );
+
+                                    let pdfWidths =
+                                        widthWeights.map(
+                                            function (
+                                                weight
+                                            ) {
+
+                                                return (
+                                                    weight /
+                                                    totalWeight
+                                                ) *
+                                                100;
+
+                                            }
+                                        );
+
+                                    // =================================================
+                                    // KEEP VERY SHORT COLUMNS FROM BECOMING TOO WIDE
+                                    // =================================================
+
+                                    const minimumPercent =
+                                        columnCount >=
+                                        8
+                                            ? 7
+                                            : 9;
+
+                                    const maximumPercent =
+                                        columnCount >=
+                                        8
+                                            ? 25
+                                            : 32;
+
+                                    pdfWidths =
+                                        pdfWidths.map(
+                                            function (
+                                                width,
+                                                index
+                                            ) {
+
+                                                const length =
+                                                    columnLengths[
+                                                        index
+                                                    ] ||
+                                                    1;
+
+                                                if (
+                                                    length <=
+                                                    12
+                                                ) {
+
+                                                    return Math.max(
+                                                        7,
+                                                        Math.min(
+                                                            minimumPercent,
+                                                            width
+                                                        )
+                                                    );
+
+                                                }
+
+                                                return Math.max(
+                                                    minimumPercent,
                                                     Math.min(
-                                                        minimumPercent,
+                                                        maximumPercent,
                                                         width
                                                     )
                                                 );
 
                                             }
+                                        );
 
-                                            return Math.max(
-                                                minimumPercent,
-                                                Math.min(
-                                                    maximumPercent,
-                                                    width
-                                                )
-                                            );
+                                    // ------------------------------------------------
+                                    // Re-normalize to exactly 100%
+                                    // ------------------------------------------------
 
-                                        }
-                                    );
+                                    const adjustedTotal =
+                                        pdfWidths.reduce(
+                                            function (
+                                                total,
+                                                value
+                                            ) {
 
-                                // ------------------------------------------------
-                                // Re-normalize to exactly 100%
-                                // ------------------------------------------------
+                                                return (
+                                                    total +
+                                                    value
+                                                );
 
-                                const adjustedTotal =
-                                    pdfWidths.reduce(
-                                        function (
-                                            total,
-                                            value
-                                        ) {
+                                            },
+                                            0
+                                        );
 
-                                            return total + value;
+                                    pdfWidths =
+                                        pdfWidths.map(
+                                            function (
+                                                width
+                                            ) {
 
-                                        },
+                                                return (
+                                                    width /
+                                                    adjustedTotal
+                                                ) *
+                                                100;
+
+                                            }
+                                        );
+
+                                    pdfWidths =
+                                        pdfWidths.map(
+                                            function (
+                                                width
+                                            ) {
+
+                                                return (
+                                                    width.toFixed(
+                                                        2
+                                                    ) +
+                                                    "%"
+                                                );
+
+                                            }
+                                        );
+
+                                    // =================================================
+                                    // PDF TABLE LAYOUT
+                                    // =================================================
+
+                                    const pdfLayout = {
+
+                                        hLineWidth:
+                                            function () {
+                                                return 0.6;
+                                            },
+
+                                        vLineWidth:
+                                            function () {
+                                                return 0.6;
+                                            },
+
+                                        hLineColor:
+                                            function () {
+                                                return "#d5dbe0";
+                                            },
+
+                                        vLineColor:
+                                            function () {
+                                                return "#d5dbe0";
+                                            },
+
+                                        paddingLeft:
+                                            function () {
+                                                return 4;
+                                            },
+
+                                        paddingRight:
+                                            function () {
+                                                return 4;
+                                            },
+
+                                        paddingTop:
+                                            function () {
+                                                return 5;
+                                            },
+
+                                        paddingBottom:
+                                            function () {
+                                                return 5;
+                                            }
+
+                                    };
+
+                                    // =================================================
+                                    // CREATE PDF TABLES
+                                    // EXACTLY 10 RECORDS PER PDF TABLE
+                                    // =================================================
+
+                                    const pageTables =
+                                        [];
+
+                                    if (
+                                        dataRows.length ===
                                         0
-                                    );
-
-                                pdfWidths =
-                                    pdfWidths.map(
-                                        function (width) {
-
-                                            return (
-                                                width /
-                                                adjustedTotal
-                                            ) * 100;
-
-                                        }
-                                    );
-
-                                pdfWidths =
-                                    pdfWidths.map(
-                                        function (width) {
-
-                                            return (
-                                                width.toFixed(2) +
-                                                "%"
-                                            );
-
-                                        }
-                                    );
-
-                                // =================================================
-                                // PDF TABLE LAYOUT
-                                // =================================================
-
-                                const pdfLayout = {
-
-                                    hLineWidth: function () {
-                                        return 0.6;
-                                    },
-
-                                    vLineWidth: function () {
-                                        return 0.6;
-                                    },
-
-                                    hLineColor: function () {
-                                        return "#d5dbe0";
-                                    },
-
-                                    vLineColor: function () {
-                                        return "#d5dbe0";
-                                    },
-
-                                    paddingLeft: function () {
-                                        return 4;
-                                    },
-
-                                    paddingRight: function () {
-                                        return 4;
-                                    },
-
-                                    paddingTop: function () {
-                                        return 5;
-                                    },
-
-                                    paddingBottom: function () {
-                                        return 5;
-                                    }
-
-                                };
-
-                                // =================================================
-                                // CREATE PDF TABLES
-                                // EXACTLY 10 RECORDS PER PDF TABLE
-                                // =================================================
-
-                                const pageTables = [];
-
-                                if (dataRows.length === 0) {
-
-                                    pageTables.push({
-
-                                        table: {
-
-                                            headerRows: 1,
-
-                                            widths: pdfWidths,
-
-                                            dontBreakRows: false,
-
-                                            body: [
-                                                headerRow
-                                            ]
-
-                                        },
-
-                                        layout: pdfLayout
-
-                                    });
-
-                                } else {
-
-                                    for (
-                                        let start = 0;
-                                        start < dataRows.length;
-                                        start += 10
                                     ) {
 
-                                        const chunk =
-                                            dataRows.slice(
-                                                start,
-                                                start + 10
-                                            );
-
-                                        const pageTable = {
+                                        pageTables.push({
 
                                             table: {
 
-                                                headerRows: 1,
+                                                headerRows:
+                                                    1,
 
-                                                widths: pdfWidths,
+                                                widths:
+                                                    pdfWidths,
 
-                                                dontBreakRows: false,
-
-                                                keepWithHeaderRows: 1,
+                                                dontBreakRows:
+                                                    false,
 
                                                 body: [
                                                     headerRow
-                                                ].concat(
-                                                    chunk
-                                                )
+                                                ]
 
                                             },
 
-                                            layout: pdfLayout,
+                                            layout:
+                                                pdfLayout
 
-                                            margin: [
-                                                0,
-                                                0,
-                                                0,
+                                        });
+
+                                    } else {
+
+                                        for (
+                                            let start = 0;
+                                            start <
+                                            dataRows.length;
+                                            start += 10
+                                        ) {
+
+                                            const chunk =
+                                                dataRows.slice(
+                                                    start,
+                                                    start +
+                                                        10
+                                                );
+
+                                            const pageTable = {
+
+                                                table: {
+
+                                                    headerRows:
+                                                        1,
+
+                                                    widths:
+                                                        pdfWidths,
+
+                                                    dontBreakRows:
+                                                        false,
+
+                                                    keepWithHeaderRows:
+                                                        1,
+
+                                                    body: [
+                                                        headerRow
+                                                    ].concat(
+                                                        chunk
+                                                    )
+
+                                                },
+
+                                                layout:
+                                                    pdfLayout,
+
+                                                margin: [
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    0
+                                                ]
+
+                                            };
+
+                                            if (
+                                                start >
                                                 0
-                                            ]
+                                            ) {
 
-                                        };
+                                                pageTable.pageBreak =
+                                                    "before";
 
-                                        if (start > 0) {
+                                            }
 
-                                            pageTable.pageBreak =
-                                                "before";
+                                            pageTables.push(
+                                                pageTable
+                                            );
 
                                         }
 
-                                        pageTables.push(
-                                            pageTable
+                                    }
+
+                                    // =================================================
+                                    // REPLACE ORIGINAL PDF TABLE
+                                    // =================================================
+
+                                    if (
+                                        pdfContentIndex >=
+                                        0
+                                    ) {
+
+                                        doc.content.splice(
+                                            pdfContentIndex,
+                                            1,
+                                            ...pageTables
                                         );
 
                                     }
@@ -4577,91 +5320,83 @@
                                 }
 
                                 // =================================================
-                                // REPLACE ORIGINAL PDF TABLE
+                                // PDF TITLE
                                 // =================================================
 
-                                if (pdfContentIndex >= 0) {
+                                if (
+                                    doc.content &&
+                                    doc.content.length
+                                ) {
 
-                                    doc.content.splice(
-                                        pdfContentIndex,
-                                        1,
-                                        ...pageTables
+                                    doc.content.forEach(
+                                        function (
+                                            content
+                                        ) {
+
+                                            if (
+                                                content.text ===
+                                                configuration.title
+                                            ) {
+
+                                                content.alignment =
+                                                    "center";
+
+                                                content.fontSize =
+                                                    18;
+
+                                                content.bold =
+                                                    true;
+
+                                                content.margin = [
+                                                    0,
+                                                    0,
+                                                    0,
+                                                    15
+                                                ];
+
+                                            }
+
+                                        }
                                     );
 
                                 }
 
                             }
 
-                            // =================================================
-                            // PDF TITLE
-                            // =================================================
-
-                            if (
-                                doc.content &&
-                                doc.content.length
-                            ) {
-
-                                doc.content.forEach(
-                                    function (content) {
-
-                                        if (
-                                            content.text ===
-                                            configuration.title
-                                        ) {
-
-                                            content.alignment =
-                                                "center";
-
-                                            content.fontSize =
-                                                18;
-
-                                            content.bold =
-                                                true;
-
-                                            content.margin = [
-                                                0,
-                                                0,
-                                                0,
-                                                15
-                                            ];
-
-                                        }
-
-                                    }
-                                );
-
-                            }
-
-                        }
-
                     },
 
-                    // ========================================================
+                    // ====================================================
                     // PRINT
-                    // ========================================================
+                    // ====================================================
 
                     {
 
-                        extend: "print",
+                        extend:
+                            "print",
 
-                        title: configuration.title,
+                        title:
+                            configuration.title,
 
                         exportOptions: {
 
-                            columns: ":visible",
+                            columns:
+                                ":visible",
 
                             format: {
 
-                                body: function (
-                                    data,
-                                    row,
-                                    column,
-                                    node
-                                ) {
+                                body:
+                                    function (
+                                        data,
+                                        row,
+                                        column,
+                                        node
+                                    ) {
 
-                                    return cleanCellText(node);
+                                        return cleanCellText(
+                                            node
+                                        );
 
-                                }
+                                    }
 
                             }
 
@@ -4671,212 +5406,233 @@
                         // PRINT CUSTOMIZATION
                         // =================================================
 
-                        customize: function (win) {
+                        customize:
+                            function (win) {
 
-                            const $body =
-                                jQuery(
-                                    win.document.body
-                                );
+                                const $body =
+                                    jQuery(
+                                        win.document.body
+                                    );
 
-                            $body.css({
-
-                                "font-size": "9pt",
-
-                                "text-align": "center"
-
-                            });
-
-                            $body
-                                .find("h1")
-                                .css({
-
-                                    "text-align":
-                                        "center",
+                                $body.css({
 
                                     "font-size":
-                                        "18pt",
-
-                                    "font-weight":
-                                        "700",
-
-                                    "margin-bottom":
-                                        "20px"
-
-                                });
-
-                            $body
-                                .find("table")
-                                .css({
-
-                                    "width":
-                                        "100%",
-
-                                    "border-collapse":
-                                        "collapse",
-
-                                    "table-layout":
-                                        "auto",
-
-                                    "font-size":
-                                        "9pt"
-
-                                });
-
-                            // ------------------------------------------------
-                            // Header
-                            // ------------------------------------------------
-
-                            $body
-                                .find(
-                                    "table thead th"
-                                )
-                                .css({
-
-                                    "background":
-                                        "#ff7043",
-
-                                    "background-image":
-                                        "none",
-
-                                    "color":
-                                        "#ffffff",
-
-                                    "border":
-                                        "1px solid #e05a35",
+                                        "9pt",
 
                                     "text-align":
-                                        "center",
-
-                                    "vertical-align":
-                                        "middle",
-
-                                    "font-weight":
-                                        "700",
-
-                                    "padding":
-                                        "8px 5px",
-
-                                    "white-space":
-                                        "normal",
-
-                                    "overflow-wrap":
-                                        "break-word",
-
-                                    "word-wrap":
-                                        "break-word"
+                                        "center"
 
                                 });
 
-                            // ------------------------------------------------
-                            // Body
-                            // ------------------------------------------------
+                                $body
+                                    .find(
+                                        "h1"
+                                    )
+                                    .css({
 
-                            $body
-                                .find(
-                                    "table tbody td"
-                                )
-                                .css({
+                                        "text-align":
+                                            "center",
 
-                                    "border":
-                                        "1px solid #d5dbe0",
+                                        "font-size":
+                                            "18pt",
 
-                                    "text-align":
-                                        "center",
+                                        "font-weight":
+                                            "700",
 
-                                    "vertical-align":
-                                        "middle",
+                                        "margin-bottom":
+                                            "20px"
 
-                                    "padding":
-                                        "7px 5px",
+                                    });
 
-                                    "white-space":
-                                        "normal",
+                                $body
+                                    .find(
+                                        "table"
+                                    )
+                                    .css({
 
-                                    "word-break":
-                                        "normal",
+                                        "width":
+                                            "100%",
 
-                                    "overflow-wrap":
-                                        "break-word",
+                                        "border-collapse":
+                                            "collapse",
 
-                                    "word-wrap":
-                                        "break-word",
+                                        "table-layout":
+                                            "auto",
 
-                                    "text-overflow":
-                                        "clip"
+                                        "font-size":
+                                            "9pt"
 
-                                });
+                                    });
 
-                            // ------------------------------------------------
-                            // Alternate rows
-                            // ------------------------------------------------
+                                // ------------------------------------------------
+                                // Header
+                                // ------------------------------------------------
 
-                            $body
-                                .find(
-                                    "table tbody tr"
-                                )
-                                .each(
-                                    function (index) {
+                                $body
+                                    .find(
+                                        "table thead th"
+                                    )
+                                    .css({
 
-                                        if (
-                                            index % 2 === 0
+                                        "background":
+                                            "#ff7043",
+
+                                        "background-image":
+                                            "none",
+
+                                        "color":
+                                            "#ffffff",
+
+                                        "border":
+                                            "1px solid #e05a35",
+
+                                        "text-align":
+                                            "center",
+
+                                        "vertical-align":
+                                            "middle",
+
+                                        "font-weight":
+                                            "700",
+
+                                        "padding":
+                                            "8px 5px",
+
+                                        "white-space":
+                                            "normal",
+
+                                        "overflow-wrap":
+                                            "break-word",
+
+                                        "word-wrap":
+                                            "break-word"
+
+                                    });
+
+                                // ------------------------------------------------
+                                // Body
+                                // ------------------------------------------------
+
+                                $body
+                                    .find(
+                                        "table tbody td"
+                                    )
+                                    .css({
+
+                                        "border":
+                                            "1px solid #d5dbe0",
+
+                                        "text-align":
+                                            "center",
+
+                                        "vertical-align":
+                                            "middle",
+
+                                        "padding":
+                                            "7px 5px",
+
+                                        "white-space":
+                                            "normal",
+
+                                        "word-break":
+                                            "normal",
+
+                                        "overflow-wrap":
+                                            "break-word",
+
+                                        "word-wrap":
+                                            "break-word",
+
+                                        "text-overflow":
+                                            "clip"
+
+                                    });
+
+                                // ------------------------------------------------
+                                // Alternate rows
+                                // ------------------------------------------------
+
+                                $body
+                                    .find(
+                                        "table tbody tr"
+                                    )
+                                    .each(
+                                        function (
+                                            index
                                         ) {
 
-                                            jQuery(this)
-                                                .find("td")
-                                                .css(
-                                                    "background",
-                                                    "#f7f9fa"
+                                            if (
+                                                index %
+                                                    2 ===
+                                                0
+                                            ) {
+
+                                                jQuery(
+                                                    this
+                                                )
+                                                    .find(
+                                                        "td"
+                                                    )
+                                                    .css(
+                                                        "background",
+                                                        "#f7f9fa"
+                                                    );
+
+                                            } else {
+
+                                                jQuery(
+                                                    this
+                                                )
+                                                    .find(
+                                                        "td"
+                                                    )
+                                                    .css(
+                                                        "background",
+                                                        "#ffffff"
+                                                    );
+
+                                            }
+
+                                        }
+                                    );
+
+                                // ------------------------------------------------
+                                // Remove hidden / interactive elements
+                                // ------------------------------------------------
+
+                                $body
+                                    .find(
+                                        ".d-print-none, .d-none, .print-only, button, .modal, .more, .read-more, .show-more"
+                                    )
+                                    .remove();
+
+                                // ------------------------------------------------
+                                // Final clean text
+                                // ------------------------------------------------
+
+                                $body
+                                    .find(
+                                        "table tbody td"
+                                    )
+                                    .each(
+                                        function () {
+
+                                            const cleaned =
+                                                cleanCellText(
+                                                    this
                                                 );
 
-                                        } else {
-
-                                            jQuery(this)
-                                                .find("td")
-                                                .css(
-                                                    "background",
-                                                    "#ffffff"
+                                            jQuery(
+                                                this
+                                            )
+                                                .text(
+                                                    cleaned
                                                 );
 
                                         }
+                                    );
 
-                                    }
-                                );
-
-                            // ------------------------------------------------
-                            // Remove hidden / interactive elements
-                            // ------------------------------------------------
-
-                            $body
-                                .find(
-                                    ".d-print-none, .d-none, .print-only, button, .modal, .more, .read-more, .show-more"
-                                )
-                                .remove();
-
-                            // ------------------------------------------------
-                            // Final clean text
-                            // ------------------------------------------------
-
-                            $body
-                                .find(
-                                    "table tbody td"
-                                )
-                                .each(
-                                    function () {
-
-                                        const cleaned =
-                                            cleanCellText(
-                                                this
-                                            );
-
-                                        jQuery(this)
-                                            .text(
-                                                cleaned
-                                            );
-
-                                    }
-                                );
-
-                        }
+                            }
 
                     }
 
@@ -4935,7 +5691,9 @@
                 typeof jQuery ===
                 "undefined"
             ) {
+
                 return;
+
             }
 
             // ------------------------------------------------------------
@@ -4946,7 +5704,9 @@
                 typeof jQuery.fn.DataTable ===
                 "undefined"
             ) {
+
                 return;
+
             }
 
             // ------------------------------------------------------------
@@ -4962,20 +5722,40 @@
 
                     const candidate =
                         jQuery(
-                            "#" + tableId
+                            "#" +
+                            tableId
                         );
 
                     if (
                         candidate.length
                     ) {
 
+                        // =================================================
+                        // IMPORTANT FIX
+                        // Skip Management tables.
+                        //
+                        // Management tables have #tableHeaders.
+                        // =================================================
+
+                        if (
+                            candidate.find(
+                                "#tableHeaders"
+                            ).length
+                        ) {
+
+                            return false;
+
+                        }
+
                         table =
                             candidate;
 
                         return true;
+
                     }
 
                     return false;
+
                 }
             );
 
@@ -4996,12 +5776,14 @@
 
             if (
                 !jQuery.fn.DataTable.isDataTable(
-                    "#" + tableId
+                    "#" +
+                    tableId
                 )
             ) {
 
                 if (
-                    attempts < 20
+                    attempts <
+                    20
                 ) {
 
                     setTimeout(
@@ -5015,9 +5797,11 @@
                         },
                         100
                     );
+
                 }
 
                 return;
+
             }
 
             // ------------------------------------------------------------
@@ -5041,8 +5825,11 @@
             // ------------------------------------------------------------
 
             if (button) {
+
                 button.trigger();
+
             }
+
         }
 
         // ================================================================
@@ -5055,9 +5842,11 @@
             // Find current report table
             // ------------------------------------------------------------
 
-            let originalTable = null;
+            let originalTable =
+                null;
 
-            let configuration = null;
+            let configuration =
+                null;
 
             Object.keys(
                 reportConfigurations
@@ -5069,20 +5858,39 @@
                             tableId
                         );
 
-                    if (candidate) {
+                    if (!candidate) {
 
-                        originalTable =
-                            candidate;
+                        return false;
 
-                        configuration =
-                            reportConfigurations[
-                                tableId
-                            ];
-
-                        return true;
                     }
 
-                    return false;
+                    // =====================================================
+                    // IMPORTANT FIX
+                    // Skip Management tables.
+                    //
+                    // Management tables contain #tableHeaders.
+                    // =====================================================
+
+                    if (
+                        candidate.querySelector(
+                            "#tableHeaders"
+                        )
+                    ) {
+
+                        return false;
+
+                    }
+
+                    originalTable =
+                        candidate;
+
+                    configuration =
+                        reportConfigurations[
+                            tableId
+                        ];
+
+                    return true;
+
                 }
             );
 
@@ -5094,7 +5902,9 @@
                 !originalTable ||
                 !configuration
             ) {
+
                 return;
+
             }
 
             // ============================================================
@@ -5107,7 +5917,9 @@
                 );
 
             if (oldContainer) {
+
                 oldContainer.remove();
+
             }
 
             // ============================================================
@@ -5248,7 +6060,9 @@
                         );
 
                     if (container) {
+
                         container.remove();
+
                     }
 
                     window.removeEventListener(
@@ -5343,4 +6157,983 @@
 
     });
 
+</script>
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+    /*
+    |--------------------------------------------------------------------------
+    | ELEMENTS
+    |--------------------------------------------------------------------------
+    */
+
+    const projectIdInput = document.getElementById('project_id');
+    const teamSelect = document.getElementById('team_id');
+    const userSelect = document.getElementById('user_id');
+
+    const teamHiddenInput = document.getElementById('team_id_hidden');
+
+    /*
+    |--------------------------------------------------------------------------
+    | INITIAL VALUES FOR EDIT PAGE
+    |--------------------------------------------------------------------------
+    */
+
+    const initialTeamId = teamSelect
+        ? teamSelect.getAttribute('data-current-team')
+        : null;
+
+    const initialUserId = userSelect
+        ? userSelect.getAttribute('data-current-user')
+        : null;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | HELPER: UPDATE TEAM HIDDEN INPUT
+    |--------------------------------------------------------------------------
+    */
+
+    function updateTeamHiddenInput(value) {
+
+        if (teamHiddenInput) {
+            teamHiddenInput.value = value || '';
+        }
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOAD TEAMS BY PROJECT
+    |--------------------------------------------------------------------------
+    */
+
+    function loadTeams(projectId, selectedTeamId = null) {
+
+        if (!teamSelect) {
+            return;
+        }
+
+        /*
+        | Reset Team
+        */
+
+        teamSelect.innerHTML = '';
+
+        const defaultOption = document.createElement('option');
+
+        defaultOption.value = '';
+        defaultOption.textContent = 'Select team...';
+        defaultOption.disabled = true;
+        defaultOption.selected = true;
+
+        teamSelect.appendChild(defaultOption);
+
+        updateTeamHiddenInput('');
+
+
+        /*
+        | Reset Employees
+        */
+
+        if (userSelect) {
+
+            userSelect.innerHTML = '';
+
+            const userDefaultOption = document.createElement('option');
+
+            userDefaultOption.value = '';
+            userDefaultOption.textContent = 'Select employee...';
+            userDefaultOption.disabled = true;
+            userDefaultOption.selected = true;
+
+            userSelect.appendChild(userDefaultOption);
+        }
+
+
+        /*
+        | No Project Selected
+        */
+
+        if (!projectId) {
+
+            teamSelect.disabled = true;
+
+            if (userSelect) {
+                userSelect.disabled = true;
+            }
+
+            return;
+        }
+
+
+        /*
+        | Enable Team
+        */
+
+        teamSelect.disabled = false;
+
+
+        /*
+        | Loading State
+        */
+
+        const loadingOption = document.createElement('option');
+
+        loadingOption.value = '';
+        loadingOption.textContent = 'Loading teams...';
+        loadingOption.disabled = true;
+        loadingOption.selected = true;
+
+        teamSelect.innerHTML = '';
+        teamSelect.appendChild(loadingOption);
+
+
+        /*
+        | AJAX Request
+        */
+
+        fetch('/admin/task/' + projectId + '/teams', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => {
+
+            if (!response.ok) {
+                throw new Error('Failed to load teams.');
+            }
+
+            return response.json();
+        })
+        .then(teams => {
+
+            /*
+            | Clear Loading State
+            */
+
+            teamSelect.innerHTML = '';
+
+
+            /*
+            | Default Option
+            */
+
+            const option = document.createElement('option');
+
+            option.value = '';
+            option.textContent = 'Select team...';
+            option.disabled = true;
+
+            if (!selectedTeamId) {
+                option.selected = true;
+            }
+
+            teamSelect.appendChild(option);
+
+
+            /*
+            | Add Teams
+            */
+
+            teams.forEach(team => {
+
+                const teamOption = document.createElement('option');
+
+                teamOption.value = team.id;
+                teamOption.textContent = team.name;
+
+                if (
+                    selectedTeamId &&
+                    String(selectedTeamId) === String(team.id)
+                ) {
+                    teamOption.selected = true;
+                }
+
+                teamSelect.appendChild(teamOption);
+            });
+
+
+            /*
+            | Update Hidden Team Input
+            */
+
+            const currentTeamValue = teamSelect.value || '';
+
+            updateTeamHiddenInput(currentTeamValue);
+
+
+            /*
+            | Load Employees For Selected Team
+            */
+
+            if (currentTeamValue) {
+
+                loadEmployees(
+                    currentTeamValue,
+                    initialUserId
+                );
+
+            } else {
+
+                if (userSelect) {
+                    userSelect.disabled = true;
+                }
+            }
+
+        })
+        .catch(error => {
+
+            console.error(error);
+
+            teamSelect.innerHTML = '';
+
+            const errorOption = document.createElement('option');
+
+            errorOption.value = '';
+            errorOption.textContent = 'Unable to load teams';
+            errorOption.disabled = true;
+            errorOption.selected = true;
+
+            teamSelect.appendChild(errorOption);
+
+            teamSelect.disabled = true;
+
+            if (userSelect) {
+
+                userSelect.innerHTML = '';
+
+                const userErrorOption = document.createElement('option');
+
+                userErrorOption.value = '';
+                userErrorOption.textContent = 'Select employee...';
+                userErrorOption.disabled = true;
+                userErrorOption.selected = true;
+
+                userSelect.appendChild(userErrorOption);
+
+                userSelect.disabled = true;
+            }
+        });
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOAD EMPLOYEES BY TEAM
+    |--------------------------------------------------------------------------
+    */
+
+    function loadEmployees(teamId, selectedUserId = null) {
+
+        if (!userSelect) {
+            return;
+        }
+
+
+        /*
+        | Reset Employees
+        */
+
+        userSelect.innerHTML = '';
+
+        const defaultOption = document.createElement('option');
+
+        defaultOption.value = '';
+        defaultOption.textContent = 'Select employee...';
+        defaultOption.disabled = true;
+        defaultOption.selected = true;
+
+        userSelect.appendChild(defaultOption);
+
+
+        /*
+        | No Team Selected
+        */
+
+        if (!teamId) {
+
+            userSelect.disabled = true;
+
+            return;
+        }
+
+
+        /*
+        | Enable Employee
+        */
+
+        userSelect.disabled = false;
+
+
+        /*
+        | Loading State
+        */
+
+        const loadingOption = document.createElement('option');
+
+        loadingOption.value = '';
+        loadingOption.textContent = 'Loading employees...';
+        loadingOption.disabled = true;
+        loadingOption.selected = true;
+
+        userSelect.innerHTML = '';
+        userSelect.appendChild(loadingOption);
+
+
+        /*
+        | AJAX Request
+        */
+
+        fetch('/admin/task/' + teamId + '/employees', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => {
+
+            if (!response.ok) {
+                throw new Error('Failed to load employees.');
+            }
+
+            return response.json();
+        })
+        .then(users => {
+
+            /*
+            | Clear Loading State
+            */
+
+            userSelect.innerHTML = '';
+
+
+            /*
+            | Default Option
+            */
+
+            const option = document.createElement('option');
+
+            option.value = '';
+            option.textContent = 'Select employee...';
+            option.disabled = true;
+
+            if (!selectedUserId) {
+                option.selected = true;
+            }
+
+            userSelect.appendChild(option);
+
+
+            /*
+            | Add Employees
+            */
+
+            users.forEach(user => {
+
+                const userOption = document.createElement('option');
+
+                userOption.value = user.id;
+                userOption.textContent = user.name;
+
+                if (
+                    selectedUserId &&
+                    String(selectedUserId) === String(user.id)
+                ) {
+                    userOption.selected = true;
+                }
+
+                userSelect.appendChild(userOption);
+            });
+
+        })
+        .catch(error => {
+
+            console.error(error);
+
+            userSelect.innerHTML = '';
+
+            const errorOption = document.createElement('option');
+
+            errorOption.value = '';
+            errorOption.textContent = 'Unable to load employees';
+            errorOption.disabled = true;
+            errorOption.selected = true;
+
+            userSelect.appendChild(errorOption);
+
+            userSelect.disabled = true;
+        });
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PROJECT CHANGE
+    |--------------------------------------------------------------------------
+    */
+
+    if (projectIdInput) {
+
+        /*
+        | The project is changed through your custom dropdown.
+        | The existing Project JavaScript should update project_id.
+        |
+        | We listen for changes to the hidden input.
+        */
+
+        let lastProjectId = projectIdInput.value || '';
+
+
+        setInterval(function () {
+
+            const currentProjectId = projectIdInput.value || '';
+
+            if (currentProjectId !== lastProjectId) {
+
+                lastProjectId = currentProjectId;
+
+                loadTeams(currentProjectId);
+
+            }
+
+        }, 200);
+
+
+        /*
+        | Initial Load
+        */
+
+        if (projectIdInput.value) {
+
+            loadTeams(
+                projectIdInput.value,
+                initialTeamId
+            );
+
+        } else {
+
+            if (teamSelect) {
+                teamSelect.disabled = true;
+            }
+
+            if (userSelect) {
+                userSelect.disabled = true;
+            }
+        }
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | TEAM CHANGE
+    |--------------------------------------------------------------------------
+    */
+
+    if (teamSelect) {
+
+        teamSelect.addEventListener('change', function () {
+
+            const teamId = this.value || '';
+
+            updateTeamHiddenInput(teamId);
+
+            loadEmployees(teamId);
+
+        });
+    }
+
+});
+</script>
+
+
+<!-- ========================================================================= -->
+<!-- SIDEBAR COLLAPSE JAVASCRIPT                                              -->
+<!-- ========================================================================= -->
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const sidebar =
+            document.querySelector('.sidebar');
+
+        const mainPanel =
+            document.querySelector('.main-panel');
+
+        const collapseButton =
+            document.getElementById('sidebarCollapseButton');
+
+
+        if (!sidebar || !collapseButton) {
+            return;
+        }
+
+
+        /* ================================================================ */
+        /* RESTORE PREVIOUS SIDEBAR STATE                                   */
+        /* ================================================================ */
+
+        const savedState =
+            localStorage.getItem('coretask_sidebar_collapsed');
+
+
+        if (savedState === 'true') {
+
+            sidebar.classList.add('sidebar-collapsed');
+
+            if (mainPanel) {
+
+                mainPanel.classList.add(
+                    'sidebar-collapsed-panel'
+                );
+
+            }
+
+            collapseButton.setAttribute(
+                'aria-label',
+                'Expand sidebar'
+            );
+
+            collapseButton.setAttribute(
+                'title',
+                'Expand sidebar'
+            );
+
+        }
+
+
+        /* ================================================================ */
+        /* COLLAPSE / EXPAND                                                 */
+        /* ================================================================ */
+
+        collapseButton.addEventListener('click', function (event) {
+
+            event.preventDefault();
+            event.stopPropagation();
+
+
+            const isCollapsed =
+                sidebar.classList.toggle('sidebar-collapsed');
+
+
+            if (mainPanel) {
+
+                mainPanel.classList.toggle(
+                    'sidebar-collapsed-panel',
+                    isCollapsed
+                );
+
+            }
+
+
+            /* ============================================================ */
+            /* UPDATE BUTTON                                                 */
+            /* ============================================================ */
+
+            if (isCollapsed) {
+
+                collapseButton.setAttribute(
+                    'aria-label',
+                    'Expand sidebar'
+                );
+
+                collapseButton.setAttribute(
+                    'title',
+                    'Expand sidebar'
+                );
+
+                localStorage.setItem(
+                    'coretask_sidebar_collapsed',
+                    'true'
+                );
+
+            } else {
+
+                collapseButton.setAttribute(
+                    'aria-label',
+                    'Collapse sidebar'
+                );
+
+                collapseButton.setAttribute(
+                    'title',
+                    'Collapse sidebar'
+                );
+
+                localStorage.setItem(
+                    'coretask_sidebar_collapsed',
+                    'false'
+                );
+
+            }
+
+        });
+
+    });
+
+</script>
+
+
+<!-- ========================================================================= -->
+<!-- NOTIFICATION JAVASCRIPT                                                  -->
+<!-- ========================================================================= -->
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+    const notificationButton =
+        document.getElementById('deadlineNotificationButton');
+
+    const notificationMenu =
+        document.getElementById('deadlineNotificationMenu');
+
+
+    if (!notificationButton || !notificationMenu) {
+        return;
+    }
+
+
+    /* ================================================================ */
+    /* OPEN / CLOSE NOTIFICATION MENU                                   */
+    /* ================================================================ */
+
+    notificationButton.addEventListener('click', function (event) {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const isOpen =
+            notificationMenu.classList.contains('show');
+
+
+        if (isOpen) {
+
+            notificationMenu.classList.remove('show');
+
+            notificationButton.setAttribute(
+                'aria-expanded',
+                'false'
+            );
+
+        } else {
+
+            notificationMenu.classList.add('show');
+
+            notificationButton.setAttribute(
+                'aria-expanded',
+                'true'
+            );
+
+        }
+
+    });
+
+
+    /* ================================================================ */
+    /* PREVENT CLICK INSIDE MENU FROM CLOSING IT                        */
+    /* ================================================================ */
+
+    notificationMenu.addEventListener('click', function (event) {
+
+        if (event.target.closest('.deadline-notification-delete')) {
+            return;
+        }
+
+        event.stopPropagation();
+
+    });
+
+
+    /* ================================================================ */
+    /* CLOSE WHEN CLICKING OUTSIDE                                      */
+    /* ================================================================ */
+
+    document.addEventListener('click', function (event) {
+
+        if (
+            !notificationMenu.contains(event.target) &&
+            !notificationButton.contains(event.target)
+        ) {
+
+            notificationMenu.classList.remove('show');
+
+            notificationButton.setAttribute(
+                'aria-expanded',
+                'false'
+            );
+
+        }
+
+    });
+
+
+    /* ================================================================ */
+    /* CLOSE WITH ESCAPE                                                */
+    /* ================================================================ */
+
+    document.addEventListener('keydown', function (event) {
+
+        if (event.key === 'Escape') {
+
+            notificationMenu.classList.remove('show');
+
+            notificationButton.setAttribute(
+                'aria-expanded',
+                'false'
+            );
+
+        }
+
+    });
+
+});
+</script>
+
+
+<!-- ========================================================================= -->
+<!-- NOTIFICATION DELETE JAVASCRIPT                                           -->
+<!-- ========================================================================= -->
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+    const badge = document.getElementById(
+        'deadlineNotificationBadge'
+    );
+
+    const headerCount = document.getElementById(
+        'deadlineNotificationHeaderCount'
+    );
+
+
+    /* ================================================================= */
+    /* NOTIFICATION HIDE TIME                                            */
+    /* ================================================================= */
+
+    const hideDuration = 30 * 60 * 1000;
+
+
+    /* ================================================================= */
+    /* GET HIDDEN NOTIFICATIONS FROM SESSION STORAGE                     */
+    /* ================================================================= */
+
+    let hiddenNotifications = {};
+
+
+    try {
+
+        hiddenNotifications = JSON.parse(
+            sessionStorage.getItem(
+                'coretask_hidden_deadline_notifications'
+            ) || '{}'
+        );
+
+        if (
+            typeof hiddenNotifications !== 'object' ||
+            hiddenNotifications === null
+        ) {
+
+            hiddenNotifications = {};
+
+        }
+
+    } catch (error) {
+
+        hiddenNotifications = {};
+
+    }
+
+
+    /* ================================================================= */
+    /* REMOVE EXPIRED HIDDEN NOTIFICATIONS                               */
+    /* ================================================================= */
+
+    const currentTime = Date.now();
+
+
+    Object.keys(hiddenNotifications).forEach(function (key) {
+
+        if (currentTime - hiddenNotifications[key] >= hideDuration) {
+
+            delete hiddenNotifications[key];
+
+        }
+
+    });
+
+
+    sessionStorage.setItem(
+        'coretask_hidden_deadline_notifications',
+        JSON.stringify(hiddenNotifications)
+    );
+
+
+    /* ================================================================= */
+    /* HIDE PREVIOUSLY DISMISSED NOTIFICATIONS                           */
+    /* ================================================================= */
+
+    const notificationItems = document.querySelectorAll(
+        '.deadline-notification-item[data-notification-key]'
+    );
+
+
+    notificationItems.forEach(function (item) {
+
+        const key = item.getAttribute(
+            'data-notification-key'
+        );
+
+
+        if (
+            key &&
+            hiddenNotifications[key] &&
+            currentTime - hiddenNotifications[key] < hideDuration
+        ) {
+
+            item.remove();
+
+        }
+
+    });
+
+
+    /* ================================================================= */
+    /* UPDATE NOTIFICATION COUNT                                        */
+    /* ================================================================= */
+
+    function updateNotificationCount() {
+
+        const remainingItems =
+            document.querySelectorAll(
+                '.deadline-notification-item[data-notification-key]'
+            );
+
+        const count = remainingItems.length;
+
+
+        /* ============================================================= */
+        /* UPDATE BADGE                                                  */
+        /* ============================================================= */
+
+        if (badge) {
+
+            if (count > 0) {
+
+                badge.textContent =
+                    count > 99 ? '99+' : count;
+
+                badge.style.display = 'inline-flex';
+
+            } else {
+
+                badge.style.display = 'none';
+
+            }
+
+        }
+
+
+        /* ============================================================= */
+        /* UPDATE HEADER COUNT                                           */
+        /* ============================================================= */
+
+        if (headerCount) {
+
+            if (count > 0) {
+
+                headerCount.textContent = count;
+
+                headerCount.style.display = 'inline-flex';
+
+            } else {
+
+                headerCount.style.display = 'none';
+
+            }
+
+        }
+
+    }
+
+
+    /* ================================================================= */
+    /* DELETE / DISMISS NOTIFICATION                                    */
+    /* ================================================================= */
+
+    document.addEventListener('click', function (event) {
+
+        const button = event.target.closest(
+            '.deadline-notification-delete'
+        );
+
+
+        if (!button) {
+            return;
+        }
+
+
+        event.preventDefault();
+        event.stopPropagation();
+
+
+        const key = button.getAttribute(
+            'data-notification-key'
+        );
+
+
+        if (!key) {
+            return;
+        }
+
+
+        /* ============================================================= */
+        /* SAVE DISMISSED NOTIFICATION FOR 30 MINUTES                    */
+        /* ============================================================= */
+
+        hiddenNotifications[key] = Date.now();
+
+
+        sessionStorage.setItem(
+            'coretask_hidden_deadline_notifications',
+            JSON.stringify(hiddenNotifications)
+        );
+
+
+        /* ============================================================= */
+        /* REMOVE NOTIFICATION FROM MENU                                 */
+        /* ============================================================= */
+
+        const item = button.closest(
+            '.deadline-notification-item[data-notification-key]'
+        );
+
+
+        if (item) {
+
+            item.remove();
+
+        }
+
+
+        /* ============================================================= */
+        /* UPDATE COUNT                                                  */
+        /* ============================================================= */
+
+        updateNotificationCount();
+
+    });
+
+
+    /* ================================================================= */
+    /* INITIAL COUNT UPDATE                                              */
+    /* ================================================================= */
+
+    updateNotificationCount();
+
+});
 </script>

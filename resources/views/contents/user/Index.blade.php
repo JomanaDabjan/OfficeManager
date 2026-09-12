@@ -42,15 +42,14 @@
                             <i class="now-ui-icons ui-1_zoom-bold mr-1 text-primary"></i> Filter By:
                         </span>
 
-                        <!-- Title Filter Dropdown -->
+                        <!-- Name Filter Dropdown -->
                         <div class="dropdown flex-fill">
                             <button
                                 class="btn btn-light btn-sm dropdown-toggle text-dark shadow-none px-3 py-2 font-weight-bold rounded-pill border w-100 text-truncate"
                                 type="button" id="dropdownTitle" data-toggle="dropdown" aria-haspopup="true"
                                 aria-expanded="false"
                                 style="font-size: 13px; background-color: #f8f9fa; border-color: #e3e6f0 !important; height: 35px; display: flex; align-items: center; justify-content: space-between;">
-                                <span>{{ request('title') ? Str::limit(request('title'), 15) : 'All Names'
-                                    }}</span>
+                                <span>{{ request('name') ? Str::limit(request('name'), 15) : 'All Names' }}</span>
                             </button>
 
                             <div class="dropdown-menu shadow-lg border-0 py-2" aria-labelledby="dropdownTitle"
@@ -65,10 +64,10 @@
 
                                 <div id="titleList">
 
-                                    <a class="dropdown-item py-2 px-3 text-sm title-option {{ !request('title') ? 'active font-weight-bold text-primary' : '' }}"
-                                        href="{{ route('admin.user.index', array_merge(request()->except(['title', 'page']), [])) }}"
+                                    <a class="dropdown-item py-2 px-3 text-sm title-option {{ !request('name') ? 'active font-weight-bold text-primary' : '' }}"
+                                        href="{{ route('admin.user.index', array_merge(request()->except(['name', 'page']), [])) }}"
                                         data-title="All Titles">
-                                        <i class="now-ui-icons ui-1_simple-add mr-2"></i> All Titles
+                                        <i class="now-ui-icons ui-1_simple-add mr-2"></i> All Names
                                     </a>
 
                                     @foreach($allNames as $nameItem)
@@ -269,7 +268,7 @@
 
                     @can('viewAny', \App\Models\User::class)
 
-                    <table class="table align-items-center table-flush mb-0" id="employeesTable"
+                    <table class="table align-items-center table-flush mb-0" id="usersTable"
                         style="table-layout: auto; width: 100%;">
 
                         <!-- Table header with gradient background -->
@@ -438,8 +437,27 @@
                             </tr>
 
                             @empty
+                            <tr>
+                                <td colspan="6" class="p-0">
+                                    <div class="datatable-empty-state"
+                                        style="padding: 45px 20px; text-align: center; width: 100%;">
+                                        <div
+                                            style="width: 64px; height: 64px; margin: 0 auto 16px auto; border-radius: 50%; background: linear-gradient(135deg, #fff1eb 0%, #ffe4d8 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(249, 99, 50, 0.12);">
+                                            <i class="now-ui-icons users_single-02"
+                                                style="font-size: 28px; color: #f96332;"></i>
+                                        </div>
+                                        <div
+                                            style="font-size: 16px; font-weight: 700; color: #32325d; margin-bottom: 6px;">
+                                            No users available
+                                        </div>
+                                        <div
+                                            style="font-size: 13px; color: #8898aa; max-width: 420px; margin: 0 auto; line-height: 1.6;">
+                                            There is no user data to display at the moment.
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
                             @endforelse
-
                         </tbody>
 
                     </table>

@@ -23,9 +23,18 @@
                     </div>
                     <div>
                         <a href="{{ route('admin.task.index') }}"
-                            class="btn btn-neutral btn-round text-primary font-weight-bold">
-                            <i class="now-ui-icons arrows-1_minimal-left"></i> Back
+                            class="btn btn-neutral btn-round text-primary font-weight-bold btn-sm px-4 shadow-sm"
+                            style="height: 36px; min-width: 120px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;">
+                            <i class="now-ui-icons arrows-1_minimal-left mr-1"></i> Back
                         </a>
+
+                        @can('update', $task)
+                        <a href="{{ route('admin.task.edit', $task->id) }}"
+                            class="btn btn-primary btn-round text-white font-weight-bold btn-sm px-4 shadow-sm ml-2"
+                            style="height: 36px; min-width: 120px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;">
+                            <i class="now-ui-icons ui-2_settings-90 mr-1"></i> Edit Task
+                        </a>
+                        @endcan
                     </div>
                 </div>
 
@@ -43,43 +52,14 @@
                                     <p class="text-uppercase text-muted font-weight-bold mb-1" style="font-size: 11px;">
                                         Task Status</p>
                                     <div class="mt-2">
-                                        @php
-                                        $today = \Carbon\Carbon::today();
-                                        $dueDate = $task->due_date ? \Carbon\Carbon::parse($task->due_date) : null;
-                                        $currentStatus = strtolower(trim($task->status ?? ''));
 
-                                        // Automatic status adjustment based on due date and completion
-                                        if ($currentStatus !== 'completed' && $currentStatus !== 'complete' && $dueDate)
-                                        {
-                                        if ($today->greaterThan($dueDate)) {
-                                        $currentStatus = 'overdue';
-                                        } elseif ($today->isSameDay($dueDate)) {
-                                        $currentStatus = 'due_today';
-                                        }
-                                        }
-
-                                        $statusClass = match($currentStatus) {
-                                        'completed', 'complete' => 'badge-success',
-                                        'in_progress' => 'badge-warning',
-                                        'pending' => 'badge-info',
-                                        'accepted' => 'badge-success',
-                                        'rejected', 'overdue' => 'badge-danger',
-                                        'due_today' => 'badge-purple',
-                                        default => 'badge-secondary',
-                                        };
-
-                                        $statusLabel = match($currentStatus) {
-                                        'due_today' => 'Due Today',
-                                        'overdue' => 'Overdue',
-                                        default => ucwords(str_replace('_', ' ', $currentStatus)),
-                                        };
-                                        @endphp
-
-                                        <span class="badge {{ $statusClass }} p-2 px-3 text-uppercase font-weight-bold"
-                                            @if($currentStatus==='due_today' )
+                                        <span
+                                            class="badge {{ $task->status_class }} p-2 px-3 text-uppercase font-weight-bold"
+                                            @if($task->display_status === 'due_today')
                                             style="background-color: #6f42c1; color: #fff;" @endif>
-                                            {{ $statusLabel }}
+                                            {{ $task->display_status_label }}
                                         </span>
+
                                     </div>
                                 </div>
                             </div>
@@ -166,47 +146,7 @@
                                     </p>
                                     <h6 class="card-title font-weight-bold text-primary mt-2 mb-0"
                                         style="font-size: 14px;">
-                                        <span>
-                                            @php
-                                            $status = isset($task) ? ($task->status ?? null) : null;
-                                            $startDate = isset($task) ? ($task->started_at ?? $task->start_date ?? null)
-                                            : ($project->start_date ?? null);
-                                            $targetDate = isset($task) ? ($task->due_date ?? null) : ($project->end_date
-                                            ?? null);
-                                            @endphp
-
-                                            @if($status === 'completed' || $status === 'Completed')
-                                            TASK COMPLETED
-                                            @elseif(!$targetDate)
-                                            No Deadline
-                                            @else
-                                            @php
-                                            $today = \Carbon\Carbon::today();
-                                            $start = $startDate ? \Carbon\Carbon::parse($startDate) : null;
-                                            $due = \Carbon\Carbon::parse($targetDate);
-
-                                            if ($start && $today->lt($start)) {
-                                            $diff = $start->diffInDays($due);
-                                            } else {
-                                            $diff = round($today->floatDiffInDays($due, false));
-                                            }
-                                            @endphp
-
-                                            @if($start && $today->lt($start))
-                                            {{ $diff }} DAYS TOTAL <span class="text-danger"
-                                                style="font-size: 12px;">(Not Started)</span>
-                                            @elseif($diff > 1)
-                                            {{ $diff }} DAYS REMAINING
-                                            @elseif($diff === 1)
-                                            1 DAY REMAINING
-                                            @elseif($diff === 0 ||
-                                            $today->eq(\Carbon\Carbon::parse($targetDate)->startOfDay()))
-                                            THIS IS THE LAST DAY
-                                            @else
-                                            OVERDUE BY {{ abs($diff) }} DAYS
-                                            @endif
-                                            @endif
-                                        </span>
+                                        <span>{{ $task->days_remaining_label }}</span>
                                     </h6>
                                 </div>
                             </div>
@@ -219,7 +159,7 @@
                     <!-- =================================================== -->
                     <div class="row mt-2">
                         <!-- Task Description Box -->
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <div class="form-group">
                                 <label class="text-uppercase text-muted font-weight-bold"
                                     style="font-size: 11px;"><strong>Task Description & Objectives</strong></label>
@@ -228,20 +168,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Rejection Reason Box -->
-                        @if($task->status === 'rejected' && $task->rejection_reason)
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="text-uppercase text-danger font-weight-bold"
-                                    style="font-size: 11px;"><strong>Rejection Reason</strong></label>
-                                <div class="p-3 border border-danger rounded bg-light text-danger"
-                                    style="min-height: 100px;">
-                                    {{ $task->rejection_reason }}
-                                </div>
-                            </div>
-                        </div>
-                        @endif
                     </div>
                     <!-- END OF DESCRIPTION SECTION -->
 

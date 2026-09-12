@@ -62,20 +62,20 @@ class TeamPolicy
 
         // 2. Manager: Can view if they manage this specific team OR belong to it as a member
         if ($role === 'manager') {
-            return ($team->manager_id === $user->id || $team->users()->where('user_id', $user->id)->exists())
+            return ($team->manager_id === $user->id || $team->manager()->where('manager_id', $user->id)->exists())
                 ? Response::allow()
                 : Response::deny('Unauthorized action. You are not assigned to manage or participate in this team.');
         }
 
         // 3. Team Leader: Can view if they lead this team or belong to it
         if ($role === 'team_leader') {
-            return ($team->team_leader_id === $user->id || $team->users()->where('user_id', $user->id)->exists())
+            return ($team->team_leader_id === $user->id || $team->leader()->where('team_leader_id', $user->id)->exists())
                 ? Response::allow()
                 : Response::deny('Unauthorized action. You are not assigned to lead or participate in this team.');
         }
 
         // 4. Employee: Can view only if assigned as a member of this team
-        return $team->users()->where('user_id', $user->id)->exists()
+        return $team->members()->where('user_id', $user->id)->exists()
             ? Response::allow()
             : Response::deny('Unauthorized action. You are not a member of this team.');
     }
@@ -118,9 +118,14 @@ class TeamPolicy
             return Response::allow();
         }
 
-        // 2. Manager: Can edit the team if they own/manage it
-        if ($role === 'manager' && $team->manager_id === $user->id) {
-            return Response::allow();
+        // 2. Manager: Can edit the team if they manage the project associated with it
+        if ($role === 'manager') {
+            // التحقق مما إذا كان المشروع المرتبط بالفريق يديره هذا المدير
+            $isProjectManager = $team->project && $team->project->manager_id === $user->id;
+
+            return $isProjectManager
+                ? Response::allow()
+                : Response::deny('Unauthorized action. You can only manage teams associated with your projects.');
         }
 
         // 3. Team Leader: Can update team settings if assigned as team leader

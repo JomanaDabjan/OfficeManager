@@ -89,356 +89,235 @@
 <!-- ========================================== -->
 <div class="row">
 
+    @php
+    $authUser = auth()->user();
+    $isManager = $authUser && $authUser->role === 'manager';
+    $mId = $authUser ? $authUser->id : null;
+
+    // Fallback scoped query builder if variables aren't passed from controller
+    $cardStats = \App\Models\Project::query();
+    if ($isManager) {
+    $cardStats->where('manager_id', $mId);
+    } elseif ($authUser && $authUser->role !== 'admin') {
+    $cardStats->whereHas('users', fn($q) => $q->where('users.id', $authUser->id));
+    }
+    @endphp
+
     <!-- Total Projects Card -->
     <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 mb-4">
-
         <div class="card card-stats border-0 shadow-lg position-relative overflow-hidden"
             style="border-radius: 18px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); transition: transform 0.2s ease;">
-
             <div class="card-body p-4">
-
                 <div class="d-flex align-items-center justify-content-between">
-
                     <div>
-
                         <p class="card-category text-uppercase text-muted font-weight-bold mb-1"
                             style="font-size: 10px; letter-spacing: 1px;">
                             Total Projects
                         </p>
-
                         <h3 class="card-title font-weight-bolder text-dark mb-0">
-                            {{ isset($totalProjects) ? $totalProjects : \App\Models\Project::count() }}
+                            {{ isset($totalProjects) ? $totalProjects : (clone $cardStats)->count() }}
                         </h3>
-
                     </div>
-
                     <div class="icon-shape text-white rounded-circle shadow d-flex align-items-center justify-content-center flex-shrink-0"
                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #f96332 0%, #ff8c42 100%);">
-
                         <i class="now-ui-icons business_briefcase-24"
                             style="font-size: 20px; color: #1a1a1a; text-shadow: 0px 1px 2px rgba(255, 255, 255, 0.4);">
                         </i>
-
                     </div>
-
                 </div>
-
             </div>
-
             <div class="position-absolute w-100"
                 style="height: 4px; bottom: 0; left: 0; background: linear-gradient(135deg, #f96332 0%, #ff8c42 100%);">
             </div>
-
         </div>
-
     </div>
 
 
     <!-- Completed Projects Card -->
     <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 mb-4">
-
         <div class="card card-stats border-0 shadow-lg position-relative overflow-hidden"
             style="border-radius: 18px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); transition: transform 0.2s ease;">
-
             <div class="card-body p-4">
-
                 <div class="d-flex align-items-center justify-content-between">
-
                     <div>
-
                         <p class="card-category text-uppercase text-muted font-weight-bold mb-1"
                             style="font-size: 10px; letter-spacing: 1px;">
                             Completed
                         </p>
-
                         <h3 class="card-title font-weight-bolder text-dark mb-0">
-
-                            {{ isset($completedProjectsCount) ? $completedProjectsCount :
-                            \App\Models\Project::whereIn('status', ['completed', 'complete'])->count() }}
-
+                            {{ isset($completedProjectsCount) ? $completedProjectsCount : (clone
+                            $cardStats)->whereIn('status', ['completed', 'complete'])->count() }}
                         </h3>
-
                     </div>
-
-
                     <div class="icon-shape text-white rounded-circle shadow d-flex align-items-center justify-content-center flex-shrink-0"
                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #2dce89 0%, #2ddfc4 100%);">
-
                         <i class="now-ui-icons ui-1_check" style="font-size: 20px;">
                         </i>
-
                     </div>
-
                 </div>
-
             </div>
-
-
             <div class="position-absolute w-100"
                 style="height: 4px; bottom: 0; left: 0; background: linear-gradient(135deg, #2dce89 0%, #2ddfc4 100%);">
             </div>
-
         </div>
-
     </div>
 
 
     <!-- In Progress Projects Card -->
     <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 mb-4">
-
         <div class="card card-stats border-0 shadow-lg position-relative overflow-hidden"
             style="border-radius: 18px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); transition: transform 0.2s ease;">
-
             <div class="card-body p-4">
-
                 <div class="d-flex align-items-center justify-content-between">
-
                     <div>
-
                         <p class="card-category text-uppercase text-muted font-weight-bold mb-1"
                             style="font-size: 10px; letter-spacing: 1px;">
                             In Progress
                         </p>
-
                         <h3 class="card-title font-weight-bolder text-dark mb-0">
-
-                            {{ isset($inProgressProjectsCount) ? $inProgressProjectsCount :
-                            \App\Models\Project::where('status', 'in_progress')
-                            ->where(function($q) {
-                            $q->whereNull('end_date')
-                            ->orWhereDate('end_date', '>=', \Carbon\Carbon::today());
-                            })
-                            ->count() }}
-
+                            {{ isset($inProgressProjectsCount) ? $inProgressProjectsCount : (clone
+                            $cardStats)->where('status', 'in_progress')->where(function($q) {
+                            $q->whereNull('end_date')->orWhereDate('end_date', '>=', \Carbon\Carbon::today());
+                            })->count() }}
                         </h3>
-
                     </div>
-
-
                     <div class="icon-shape text-white rounded-circle shadow d-flex align-items-center justify-content-center flex-shrink-0"
                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #fbb140 0%, #f39c12 100%);">
-
                         <i class="now-ui-icons loader_refresh" style="font-size: 20px;">
                         </i>
-
                     </div>
-
                 </div>
-
             </div>
-
-
             <div class="position-absolute w-100"
                 style="height: 4px; bottom: 0; left: 0; background: linear-gradient(135deg, #fbb140 0%, #f39c12 100%);">
             </div>
-
         </div>
-
     </div>
 
 
     <!-- Pending Projects Card -->
     <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 mb-4">
-
         <div class="card card-stats border-0 shadow-lg position-relative overflow-hidden"
             style="border-radius: 18px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); transition: transform 0.2s ease;">
-
             <div class="card-body p-4">
-
                 <div class="d-flex align-items-center justify-content-between">
-
                     <div>
-
                         <p class="card-category text-uppercase text-muted font-weight-bold mb-1"
                             style="font-size: 10px; letter-spacing: 1px;">
                             Pending
                         </p>
-
                         <h3 class="card-title font-weight-bolder text-dark mb-0">
-
-                            {{ isset($pendingProjectsCount) ? $pendingProjectsCount :
-                            \App\Models\Project::where('status', 'pending')
-                            ->where(function($q) {
-                            $q->whereNull('end_date')
-                            ->orWhereDate('end_date', '>', \Carbon\Carbon::today());
-                            })
-                            ->count() }}
-
+                            {{ isset($pendingProjectsCount) ? $pendingProjectsCount : (clone
+                            $cardStats)->where('status', 'pending')->where(function($q) {
+                            $q->whereNull('end_date')->orWhereDate('end_date', '>', \Carbon\Carbon::today());
+                            })->count() }}
                         </h3>
-
                     </div>
-
-
                     <div class="icon-shape text-white rounded-circle shadow d-flex align-items-center justify-content-center flex-shrink-0"
                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #11cdef 0%, #1171ef 100%);">
-
                         <i class="now-ui-icons time-support" style="font-size: 20px;">
                         </i>
-
                     </div>
-
                 </div>
-
             </div>
-
-
             <div class="position-absolute w-100"
                 style="height: 4px; bottom: 0; left: 0; background: linear-gradient(135deg, #11cdef 0%, #1171ef 100%);">
             </div>
-
         </div>
-
     </div>
 
 
     <!-- Overdue Projects Card -->
     <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 mb-4">
-
         <div class="card card-stats border-0 shadow-lg position-relative overflow-hidden"
             style="border-radius: 18px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); transition: transform 0.2s ease;">
-
             <div class="card-body p-4">
-
                 <div class="d-flex align-items-center justify-content-between">
-
                     <div>
-
                         <p class="card-category text-uppercase text-muted font-weight-bold mb-1"
                             style="font-size: 10px; letter-spacing: 1px;">
                             Overdue
                         </p>
-
                         <h3 class="card-title font-weight-bolder text-dark mb-0">
-
-                            {{ isset($overdueProjectsCount) ? $overdueProjectsCount :
-                            \App\Models\Project::whereNotIn('status', ['completed', 'complete'])
-                            ->whereNotNull('end_date')
-                            ->whereDate('end_date', '<', \Carbon\Carbon::today()) ->count() }}
-
+                            {{ isset($overdueProjectsCount) ? $overdueProjectsCount : (clone
+                            $cardStats)->whereNotIn('status', ['completed',
+                            'complete'])->whereNotNull('end_date')->whereDate('end_date', '<',
+                                \Carbon\Carbon::today())->count() }}
                         </h3>
-
                     </div>
-
-
                     <div class="icon-shape text-white rounded-circle shadow d-flex align-items-center justify-content-center flex-shrink-0"
                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #f5365c 0%, #f56036 100%);">
-
                         <i class="now-ui-icons ui-1_simple-remove" style="font-size: 20px;">
                         </i>
-
                     </div>
-
                 </div>
-
             </div>
-
-
             <div class="position-absolute w-100"
                 style="height: 4px; bottom: 0; left: 0; background: linear-gradient(135deg, #f5365c 0%, #f56036 100%);">
             </div>
-
         </div>
-
     </div>
 
 
     <!-- Due Today Projects Card -->
     <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 mb-4">
-
         <div class="card card-stats border-0 shadow-lg position-relative overflow-hidden"
             style="border-radius: 18px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); transition: transform 0.2s ease;">
-
             <div class="card-body p-4">
-
                 <div class="d-flex align-items-center justify-content-between">
-
                     <div>
-
                         <p class="card-category text-uppercase text-muted font-weight-bold mb-1"
                             style="font-size: 10px; letter-spacing: 1px;">
                             Due Today
                         </p>
-
                         <h3 class="card-title font-weight-bolder text-dark mb-0">
-
-                            {{ isset($dueTodayProjectsCount) ? $dueTodayProjectsCount :
-                            \App\Models\Project::whereNotIn('status', ['completed', 'complete'])
-                            ->whereNotNull('end_date')
-                            ->whereDate('end_date', \Carbon\Carbon::today())
-                            ->count() }}
-
+                            {{ isset($dueTodayProjectsCount) ? $dueTodayProjectsCount : (clone
+                            $cardStats)->whereNotIn('status', ['completed',
+                            'complete'])->whereNotNull('end_date')->whereDate('end_date',
+                            \Carbon\Carbon::today())->count() }}
                         </h3>
-
                     </div>
-
-
                     <div class="icon-shape text-white rounded-circle shadow d-flex align-items-center justify-content-center flex-shrink-0"
                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #172b4d 0%, #2d3748 100%);">
-
                         <i class="now-ui-icons ui-2_time-alarm" style="font-size: 20px;">
                         </i>
-
                     </div>
-
                 </div>
-
             </div>
-
-
             <div class="position-absolute w-100"
                 style="height: 4px; bottom: 0; left: 0; background: linear-gradient(135deg, #172b4d 0%, #2d3748 100%);">
             </div>
-
         </div>
-
     </div>
 
 
     <!-- Total Tasks Card -->
     <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 mb-4">
-
         <div class="card card-stats border-0 shadow-lg position-relative overflow-hidden"
             style="border-radius: 18px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); transition: transform 0.2s ease;">
-
             <div class="card-body p-4">
-
                 <div class="d-flex align-items-center justify-content-between">
-
                     <div>
-
                         <p class="card-category text-uppercase text-muted font-weight-bold mb-1"
                             style="font-size: 10px; letter-spacing: 1px;">
                             Total Tasks
                         </p>
-
                         <h3 class="card-title font-weight-bolder text-dark mb-0">
-
-                            {{ isset($totalTasksCount) ? $totalTasksCount : \App\Models\Task::count() }}
-
+                            {{ isset($totalTasksCount) ? $totalTasksCount : \App\Models\Task::whereIn('project_id',
+                            (clone $cardStats)->select('id'))->count() }}
                         </h3>
-
                     </div>
-
-
                     <div class="icon-shape text-white rounded-circle shadow d-flex align-items-center justify-content-center flex-shrink-0"
                         style="width: 48px; height: 48px; background: linear-gradient(135deg, #8965e0 0%, #bc6fe1 100%);">
-
                         <i class="now-ui-icons design_bullet-list-67" style="font-size: 20px;">
                         </i>
-
                     </div>
-
                 </div>
-
             </div>
-
-
             <div class="position-absolute w-100"
                 style="height: 4px; bottom: 0; left: 0; background: linear-gradient(135deg, #8965e0 0%, #bc6fe1 100%);">
             </div>
-
         </div>
-
     </div>
 
 </div>
@@ -459,6 +338,15 @@
 
                     <!-- Filters Grouping -->
                     <div class="d-flex flex-wrap align-items-center flex-grow-1" style="gap: 10px;">
+
+                        <!-- Filter By Label -->
+                        <span class="text-muted font-weight-bold d-flex align-items-center mr-1"
+                            style="font-size: 13px; min-width: 75px;">
+
+                            <i class="now-ui-icons ui-1_zoom-bold mr-1 text-primary" style="font-size: 14px;"></i>
+                            Filter By:
+
+                        </span>
 
 
                         <!-- Title Filter Dropdown -->
@@ -629,7 +517,7 @@
                                 </a>
 
 
-                                <a class="dropdown-item py-2 px-3 text-sm {{ request('status') == 'due_today' ? 'active font-weight-bold text-print text-primary' : '' }}"
+                                <a class="dropdown-item py-2 px-3 text-sm {{ request('status') == 'due_today' ? 'active font-weight-bold text-primary' : '' }}"
                                     href="{{ route('admin.report.project-report', array_merge(request()->except(['status', 'page']), ['status' => 'due_today'])) }}">
 
                                     Due Today
@@ -705,9 +593,24 @@
                         </div>
 
 
-                        <!-- Date From & To Filters Group -->
+                    </div>
+
+
+                    <!-- Date From & To Filters Group -->
+                    <div class="d-flex align-items-center" style="gap: 12px; margin-top: 12px;">
+
+                        <span class="text-muted font-weight-bold d-flex align-items-center"
+                            style="font-size: 13px; min-width: 110px;">
+
+                            <i class="now-ui-icons ui-1_calendar-60 mr-1 text-primary" style="font-size: 14px;"></i>
+
+                            Creation Date:
+
+                        </span>
+
+
                         <form method="GET" action="{{ route('admin.report.project-report') }}"
-                            class="d-flex align-items-center flex-fill" style="gap: 8px; min-width: 260px;">
+                            class="d-flex align-items-center flex-grow-1" style="gap: 8px;">
 
                             @foreach(request()->except(['date_from', 'date_to', 'page']) as $key => $value)
 
@@ -719,10 +622,10 @@
                             <div class="d-flex align-items-center flex-fill"
                                 style="background-color: #f8f9fa; border: 1px solid #e3e6f0 !important; border-radius: 50rem; padding: 2px 10px; height: 35px;">
 
-                                <span class="text-muted mr-1" style="font-size: 11px; white-space: nowrap;">
+                                <span class="text-muted font-weight-bold mr-1"
+                                    style="font-size: 11px; white-space: nowrap;">
                                     From:
                                 </span>
-
 
                                 <input type="date" name="date_from" value="{{ request('date_from') }}"
                                     class="form-control form-control-sm border-0 bg-transparent shadow-none px-0 py-0 w-100"
@@ -734,7 +637,8 @@
                             <div class="d-flex align-items-center flex-fill"
                                 style="background-color: #f8f9fa; border: 1px solid #e3e6f0 !important; border-radius: 50rem; padding: 2px 10px; height: 35px;">
 
-                                <span class="text-muted mr-1" style="font-size: 11px; white-space: nowrap;">
+                                <span class="text-muted font-weight-bold mr-1"
+                                    style="font-size: 11px; white-space: nowrap;">
                                     To:
                                 </span>
 
@@ -747,7 +651,6 @@
                         </form>
 
                     </div>
-
 
                     <!-- Reset Filters Button -->
 
@@ -937,7 +840,6 @@
 
                                     </span>
 
-
                                     @if($isLong)
 
                                     <button type="button"
@@ -957,24 +859,33 @@
                                         <div class="modal-dialog modal-dialog-centered" role="document">
 
                                             <div class="modal-content shadow-lg border-0"
-                                                style="border-radius: 12px; overflow: hidden;">
+                                                style="border-radius: 16px; overflow: hidden; background: #ffffff;">
 
-                                                <div class="modal-header text-white"
-                                                    style="background: linear-gradient(135deg, #f96332 0%, #ff8c42 100%);">
+                                                <div class="modal-header border-0 pb-3 pt-4 px-4"
+                                                    style="background: linear-gradient(135deg, #f96332 0%, #ff8c42 100%); color: white;">
 
-                                                    <h5 class="modal-title font-weight-bold text-white"
-                                                        id="descModalLabel{{ $project->id }}">
+                                                    <h5 class="modal-title font-weight-bold text-white d-flex align-items-center m-0"
+                                                        id="descModalLabel{{ $project->id }}" style="font-size: 1.1rem;">
 
-                                                        <i class="now-ui-icons text_align-left mr-2"></i>
-                                                        Project Description
+                                                        <div style="background: rgba(255, 255, 255, 0.2); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;"
+                                                            class="mr-3">
+                                                            <i class="now-ui-icons business_briefcase-24 text-white"
+                                                                style="font-size: 18px; line-height: 0;"></i>
+                                                        </div>
+
+                                                        <span>
+                                                            Task Description
+                                                        </span>
 
                                                     </h5>
 
-
                                                     <button type="button" class="close text-white" data-dismiss="modal"
-                                                        aria-label="Close" style="opacity: 1;">
+                                                        aria-label="Close"
+                                                        style="opacity: 0.8; text-shadow: none; transition: opacity 0.2s;"
+                                                        onmouseover="this.style.opacity='1'"
+                                                        onmouseout="this.style.opacity='0.8'">
 
-                                                        <span aria-hidden="true">
+                                                        <span aria-hidden="true" style="font-size: 1.5rem;">
                                                             &times;
                                                         </span>
 
@@ -983,32 +894,34 @@
                                                 </div>
 
 
-                                                <div class="modal-body p-4 bg-white text-dark">
+                                                <div class="modal-body p-4 text-left"
+                                                    style="background-color: #fcfcfc;">
 
                                                     <h6 class="font-weight-bold text-primary mb-2">
-
                                                         {{ $project->title }}
-
                                                     </h6>
-
 
                                                     <hr class="mt-1 mb-3">
 
+                                                    <div
+                                                        style="background: rgba(249, 99, 50, 0.04); border: 1px solid rgba(249, 99, 50, 0.12); border-radius: 12px; padding: 20px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);">
+                                                        <p class="text-dark m-0 text-break"
+                                                            style="white-space: pre-line; line-height: 1.8; font-size: 0.95rem;">
 
-                                                    <p class="text-break"
-                                                        style="line-height: 1.6; white-space: pre-line;">
+                                                            {{ $fullDescription }}
 
-                                                        {{ $fullDescription }}
-
-                                                    </p>
+                                                        </p>
+                                                    </div>
 
                                                 </div>
 
 
-                                                <div class="modal-footer bg-light px-4 py-3">
+                                                <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-end"
+                                                    style="background-color: #fcfcfc;">
 
-                                                    <button type="button" class="btn btn-secondary btn-round btn-sm"
-                                                        data-dismiss="modal">
+                                                    <button type="button" class="btn btn-secondary btn-round px-4 py-2"
+                                                        data-dismiss="modal"
+                                                        style="text-transform: none; font-weight: 600; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
 
                                                         Close
 
@@ -1023,7 +936,6 @@
                                     </div>
 
                                     @endif
-
 
                                     <div class="d-none d-print-block text-dark" style="white-space: normal;">
 
@@ -1324,6 +1236,33 @@
 
 
                             @empty
+
+                            <tr>
+                                <td colspan="9" class="p-0">
+                                    <div class="datatable-empty-state"
+                                        style="padding: 45px 20px; text-align: center; width: 100%;">
+
+                                        <div
+                                            style="width: 64px; height: 64px; margin: 0 auto 16px auto; border-radius: 50%; background: linear-gradient(135deg, #fff1eb 0%, #ffe4d8 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(249, 99, 50, 0.12);">
+
+                                            <i class="now-ui-icons business_briefcase-24"
+                                                style="font-size: 28px; color: #f96332;"></i>
+
+                                        </div>
+
+                                        <div
+                                            style="font-size: 16px; font-weight: 700; color: #32325d; margin-bottom: 6px;">
+                                            No projects available
+                                        </div>
+
+                                        <div
+                                            style="font-size: 13px; color: #8898aa; max-width: 420px; margin: 0 auto; line-height: 1.6;">
+                                            There is no project data to display at the moment.
+                                        </div>
+
+                                    </div>
+                                </td>
+                            </tr>
 
                             @endforelse
 
